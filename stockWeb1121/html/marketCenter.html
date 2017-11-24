@@ -120,7 +120,6 @@
     <script type="text/javascript" src="../js/moment-with-locales.min.js"></script>
     <script type="text/javascript" src="../js/jquery.pagination.js"></script>
     <script type="text/javascript" src="../js/main.js"></script>
-    <script type="text/javascript" src="../js/common.js"></script>
     <script type="text/javascript" src="../js/market-center.js"></script>
     <script>
         $(function(){
@@ -144,6 +143,29 @@
                 totalData:100,
                 showData:5,
                 keepShowPN:true
+            });
+            //jump为0表示不跳转，为1是跳转
+            $(".zdf-list").showList({
+                title:"沪深A涨跌幅",
+                dataTit:[
+                    {liTilt:"序号",jump:0},
+                    {liTilt:"代码",jump:0},
+                    {liTilt:"名称",jump:0},
+                    {liTilt:"现价",jump:1},
+                    {liTilt:"涨跌",jump:1},
+                    {liTilt:"涨幅",jump:1},
+                    {liTilt:"今开",jump:1},
+                    {liTilt:"最高",jump:1},
+                    {liTilt:"最低",jump:1},
+                    {liTilt:"昨收",jump:1},
+                    {liTilt:"换手",jump:1},
+                    {liTilt:"量比",jump:1},
+                    {liTilt:"振幅",jump:1},
+                    {liTilt:"成交量",jump:1},
+                    {liTilt:"成交额",jump:1},
+                ],
+                data:[]
+                
             });
         });
         function tabLi(index){

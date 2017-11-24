@@ -40,16 +40,18 @@
             <div class="box fl echarts">
                 <div class="container">
                     <div class="canvas" id="MLine">
-                        <label class="canvasTitle" id="toolContent_M"><i>2017-10-10 10:00</i>价<i>-</i>量<i>-</i>幅<i>-</i></label>
+                        <div style="font-size:18px;padding-top: 40px;" id="noData">亲，暂时没有数据哦~~~~ ^_^</div>
+                        <label class="canvasTitle" id="toolContent_M" style="display:none;"><i>2017-10-10 10:00</i>价<i>-</i>量<i>-</i>幅<i>-</i></label>
                         <div id="main1" style="width:840px;height:520px;background-color:#fff;"></div>
-                        <div class="vol vol1">Vol:<i>-</i></div>
+                        <div class="vol vol1" style="display:none;">Vol:<i>-</i></div>
                         <label class="quantityRatio">LB:<i id="quantityRatio">0.86</i></label>
                         <label class="quantityRatio">MACD:<i id="quantityRatio">0.86</i></label>
-                        <div class="chartsTab"></div>
+                        <div class="chartsTab" style="display:none;"></div>
                     </div>
 
                     <!--K线图开始-->
                     <div class="canvas kline" id="kline">
+                        <div style='font-size:18px;margin-top: 40px;' id="withoutData">亲，暂时没有数据哦~~~~ ^_^</div>
                         <!-- 上部信息显示开始 -->
                         <ul class="list-inline text-center kline-info">
                             <li><span class="date"></span></li>
@@ -87,41 +89,10 @@
                 </div>
             </div>
             <div class="box fr cb-right">
-                <div class="cb-pk">
-                    <h2>五档盘口</h2>
-                    <div class="cb-title">
-                        <p>委比：<span>-</span></p>
-                        <p>委差：<span>-</span></p>
-                    </div>
-                    <ul>
-                        <li><span>卖五</span><span>-</span><span>-</span></li>
-                        <li><span>卖四</span><span>-</span><span>-</span></li>
-                        <li><span>卖三</span><span>-</span><span>-</span></li>
-                        <li><span>卖二</span><span>-</span><span>-</span></li>
-                        <li><span>卖一</span><span>-</span><span>-</span></li>
-                    </ul>
-                    <ul>
-                        <li><span>买一</span><span>-</span><span>-</span></li>
-                        <li><span>买二</span><span>-</span><span>-</span></li>
-                        <li><span>买三</span><span>-</span><span>-</span></li>
-                        <li><span>买四</span><span>-</span><span>-</span></li>
-                        <li><span>买五</span><span>-</span><span>-</span></li>
-                    </ul>
-                    <div class="cb-title cb-title-sub">
-                        <p>外盘：<span class="red">-</span></p>
-                        <p>内盘：<span class="green">-</span></p>
-                    </div>
-                </div>
-                <div class="cb-cj">
-                    <h2>逐笔成交</h2>
-                    <ul>
-                        <li><span>-</span><span>-</span><span>-</span></li>
-                        <li><span>14:05:09</span><span>13.17</span><span>1</span></li>
-                        <li><span>14:05:09</span><span>13.17</span><span>46</span></li>
-                        <li><span>14:05:09</span><span>13.17</span><span>15</span></li>
-                        <li><span>14:05:09</span><span>13.17</span><span>44</span></li>
-                    </ul>
-                </div>
+                <!-- 五档盘口 -->
+                <div class="cb-pk"></div>
+                <!-- 逐笔成交 -->
+                <div class="cb-cj"></div>
             </div>
             <!-- echarts图形结束 -->
         </div>
@@ -192,35 +163,34 @@
     <script type="text/javascript" src="../js/moment-with-locales.min.js"></script>
     <script type="text/javascript" src="../js/echarts.min.js"></script>
     <script type="text/javascript" src="../js/main.js"></script>
-    <script src="../js/kline.js"></script> <!-- K线 -->
-    <script type="text/javascript" src="../js/detail.js"></script>
+    
     <script type="text/javascript" src="../js/utils.js"></script>
-    <!-- <script type="text/javascript" src="./js/socket.js"></script> -->
+
+    <script src="../js/data.js"></script> <!--全局变量-->
+    <script src="../js/public.js"></script> <!--函数方法-->
+    <script src="../js/websocket.js"></script> <!--函数方法-->
+    <script src="../js/kline.js"></script> <!-- K线 -->
+    <script src="../js/detail.js"></script> <!--此页的方法-->
+    
 
 
     <script>
         $(function(){
+            // 行情echarts切换标签
             $(".container").toggleLi(
                 {
                     data:[
                         {name:"分时",id:"mline"},
-                        // {name:"5日"},
-                        // {name:"年线"},
                         {name:"日K",id:"day"},
-                        {name:"分钟",id:"minute"},
-                        // {name:"周K"},
-                        // {name:"月K"},
-                        // {name:"5分钟"},
-                        // {name:"15分钟"},
-                        // {name:"30分钟"},
-                        // {name:"60分钟"}
+                        {name:"分钟",id:"minute"}
                     ]
                 }
             );
             $(".chartsTab").chartsTab();
 
+            //指数与个股区分
             var url = location.href;
-            var id,exchangeID;
+            var id,exchangeID,wsUrl,stockXMlUrl;
             if(url.indexOf("?")>-1){
                 id = getQueryString("id");//main.js里的getQueryString
                 exchangeID = getQueryString("exchangeID");
@@ -228,35 +198,39 @@
                 id = "1";
                 exchangeID = "101";
             }
+            var wsUrl,stockXMlUrl;
+            switch(exchangeID){
+                case "2":
+                    // 深交所接口
+                    wsUrl = "ws://103.66.33.67:443";
+                    stockXMlUrl = "http://172.17.20.203:6789/2";
+                    
+                    break;
+                case "101":;
+                default: 
+                    // 上证指数接口
+                    wsUrl = "ws://172.17.20.203:7681";
+                    stockXMlUrl = "http://172.17.20.203:6789/101";
+            }
 
-            $("#MLine").initMline({id:id,exchangeID:exchangeID});
+            // 初始化分时图
+            $("#MLine").initMline({
+                id:id,
+                exchangeID:exchangeID,
+                wsUrl:wsUrl,
+                stockXMlUrl:stockXMlUrl
+            });
+            // 初始化K线图
             $.queryKLine({
-                "InstrumentID": id,
-                "ExchangeID":exchangeID
+                InstrumentID: id,
+                ExchangeID:exchangeID,
+                wsUrl:wsUrl,
+                stockXMlUrl:stockXMlUrl
             });
 
-            var loc = window.location.href.split("?")[1];
-
-            if(!loc){
-                $(".bottom-bar").html("<div class='box feild-null' style='height: 560px;font-size: 16px;margin-bottom:20px'>指数页面该模块信息为空</div>")
-            }
-            /*
-            * 个股信息
-            */
-            var indId = "000001";
-            var reqIds = ["23000171","23000138","23000164"];
-            requireCom(loc,indId,reqIds);
             $("#kline").hide();
-        });
-        function tabLi(index){
-            if(index==0){
-                $("#MLine").show();
-                $("#kline").hide();
-            }else{
-                $("#kline").show();
-                $("#MLine").hide();
-            }
-        }
+
+        }); 
     </script>
 </body>
 </html>
