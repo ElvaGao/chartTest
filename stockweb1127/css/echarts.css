@@ -1,0 +1,141 @@
+html,body,div,ul,li{
+    margin: 0;
+    padding: 0;
+}
+ul{
+    display: block;
+}
+div,ul,li{
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+ul,li,a{
+    list-style: none;
+    appearance: none;
+    -moz-appearance: none;
+}
+i{
+    font-style: normal;
+}
+a{
+    text-decoration: none;
+}
+.charts-tab li{
+    float: left;
+}
+.fl{
+    float: left;
+}
+.clearfix{
+    *zoom: 1;
+}
+.clearfix:after{
+    content: "";
+    height: 0;
+    display: block;
+    visibility: visible;
+    clear: both;
+}
+body{
+    /* background-color:; */
+}
+.wrap{
+    width: 1000px;
+    margin: auto;
+    padding: 20px 0;
+}
+.container{
+    width: 833px;
+}
+.canvas{
+    position: relative;
+    text-align: center;
+}
+.canvasTitle{
+    line-height: 32px;
+    font-size: 12px;
+    color: #555;
+}
+.container>ul{
+    border-bottom: 1px solid #e5e5e5;
+}
+.container>ul>li{
+    width: 70px;
+    text-align: center;
+    height: 40px;
+    line-height: 40px;
+    color: #555;
+    cursor: pointer;
+}
+.container>ul>.active{
+    background-color: #fff;
+    border-bottom:3px solid #2b99ff !important; 
+}
+.container>ul>.active>a{
+    color: #555;
+    font-size: 16px
+}
+/*.container>ul>li>a{
+    color: #555;
+}
+.container>ul>li>a:hover{
+    color: #555;
+}*/
+#toolContent_M>i{
+    margin: 0 10px;
+}
+.vol{
+    color: #555;
+    position: absolute;
+    top: 53%;
+    left: 15%;
+    font-size: 14px;
+}
+.vol1{
+    top: 71.5%;
+}
+.chartsTab{
+    position: absolute;
+    left: 10%;
+    bottom: 40px;
+}
+.tabAs{
+    color: #2b99ff;
+    border: 1px solid #b4b4b4;
+    line-height: 26px;
+    height: 26px;
+    display: inline-block;
+    width: 58px;
+    text-align: center;
+    font-size: 14px;
+}
+.activeAs{
+    color: #999;
+}
+.quantityRatio{
+    color:#2c81ff;
+    position:absolute;
+    left:15%;
+    bottom: 23.3%;
+    font-size:14px;
+    display:none;
+}
+#toolContent{
+    position:absolute;
+    top:50px;
+    left:80px;
+    border:1px solid #b4b4b4;
+}
+#toolContent>ul>li{
+    font-size: 14px;
+    color: #555;
+    padding: 0 10px;
+    line-height:40px;height:40px;
+    text-align:left;
+    background-color: #fff; 
+    overflow: hidden;
+}
+#toolContent>ul>li>span{
+    float: right;
+}
