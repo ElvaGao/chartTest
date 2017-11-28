@@ -6,15 +6,18 @@ var turnOff = true;
 		
 		// 实例化websocket默认参数 
 		KLineSocket = new WebSocketConnect(option);
+		KLineSocket.KChart = echarts.init(document.getElementById('kline_charts'));	// K线绘制对象;
+
 		// 建立websocket连接，命名为ws
 		var ws = KLineSocket.createWebSocket();
 
 		// 点击按钮查询K线
-		var turnOn = true;
+		KLineSocket.turnOn = true;
 		$(".charts-tab li").on("click",function(){
 			
 			// K线类型
 			var klineType = $(this).attr("id");
+
 			// 创建新的查询对象
 			var KLrequireObj = new KLineRequire(option, klineType);
 			KLineSocket.option = KLrequireObj.options;
@@ -22,19 +25,23 @@ var turnOff = true;
 			KLineSocket.KLineSet = KLrequireObj.KLineSet;
 			// 发起websocket请求
 			initSocketEvent(KLineSocket, ws, klineType);
+			
 
-			if(klineType=="mline"&&turnOn){
+			if(klineType=="mline"&&KLineSocket.turnOn){
 				return;
 			}else{
-				turnOn = false;
+				KLineSocket.turnOn = false;
 				// 取消之前的订阅
 				switch(klineType){
 					case "mline":
-						KLineSocket.HistoryData.KChart.setOption({
-							xAxis: [{data: null},{data: null}],
-							yAxis: [{data: null},{data: null}],
-							series: [{data: null},{data: null}]
-						})
+						if(KLineSocket.KChart.getOption().xAxis[0].data){
+							KLineSocket.KChart.setOption({
+								xAxis: [{data: null},{data: null}],
+								yAxis: [{data: null},{data: null}],
+								series: [{data: null},{data: null}]
+							});
+						}
+						$("#withoutData").show().siblings().hide();
 						KLineSocket.request(KLrequireObj.options.KQXQAll);
 						KLineSocket.request(KLrequireObj.options.KQXKZQAll);
 						break;
@@ -92,12 +99,6 @@ var ReqStockInfoOpt = function(option){
 	this.defaults = {
 		wsUrl: wsUrl,
         stockXMlUrl: stockXMlUrl,
-        // 心跳包
-		HeartSend: {			
-			InstrumentID: InstrumentID,
-			ExchangeID: ExchangeID,
-			MsgType: "C646"
-		},
 		// 订阅快照
 		KKZQAll: {				
 			InstrumentID: InstrumentID,
@@ -146,12 +147,6 @@ var KLineRequire = function(option, klineType){
 		wsUrl: wsUrl,
         stockXMlUrl: stockXMlUrl,
         lineType: klineType,
-        // 心跳包
-		HeartSend: {			
-			InstrumentID: InstrumentID,
-			ExchangeID: ExchangeID,
-			MsgType: "C646"
-		},
 		// 查询历史数据
 		HistoryKQAll: {			
 			InstrumentID: InstrumentID,
@@ -192,23 +187,7 @@ var KLineRequire = function(option, klineType){
 			MsgType:"S101",
 		    DesscriptionType:"4",
 		    Instrumenttype:"2"
-		},
-		// 盘口
-        QPK : {
-        	InstrumentID: InstrumentID,
-			ExchangeID: ExchangeID,
-            MsgType: "S101",
-            DesscriptionType: "3",
-            Instrumenttype: "3"
-        },
-        // 逐笔成交
-        QZBCJ : {
-        	InstrumentID: InstrumentID,
-			ExchangeID: ExchangeID,
-            MsgType: "S101",
-            DesscriptionType: "3",
-            Instrumenttype: "1"
-        }
+		}
 	};
 	// 不同类型K线请求参数区分
 	switch(klineType){
@@ -229,7 +208,6 @@ var KLineRequire = function(option, klineType){
 	this.defaults.HistoryKQAll = $.extend({}, this.defaults.HistoryKQAll, historyQAll);
 	this.options = $.extend({}, this.defaults, option);
 	this.HistoryData = {
-		KChart: echarts.init(document.getElementById('kline_charts')),	// K线绘制对象
 		hDate: [],					// 日期
 		hDay: [],					// 星期
 		hTime: 0,					// 如果为日K线，存储最后一条时间
@@ -260,6 +238,12 @@ var WebSocketConnect = function(options){
 	this.serverTimeoutObj = null;
 	this.option = options; 		// 将请求参数等，存储在socket中
 	this.HistoryData = options.HistoryData?options.HistoryData:null; 		// 历史数据存储，为了添加新数据时，能够准确记录所有数据
+    // 心跳包
+	this.HeartSend = {			
+		InstrumentID: options.InstrumentID,
+		ExchangeID: options.ExchangeID,
+		MsgType: "C646"
+	};
 };
 WebSocketConnect.prototype = {
 	createWebSocket: 	function () {
@@ -271,7 +255,7 @@ WebSocketConnect.prototype = {
 						    }
 						},
 	reconnect:  function () {
-					var turnOff = true;
+					turnOff = true;
 					var _target = this;
 				    if (_target.lockReconnect) return;
 				    _target.lockReconnect = true;
@@ -304,8 +288,8 @@ WebSocketConnect.prototype = {
 				        self.request(self.HeartSend);
 				        self.serverTimeoutObj = setTimeout(function () {//如果超过一定时间还没重置，说明后端主动断开了
 				            self.ws.close();//如果onclose会执行reconnect，我们执行ws.close()就行了.如果直接执行reconnect 会触发onclose导致重连两次
-				        }, this.timeout)
-				    }, this.timeout)
+				        }, self.timeout)
+				    }, self.timeout)
 				}
 };
 // websocket请求
@@ -363,21 +347,25 @@ var initSocketEvent = function(socket, ws, klineType){
 				                    setfillZBCJ(data);
 				                    break;
 				            	case "Q619":       // 订阅快照
+				            		// 页面信息接口
 				            		if(!klineType){
+				            			StockSocket.FieldInfo.PrePrice = data[0].PreClose;
 				            			setFieldInfo(data[data.length-1]);
 				            			if(turnOff){
 							                //请求盘口
 										    StockSocket.request(socket.option.QPK);
 										    //请求逐笔成交
 										    StockSocket.request(socket.option.QZBCJ);
-										    turnOff==false;
+										    turnOff = false;
 									    }
 				            		}
+				            		// K线接口
 							    	if(klineType&&klineType!="mline"){
 										KCharts(socket, dataList);
 									}else{
 										return;
 									}
+									break;
 				                case "Q213":        // 订阅分钟线应答
 					                KCharts(socket, dataList);
 				                    break;
@@ -541,8 +529,7 @@ function reqStockInfo(options){
 function setFieldInfo(data){
     var high,low,open,zf,price,zd,zdf,dealVal,dealVol;
     if(data){
-        StockSocket.FieldInfo.PrePrice = data.PreClose;
-
+    	$("#withoutStockData").hide().siblings().show();
         high = data.High;
         low = data.Low;
         open = data.Open;
@@ -654,7 +641,7 @@ function requireCom(reqComOpt,code){
             url:  reqUrl+reqComObj+"&P_NODE_CODE="+code,
             type: 'GET',
             dataType: 'json',
-            async:false,
+            async:true,
             cache:false,
             error: function(data){
                 console.log("请求公司信息出错");
@@ -673,8 +660,6 @@ function requireCom(reqComOpt,code){
                             break;
                         default:;
                     }
-                }else{
-                    $(".bottom-bar").html("<div class='box feild-null' style='height: 560px;font-size: 20px;margin-bottom:20px'>指数页面该公司信息为空~~~~~^_^</div>");
                 } 
             }
         });
@@ -720,12 +705,14 @@ function getCompanyInfo(responseInfo){
             // 上市日期
             $("#com_ss").text((responseInfo.LST_DT).split(" ")[0]);
 
+            $("#withoutComData").hide().siblings().show();
         }
 
     }
 }
 // 获取十大流通股数据
 function getSDLTG(responseInfo){
+	$("#withoutStcData").hide().siblings().show();
     // 获取最新的报告期
     var endDate = getEndDate(responseInfo);
     // 找到最新报告期的十大流通股东
@@ -778,12 +765,12 @@ function setSDLTGInfo(list){
 }
 // 五档盘口拼接li
 function setfillPK(data){
-
+	$("#withoutPKCJData").hide().siblings().show();
     var bids = data.Bids,       // 买
         offer = data.Offer,     // 卖
         titalB = setUnit(data.TotalBidVolume/100),      // 买盘(外盘)总量
         titalO = setUnit(data.TotalOfferVolume/100),    // 卖盘(内盘)
-        minus = setUnit(data.TotalBidVolume-data.TotalOfferVolume),         // 委差      
+        minus = setUnit((data.TotalBidVolume-data.TotalOfferVolume)/100),         // 委差      
         percent = (data.TotalBidVolume-data.TotalOfferVolume)/(data.TotalBidVolume + data.TotalOfferVolume)*100,  // 委比
         txtOffer = "",
         txtBids = "",
@@ -851,7 +838,7 @@ function setfillZBCJ(data){
 // K线图方法
 function KCharts(socket, dataList, isHistory){
     if(dataList.length>0){
-        $("#withoutData").hide()
+        $("#withoutData").hide().siblings().show();
 
         // 解析数据
         var dataJsons = splitData(dataList, isHistory); 
@@ -873,7 +860,7 @@ function KCharts(socket, dataList, isHistory){
 
             chartResize(); 
         });
-        KLineSocket.HistoryData.KChart.on('showTip', function (params) {
+        KLineSocket.KChart.on('showTip', function (params) {
             KLineSocket.KLineSet.mouseHoverPoint = params.dataIndex;
             var length = KLineSocket.HistoryData.hCategoryList.length;
             setToolInfo(length, 'showTip');
@@ -895,9 +882,7 @@ function KCharts(socket, dataList, isHistory){
             initMarketTool();// 显示信息
         });
 
-    }else{
-         $("#kline").html("<div style='font-size:18px;margin-top: 40px;'>亲，暂时没有数据哦~~~~ ^_^</div>");
-    };
+    }
 }
 
 // 解析获取到的数据
@@ -1051,7 +1036,7 @@ function chartPaint(isHistory){
     var yAxisName = null;
     if(isHistory){
         // 绘制K线图
-        KLineSocket.HistoryData.KChart.setOption(option = {
+        KLineSocket.KChart.setOption(option = {
             animation: false,
             tooltip: {
                 trigger: 'axis',
@@ -1352,7 +1337,7 @@ function chartPaint(isHistory){
         });
     }else{
         // 初始化并显示数据栏和数据信息框的信息
-        KLineSocket.HistoryData.KChart.setOption({
+        KLineSocket.KChart.setOption({
             xAxis:[
                 {
                     data: KLineSocket.HistoryData.hCategoryList
@@ -1395,7 +1380,7 @@ function chartResize() {
     k_width = width;
     k_height = width*h_w;
 
-    KLineSocket.HistoryData.KChart.resize({
+    KLineSocket.KChart.resize({
         width: k_width,
         height: k_height
     })

@@ -232,3 +232,127 @@ h2{
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
+.no-data{
+	font-size: 18px;
+	padding-top: 40px;
+}
+.kline{
+	display: none;
+}
+.no-data-k~h2,
+.no-data-k~div,
+.no-data-k~ul{
+	display: none;
+}
+
+.red{
+    color: #e22f2a
+}
+.green{
+    color: #3bc25b;
+}
+ul{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.pull-right{
+    float: right;
+}
+/*图表charts的tab切换*/
+.charts-tab{
+    border-bottom: 1px solid #e5e5e5;
+    margin-bottom: 0;
+    margin-left: 0;
+    text-align: center;
+}
+.charts > ul li{
+    position: relative;
+    line-height: 41px;
+    padding: 0 23px;
+    cursor: pointer;
+}
+.charts > ul li:after{
+    content: '';
+    display: inline-block;
+    width: 100%;
+    height: 5px;
+    background-color: transparent;
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    transition: all .3s ease;
+}
+.charts > ul li:hover:after,
+.charts .active:after {
+    background-color: #2b99ff;
+}
+/*分钟K线图绘制*/
+.kline-info{
+    margin-bottom: 0;
+    text-align: center;
+}
+.kline-info li{
+    display: inline-block;
+    margin: 0 10px;
+    line-height: 32px;
+    overflow: hidden;
+    font-size: 12px;
+}
+.kline-info li:nth-child(4){
+    margin-left: 10px
+}
+.kline-charts-container{
+    position: relative;
+}
+.kline-charts{
+    width: 830px;
+    height: 538px;
+}
+.kline-tooltip{
+    position: absolute;
+    left: 72px;
+    top: 5%;
+    width: 180px;
+    height: 310px;
+    padding: 4px 10px;
+    box-sizing: border-box;
+    background-color: #fff;
+    border: solid 1px #b4b4b4;
+    display: none;
+}
+.kline-tooltip li{
+    line-height: 27px;
+    overflow: hidden;
+    font-size: 14px;
+    display: inline-block;
+    width: 100%;
+    text-align: left;
+}
+
+.text-justify span{
+    float: left;
+    display: inline-block;
+    margin-right: 13px;
+}
+.text-justify span:last-child{
+    margin-right: 0;
+    float: right;
+}
+.toolbtn input,.toolbtn label{
+    cursor: pointer;
+    float: left;
+}
+.toolbtn label{
+    margin-right: 10px;
+    font-weight: normal;
+}
+.kline-unit{
+    position: absolute;
+    bottom: 19.2%;
+    left: 0;
+    width: 50px;
+    text-align: right;
+    transform: scale(0.88);
+    color: #999
+}
