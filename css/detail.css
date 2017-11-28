@@ -92,7 +92,7 @@ h2{
 .echarts{
 	float: left;
 	width: 910px;
-	height: 675px;
+	/* height: 675px; */
 }
 .cb-right{
 	float: right;

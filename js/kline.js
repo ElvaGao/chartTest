@@ -42,18 +42,18 @@ var turnOff = true;
 							});
 						}
 						$("#withoutData").show().siblings().hide();
-						KLineSocket.request(KLrequireObj.options.KQXQAll);
-						KLineSocket.request(KLrequireObj.options.KQXKZQAll);
+						KLineSocket.getKQXQAll();
+						KLineSocket.getKQXKZQAll();
 						break;
 					case "minute":
-						KLineSocket.request(KLrequireObj.options.KQXKZQAll);
+						KLineSocket.getKQXKZQAll();
 						// 发起新请求
-						KLineSocket.request(KLrequireObj.options.HistoryKQAll);
+						KLineSocket.getHistoryKQAll();
 						break;
 					case "day":
-						KLineSocket.request(KLrequireObj.options.KQXQAll);
+						KLineSocket.getKQXQAll();
 						// 发起新请求
-						KLineSocket.request(KLrequireObj.options.HistoryKQAll);
+						KLineSocket.getHistoryKQAll();
 						break;
 					default:;
 				};
@@ -71,16 +71,15 @@ var turnOff = true;
 		StockSocket.FieldInfo = StockReqObj.FieldInfo;
 		// 建立websocket连接，命名为wsStock
 		var wsStock = StockSocket.createWebSocket();
-
+		
 
 		// 存储当前个股/指数信息
 		reqStockInfo(StockSocket.option);
+		// 发起websocket请求
+		initSocketEvent(StockSocket, wsStock);
 		// 个股需要查询企业信息，公司信息
 	    var reqComOpt = ["23000171","23000138","23000164","23000188"];
 	    requireCom(reqComOpt, StockSocket.FieldInfo.Code);
-
-		// 发起websocket请求
-		initSocketEvent(StockSocket, wsStock);
 
 	};
 })(jQuery);
@@ -227,6 +226,39 @@ var KLineRequire = function(option, klineType){
 		start: 0
 	};
 };
+var getReq = {
+	// 查询历史数据
+	getHistoryKQAll: 	function(){
+							this.request(this.option.HistoryKQAll);
+						},
+	// 订阅分钟K线
+	getKQAll: 			function(){
+							this.request(this.option.KQAll);
+						},
+	// 取消订阅分钟K线
+	getKQXQAll: 		function(){
+							this.request(this.option.KQXQAll);
+						},
+	// 订阅快照
+	getKKZQAll: 		function(){
+							this.request(this.option.KKZQAll);
+						},
+	// 取消订阅快照
+	getKQXKZQAll: 		function(){
+							this.request(this.option.KQXKZQAll);
+						},
+	// 盘口
+	getQPK: 			function(){
+							this.request(this.option.QPK);
+						},
+	// 逐笔成交
+	getQZBCJ: 			function(){
+							this.request(this.option.QZBCJ);
+						},
+	getHeartSend: 		function(){
+							this.request(this.HeartSend);
+						},
+};
 // websocket连接
 var WebSocketConnect = function(options){
 	this.wsUrl = options.wsUrl?options.wsUrl:"ws://172.17.20.203:7681";
@@ -285,13 +317,14 @@ WebSocketConnect.prototype = {
 				    this.timeoutObj = setTimeout(function () {
 				        //这里发送一个心跳，后端收到后，返回一个心跳消息，
 				        // onmessage拿到返回的心跳就说明连接正常
-				        self.request(self.HeartSend);
+				        self.getHeartSend();
 				        self.serverTimeoutObj = setTimeout(function () {//如果超过一定时间还没重置，说明后端主动断开了
 				            self.ws.close();//如果onclose会执行reconnect，我们执行ws.close()就行了.如果直接执行reconnect 会触发onclose导致重连两次
 				        }, self.timeout)
 				    }, self.timeout)
 				}
 };
+WebSocketConnect.prototype.__proto__ = getReq;
 // websocket请求
 var initSocketEvent = function(socket, ws, klineType){
 
@@ -314,13 +347,13 @@ var initSocketEvent = function(socket, ws, klineType){
 				     */
 				    // klineType-区分查询历史数据和指数/个股信息
 				    if(klineType){
-				    	socket.request(socket.option.HistoryKQAll);
+				    	socket.getHistoryKQAll();
 				    }else{
 				    	// 指数不存在盘口数据和成交记录
 			            if(socket.option.ExchangeID=="101"){
 			                $(".cb-right").html("<div style='font-size:18px;'>指数查询无盘口信息和成交信息哟~~~~^_^</div>");
 			            }
-					    StockSocket.request(socket.option.KKZQAll);
+					    StockSocket.getKKZQAll();
 				    }
 				},
 	ws.onmessage = function (evt) {
@@ -353,9 +386,9 @@ var initSocketEvent = function(socket, ws, klineType){
 				            			setFieldInfo(data[data.length-1]);
 				            			if(turnOff){
 							                //请求盘口
-										    StockSocket.request(socket.option.QPK);
+										    StockSocket.getQPK();
 										    //请求逐笔成交
-										    StockSocket.request(socket.option.QZBCJ);
+										    StockSocket.getQZBCJ();
 										    turnOff = false;
 									    }
 				            		}
@@ -370,11 +403,11 @@ var initSocketEvent = function(socket, ws, klineType){
 					                KCharts(socket, dataList);
 				                    break;
 				                case "R213":        // 分钟K线历史数据查询
-				                 	socket.request(socket.option.KQAll);	 	// 订阅当前日期K线=分钟K线
+				                 	socket.getKQAll();	 	// 订阅当前日期K线=分钟K线
 				                 	KCharts(socket, dataList, "history");
 				                 	break;
 				                case "R211":        // 日K线历史数据查询
-				                 	socket.request(socket.option.KKZQAll);	 // 订阅当前日期K线=快照
+				                 	socket.getKKZQAll();	 // 订阅当前日期K线=快照
 				                 	KCharts(socket, dataList, "history");
 				                    break;    
 				                case "R646":  //心跳包

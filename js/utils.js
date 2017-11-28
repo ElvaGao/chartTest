@@ -311,12 +311,10 @@
                     break;
                 case "Q619"://订阅快照
                     // $(document).trigger("SBR_HQ",data);
-
                     if(!yc){
                         yc = data[0].PreClose; //获取昨收值
                         return;
                     }
-
                     // 接口变更  日期为前一天
                     // todayDate = formatDate(data[0].Date + sub);
                 break;
@@ -367,7 +365,6 @@
             var limitDown = yc - yc*0.1;
             if(type == "add"){
                 if(myChart != undefined){
-                    // yc = parseFloat(yc);
                     var a_lastData = data;
                     var last_dataTime = formatTime(a_lastData[0].Time);//moment(parseFloat(a_lastData[0].Time + "000")).format("HH:mm"); //行情最新时间
                     var last_date = dateToStamp(formatDate(a_lastData[0].Date) +" " + last_dataTime);
@@ -1087,16 +1084,23 @@
                     myChart.setOption(option);
 
                     count = myChart.getOption().series[0].data.length;
+                    if(!count){
+                        return;
+                    }
                     
-                    var marktToolData = [$this.history_data[count - 1], $this.z_history_data[count - 1], $this.a_history_data[count - 1], moment(parseFloat($this.c_data[count - 1])).format("YYYY-MM-DD HH:mm")];
+                    var marktToolData = [
+                        $this.history_data[count - 1], 
+                        $this.z_history_data[count - 1], 
+                        $this.a_history_data[count - 1], 
+                        moment(parseFloat($this.c_data[count - 1])).format("YYYY-MM-DD HH:mm")
+                    ];
                     set_marketTool(marktToolData,$this); //设置动态行情条
 
                     myChart.on('showTip', function (params) {
-                        // console.log(params);
                         mouseHoverPoint = params.dataIndex;
+                        $("#toolContent .dataTime").text(formatDate($this.c_data[mouseHoverPoint],"1"));
                         if ($this.history_data[mouseHoverPoint]) {
                             $("#toolContent_M").children().first().text(moment(parseFloat($this.c_data[mouseHoverPoint])).format("YYYY-MM-DD HH:mm"));
-                            $("#toolContent .dataTime").text(formatDate($this.c_data[mouseHoverPoint],"1"));
                             if($this.history_data[mouseHoverPoint] >= yc){
                                 $("#toolContent_M").children().eq(1).text($this.history_data[mouseHoverPoint]).css("color",colorList[0]);
                                 $("#toolContent_M").children().eq(3).text($this.z_history_data[mouseHoverPoint]).css("color",colorList[0]);
@@ -1113,8 +1117,7 @@
                             $("#toolContent_M").children().eq(2).text($this.a_history_data[mouseHoverPoint]);
                             $(".vol i").text($this.a_history_data[mouseHoverPoint]);
                             $("#quantityRatio").text($this.a_history_data[mouseHoverPoint]);
-                            $(".volume").text($this.a_history_data[mouseHoverPoint])
-                            
+                            $(".volume").text($this.a_history_data[mouseHoverPoint]); 
                         } else {
                             $("#toolContent_M").children().first().text("-");
                             $("#toolContent_M").children().eq(1).text("-");
@@ -1122,6 +1125,11 @@
                             $("#toolContent_M").children().eq(3).text("-");
                             $(".vol i").text("-");
                             $("#quantityRatio").text("-");
+                            // 浮窗数据
+                            $(".volume").text("-"); 
+                            $("#quantityRatio").text("-");
+                            $(".dataPrice").text("-");
+                            $(".change").text("-");
                         }
                     });
 
