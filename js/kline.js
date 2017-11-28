@@ -287,7 +287,6 @@ WebSocketConnect.prototype = {
 						    }
 						},
 	reconnect:  function () {
-					turnOff = true;
 					var _target = this;
 				    if (_target.lockReconnect) return;
 				    _target.lockReconnect = true;
