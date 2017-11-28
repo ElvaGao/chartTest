@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>echarts</title>
+	<script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+	<script type="text/javascript" src="js/echarts.js"></script>
+    <!-- <link rel="stylesheet" type="text/css" href="style/bootstrap.css"> -->
+	<link rel="stylesheet" type="text/css" href="style/kline.css">
+</head>
+<body>
+    <!-- 页面开始 -->
+    <div class="container">
+         
+        <!-- chart图表开始 -->
+    	<div class="charts">
+            <ul class="list-inline charts-tab">
+                <li id="fenshi">分时</li>
+                <li id="day" class="active">日K</li>
+                <li id="minute">分钟K</li>
+            </ul>
+            <!--分钟K线图开始-->
+            <div class="kline" id="kline">
+                <!-- 上部信息显示开始 -->
+                <ul class="kline-info">
+                    <li><span class="date"></span></li>
+                    <li><span class="day"></span></li>
+                    <li><span class="time"></span></li>
+                    <li>价:<span class="price red"></span></li>
+                    <li>均:<span class="average red"></span></li>
+                    <li>量:<span class="volume"></span></li>
+                    <li>幅:<span class="z-value red"></span></li>
+                </ul>
+                <!-- 上部信息显示结束 -->
+                <!-- echarts图开始 -->
+                <div class="kline-charts-container">
+                    <div id="kline_charts" class="kline-charts"></div>
+                    <div id="kline_tooltip" class="kline-tooltip">
+                        <ul class="list-unstyled">
+                            <li><span class="name"></span></li>
+                            <li class="text-justify"><span class="date"></span><span class="day"></span><span class="time"></span></li>
+                            <li>开盘<span class="open pull-right red"></span></li>
+                            <li>最高<span class="highest pull-right red"></span></li>
+                            <li>最低<span class="lowest pull-right red"></span></li>
+                            <li>收盘<span class="price pull-right red"></span></li>
+                            <li>涨跌<span class="z-value pull-right red"></span></li>
+                            <li>成交<span class="volume pull-right"></span></li>
+                            <li>换手<span class="??? pull-right"></span></li>
+                            <li>振幅<span class="amplitude pull-right"></span></li>
+                        </ul>
+                    </div>
+                    <div class="kline-unit"></div>
+
+                </div>
+                <!-- echarts图结束 -->
+            </div>
+            <!--分钟K线图结束-->
+        </div>
+        <div class="toolbtn" id="toolbtn">
+            <input type="radio" name="fq" id="fq0" checked="checked"><label for="fq0">不复权</label>
+            <input type="radio" name="fq" id="fq1"><label for="fq1">前复权</label>
+            <input type="radio" name="fq" id="fq2"><label for="fq2">后复权</label>
+        </div>
+        <!-- chart图表结束 -->
+    </div>
+    <!-- 页面结束 -->
+    <script type="text/javascript" src="js/kline7.js"></script>
+    <script>
+        // 初始化图形
+        $.queryKLine({
+            "InstrumentID": "1",
+            "id": "day"
+        });
+    </script>
+</body>
+</html>

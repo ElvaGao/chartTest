@@ -1,0 +1,67 @@
+This XML file does not appear to have any style information associated with it. The document tree is shown below.
+<INSTRUMENTS>
+<EXCHANGE id="101" code="THS" name="同花顺指数 ">
+<PRODUCT code="INDEX" name="指数" type="1" ts="09:30-11:30;13:00-15:00" PriceDecimal="2">
+<SECURITY id="1" code="1A0001" name="上证指数"/>
+<SECURITY id="2" code="399001" name="深证成指"/>
+<SECURITY id="3" code="399005" name="中小板指"/>
+<SECURITY id="4" code="399006" name="创业扳指"/>
+<SECURITY id="5" code="399300" name="沪深300"/>
+</PRODUCT>
+<PRODUCT code="FOREIGN_INDEX" name="国际指数" type="4" PriceDecimal="3">
+<SECURITY id="1000" code="AEX" name="荷兰aex指数" ts="15:00-23:30"/>
+<SECURITY id="1001" code="AORD" name="ATX澳大利亚普通股指数" ts="08:00-14:00"/>
+<SECURITY id="1002" code="ATX" name="奥地利ATX指数" ts="15:20-23:35"/>
+<SECURITY id="1003" code="BFX" name="比利时bfx指数" ts="15:10-23:35"/>
+<SECURITY id="1004" code="XAX" name="美国证交所" ts="21:30-04:00"/>
+<SECURITY id="1005" code="DJI" name="道琼斯工业平均指数" ts="21:30-04:00"/>
+<SECURITY id="1006" code="FCHI" name="法国巴黎cac40指数" ts="15:00-23:30"/>
+<SECURITY id="1007" code="FTSE" name="伦敦金融时报100指数" ts="15:00-23:30"/>
+<SECURITY id="1008" code="GDAXI" name="法国法兰克福dax指数" ts="15:00-23:30"/>
+<SECURITY id="1009" code="GSPTSE" name="多伦多股票交易所综合" ts="21:30-04:00"/>
+<SECURITY id="1010" code="HSZS" name="香港恒生指数" ts="09:30-12:00;13:00-16:00"/>
+<SECURITY id="1011" code="IBOV" name="圣保罗ibovespa指数" ts="22:00-04:15"/>
+<SECURITY id="1012" code="IXIC" name="纳斯达克综合指数" ts="21:30-04:00"/>
+<SECURITY id="1013" code="JKSE" name="印尼雅加达综合指数" ts="10:00-13:00;14:25-17:00"/>
+<SECURITY id="1014" code="N225" name="东京日经225指数" ts="08:00-10:30;11:30-14:00"/>
+<SECURITY id="1015" code="KLSE" name="马来西亚吉隆坡指数" ts="09:00-12:15;14:15-17:00"/>
+<SECURITY id="1016" code="NYA" name="纽约证交所综合指数" ts="21:30-04:00"/>
+<SECURITY id="1017" code="KS11" name="韩国综合指数" ts="08:00-14:00"/>
+<SECURITY id="1018" code="NZ50" name="新西兰股市nz50指数" ts="06:00-12:40"/>
+<SECURITY id="1019" code="MERV" name="阿根廷merv指数" ts="22:00-04:00"/>
+<SECURITY id="1020" code="OMXSPI" name="瑞典omxspi指数" ts="15:00-23:30"/>
+<SECURITY id="1021" code="MIB" name="意大利mib指数" ts="15:00-23:30"/>
+<SECURITY id="1022" code="OSEAX" name="挪威oseax指数" ts="15:00-22:30"/>
+<SECURITY id="1023" code="MXX" name="墨西哥mxx指数" ts="21:35-04:00"/>
+<SECURITY id="1024" code="SSMI" name="瑞士苏黎士市场指数" ts="15:00-23:30"/>
+<SECURITY id="1025" code="PSI" name="菲律宾马尼拉综合指数" ts="09:30-12:00;13:30-15:30"/>
+<SECURITY id="1026" code="STI" name="新加坡海峡指数" ts="09:00-17:00"/>
+<SECURITY id="1027" code="RTS" name="俄罗斯rts指数" ts="15:00-21:45"/>
+<SECURITY id="1028" code="TA100" name="以色列ta-100指数" ts="15:45-23:00"/>
+<SECURITY id="1029" code="SENSEX" name="印度孟买sensex指数" ts="11:45-17:45"/>
+<SECURITY id="1030" code="TWII" name="台湾加权指数" ts="09:00-13:30"/>
+<SECURITY id="1031" code="SET" name="曼谷泰证指数" ts="11:00-13:30;15:30-17:30"/>
+<SECURITY id="1032" code="IBEX" name="西班牙ibex35" ts="15:00-23:35"/>
+<SECURITY id="1033" code="SPX" name="标准普尔500指数" ts="21:30-04:00"/>
+</PRODUCT>
+<PRODUCT code="FOREX" name="外汇" type="128" ts="08:00-07:59" PriceDecimal="4">
+<SECURITY id="1500" code="AUDUSD" name="澳元/美元"/>
+<SECURITY id="1501" code="EURUSD" name="欧元/美元"/>
+<SECURITY id="1502" code="GBPUSD" name="英镑/美元"/>
+<SECURITY id="1503" code="USDCAD" name="美元/加元"/>
+<SECURITY id="1504" code="USDCHF" name="美元/瑞郎"/>
+<SECURITY id="1505" code="USDCNH" name="美元/人民币(离)"/>
+<SECURITY id="1506" code="USDCNY" name="美元/人民币"/>
+<SECURITY id="1507" code="USDHKD" name="美元/港币"/>
+<SECURITY id="1508" code="USDIND" name="美元指数"/>
+<SECURITY id="1509" code="USDJPY" name="美元/日元"/>
+<SECURITY id="1510" code="USDSGD" name="美元/新加坡元"/>
+</PRODUCT>
+<PRODUCT code="NMETAL" name="贵金属" type="224" ts="08:00-07:59" PriceDecimal="3">
+<SECURITY id="1700" code="AGUSDO" name="伦敦银"/>
+<SECURITY id="1701" code="AUUSDO" name="伦敦金"/>
+<SECURITY id="1702" code="PDUSDO" name="伦敦钯金"/>
+<SECURITY id="1703" code="PTUSDO" name="伦敦铂金"/>
+</PRODUCT>
+</EXCHANGE>
+</INSTRUMENTS>
