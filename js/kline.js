@@ -84,8 +84,8 @@ var KLineSocket,StockSocket;
 		// 发起websocket请求-reqStockInfo中去写
 		// initSocketEvent(StockSocket); 
 		// 个股需要查询企业信息，公司信息
-	    var reqComOpt = ["23000171","23000138","23000164","23000188"];
-	    requireCom(reqComOpt, StockSocket.FieldInfo.Code);
+	    // var reqComOpt = ["23000171","23000138","23000164","23000188"];
+	    // requireCom(reqComOpt, StockSocket.FieldInfo.Code);
 
 	};
 })(jQuery);
