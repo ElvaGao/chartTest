@@ -34,7 +34,8 @@ var turnOff = true;
 				// 取消之前的订阅
 				switch(klineType){
 					case "mline":
-						if(KLineSocket.KChart.getOption().xAxis[0].data){
+						var KCharts =  KLineSocket.KChart.getOption();
+						if(KCharts){
 							KLineSocket.KChart.setOption({
 								xAxis: [{data: null},{data: null}],
 								yAxis: [{data: null},{data: null}],
@@ -847,9 +848,20 @@ function setfillZBCJ(data){
 
     var text = $(".cb-cj ul")[0]?$(".cb-cj ul").html():"";
 
+    var time,price,volumn,dir;
+    time = $(".cb-cj ul li:last span:eq(0)").text();
+    price = $(".cb-cj ul li:last span:eq(1)").text();
+    volumn = parseInt($(".cb-cj ul li:last span:eq(2)").text());
+    dir = $(".cb-cj ul li:last span:eq(3)").text();
+
     $.each(data,function(i,obj){
-        var abside = (obj.ABSide==83)?("<span class='green'>卖出</span>"):((obj.ABSide==66)?("<span class='red'>买入</span>"):"");
-        text = text + "<li><span>"+formatTimeSec(obj.MarketTime)+"</span><span>"+floatFixedTwo(obj.RecorePrice)+"</span><span>"+Math.round(obj.Volume/100)+"</span>"+abside+"</li>";
+    	
+        var abside = (obj.ABSide==83)?("<span class='green'>卖出</span>"):((obj.ABSide==66)?("<span class='red'>买入</span>"):(obj.ABSide==0)?("<span>平盘</span>"):"");
+        if(time==formatTimeSec(obj.MarketTime)&&price==floatFixedTwo(obj.RecorePrice)&&volumn==Math.round(obj.Volume/100)&&dir==abside){
+        	text = "";
+        }else{
+        	text = text + "<li><span>"+formatTimeSec(obj.MarketTime)+"</span><span>"+floatFixedTwo(obj.RecorePrice)+"</span><span>"+Math.round(obj.Volume/100)+"</span>"+abside+"</li>";
+    	}
     });
 
     var innerHtmlStr = "<h2>逐笔成交</h2>\
@@ -916,7 +928,6 @@ function KCharts(socket, dataList, isHistory){
 
     }
 }
-
 // 解析获取到的数据
 function splitData(data, isHistory) {
     let k_date = [],                        // 日期
