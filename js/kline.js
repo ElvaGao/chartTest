@@ -85,8 +85,6 @@ var turnOff = true;
 	};
 })(jQuery);
 
-
-
 // 指数/个股信息参数
 var ReqStockInfoOpt = function(option){
 	var ExchangeID = option.ExchangeID?option.ExchangeID:"101",
@@ -227,39 +225,7 @@ var KLineRequire = function(option, klineType){
 		start: 0
 	};
 };
-var getReq = {
-	// 查询历史数据
-	getHistoryKQAll: 	function(){
-							this.request(this.option.HistoryKQAll);
-						},
-	// 订阅分钟K线
-	getKQAll: 			function(){
-							this.request(this.option.KQAll);
-						},
-	// 取消订阅分钟K线
-	getKQXQAll: 		function(){
-							this.request(this.option.KQXQAll);
-						},
-	// 订阅快照
-	getKKZQAll: 		function(){
-							this.request(this.option.KKZQAll);
-						},
-	// 取消订阅快照
-	getKQXKZQAll: 		function(){
-							this.request(this.option.KQXKZQAll);
-						},
-	// 盘口
-	getQPK: 			function(){
-							this.request(this.option.QPK);
-						},
-	// 逐笔成交
-	getQZBCJ: 			function(){
-							this.request(this.option.QZBCJ);
-						},
-	getHeartSend: 		function(){
-							this.request(this.HeartSend);
-						},
-};
+var getReq = 
 // websocket连接
 var WebSocketConnect = function(options){
 	this.wsUrl = options.wsUrl?options.wsUrl:"ws://172.17.20.203:7681";
@@ -324,7 +290,39 @@ WebSocketConnect.prototype = {
 				    }, self.timeout)
 				}
 };
-WebSocketConnect.prototype.__proto__ = getReq;
+WebSocketConnect.prototype.__proto__ = {
+	// 查询历史数据
+	getHistoryKQAll: 	function(){
+							this.request(this.option.HistoryKQAll);
+						},
+	// 订阅分钟K线
+	getKQAll: 			function(){
+							this.request(this.option.KQAll);
+						},
+	// 取消订阅分钟K线
+	getKQXQAll: 		function(){
+							this.request(this.option.KQXQAll);
+						},
+	// 订阅快照
+	getKKZQAll: 		function(){
+							this.request(this.option.KKZQAll);
+						},
+	// 取消订阅快照
+	getKQXKZQAll: 		function(){
+							this.request(this.option.KQXKZQAll);
+						},
+	// 盘口
+	getQPK: 			function(){
+							this.request(this.option.QPK);
+						},
+	// 逐笔成交
+	getQZBCJ: 			function(){
+							this.request(this.option.QZBCJ);
+						},
+	getHeartSend: 		function(){
+							this.request(this.HeartSend);
+						},
+};
 // websocket请求
 var initSocketEvent = function(socket, ws, klineType){
 
