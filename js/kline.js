@@ -1,4 +1,5 @@
 var KLineSocket,StockSocket;
+var barMaxValue;
 ;(function($){
 	// websocket通道-查询K线
 	$.queryKLine = function(option) {
@@ -43,9 +44,9 @@ var KLineSocket,StockSocket;
 						var KCharts =  KLineSocket.KChart.getOption();
 						if(KCharts){
 							KLineSocket.KChart.setOption({
-								xAxis: [{data: null},{data: null}],
-								yAxis: [{data: null},{data: null}],
-								series: [{data: null},{data: null}]
+								xAxis: [{data: null},{data: null},{data: null}],
+								yAxis: [{data: null},{data: null},{data: null}],
+								series: [{data: null},{data: null},{data: null}]
 							});
 						}
 						$("#withoutData").show().siblings().hide();
@@ -473,6 +474,11 @@ function formatTime(time) {
     time = H + ":" + m;
     return time;
 };
+// 取0位小数点
+function floatFixedZero(data) {
+
+    return parseFloat(data).toFixed(0);
+};
 // 取两位小数点
 function floatFixedTwo(data) {
 
@@ -500,20 +506,15 @@ function setUnit(data,type){
         if(type){
             var obj={};
             var unit,value;
-            data/100000000000>1?((unit="千亿")&&(value=fh+data/100000000000)):
-                (data/10000000000>1?((unit="百亿")&&(value=fh+data/10000000000)):
-                    (data/1000000000>1?((unit="十亿")&&(value=fh+data/1000000000)):
-                        (data/100000000>1?((unit="亿")&&(value=fh+data/100000000)):
-                            (data/10000000>1?((unit="千万")&&(value=fh+data/10000000)):
-                                (data/1000000>1?((unit="百万")&&(value=fh+data/1000000)):
-                                    (data/100000>1?((unit="十万")&&(value=fh+data/100000)):
-                                        (data/10000>1?((unit="万")&&(value=fh+data/10000)):
-                                            "量")))))));
+               	(data/100000000>=1?((unit="亿")&&(value=data/100000000)):
+                    (data/10000>=1?((unit="万")&&(value=data/10000)):
+                    	((unit="量")&&(value=data))
+                        ));
             obj.unit = unit;
-            obj.value = floatFixedTwo(value);
+            obj.value = fh+floatFixedTwo(value);
             return obj;
         }else{
-            return data/100000000000>1?fh+floatFixedTwo(data/100000000000)+"千亿":(data/100000000>1?fh+floatFixedTwo(data/100000000)+"亿":(data/10000>1?fh+floatFixedTwo(data/10000)+"万":fh+data));
+            return (data/100000000>1?fh+floatFixedTwo(data/100000000)+"亿":(data/10000>1?fh+floatFixedTwo(data/10000)+"万":fh+data));
         }
     }else{
         return "0";
@@ -557,7 +558,7 @@ function reqStockInfo(options){
         },
         success: function(xml){
             var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
-            // 1109新增: 获取交易名字和小数位数
+            //  获取交易名字和小数位数
             setStockInfo(allZSCode,options.InstrumentID);
             // 发起websocket请求-reqStockInfo中去写
 			initSocketEvent(StockSocket); 
@@ -572,16 +573,19 @@ function setFieldInfo(data){
     var high,low,open,zf,price,zd,zdf,dealVal,dealVol;
     if(data){
     	$("#withoutStockData").hide().siblings().show();
+    	StockSocket.FieldInfo.PrePrice = data.PreClose;
         high = data.High;
         low = data.Low;
         open = data.Open;
-        dealVal = setUnit(data.Value);
-        dealVol = setUnit(data.Volume);
+        dealVal = data.Value;
+
+        dealVol = data.Volume;
         // StockSocket.FieldInfo.fMarketRate = data.fMarketRate;
         // StockSocket.FieldInfo.fMarketValue = data.fMarketValue;
         // StockSocket.FieldInfo.fHSRate = data.fHSRate;
-        zf = high - low;
+        
         price = data.Last;
+        zf = floatFixedTwo((high - low)/StockSocket.FieldInfo.PrePrice*100);
         zd = price - StockSocket.FieldInfo.PrePrice;
         zdf = floatFixedTwo((zd/StockSocket.FieldInfo.PrePrice)*100);
 
@@ -601,7 +605,7 @@ function setFieldInfo(data){
                 case 2:
                     data = setUnit(floatFixedDecimal(dealVal));
                     compareData = false;
-                    unit = "元"
+                    unit = "元";
                     break;
                 case 3:
                     return;
@@ -611,22 +615,28 @@ function setFieldInfo(data){
                     data = floatFixedDecimal(low);
                     break;
                 case 6:
-                    data = floatFixedDecimal(compareData);
+                    data = floatFixedDecimal(StockSocket.FieldInfo.PrePrice);
                     compareData = false;
                     break;
                 case 7:
-                    data = dealVol;
+                	if(dealVol>=100){
+                		data = setUnit(dealVol/100);
+                		unit = "手";
+                	}else{
+                		data = dealVol;
+                		unit = "股";
+                	}
                     compareData = false;
                     break;
                 case 8:
                     return;
                 case 9:
-                    data = floatFixedDecimal(zf);
+                    data = zf+"%";
                     compareData = false;
                     break;
                 default:;
             }
-            setTextAndColor(spanObj, data, compareData);
+            setTextAndColor(spanObj, data, compareData, unit);
             compareData = StockSocket.FieldInfo.PrePrice;
         });
 
@@ -789,16 +799,16 @@ function getComList(data,endDate){
 function setSDLTGInfo(list){
     var txt =  $(".bb-info ul").html();
     $.each(list,function(i,obj){
-        var s_hld_shr = obj.HLD_SHR.replace(/,/g,"").trim()/10000;
+        var s_hld_shr = setUnit(obj.HLD_SHR.replace(/,/g,"").trim());
         if(obj.DIRECT==0){
             obj.DIRECT = "不变";
         }
         var className = obj.DIRECT=="减持"?"green":(obj.DIRECT=="增持"?"red":null);
-        var s_hld_shr_chg = parseInt(obj.HLD_SHR_CHG_LST)!=0?floatFixedTwo(obj.HLD_SHR_CHG_LST.replace(/,/g,"").trim()/10000):"";
+        var s_hld_shr_chg = parseInt(obj.HLD_SHR_CHG_LST)!=0?setUnit(obj.HLD_SHR_CHG_LST.replace(/,/g,"").trim()):"";
         txt += "<li>\
                     <span>"+obj.SH_NAME+"</span>\
                     <span>"+floatFixedTwo(obj.TTL_CPTL_RAT)+"%</span>\
-                    <span>"+floatFixedTwo(s_hld_shr)+"</span>\
+                    <span>"+s_hld_shr+"</span>\
                     <span class="+className+">"+obj.DIRECT+s_hld_shr_chg+"</span>\
                 </li>";
         
@@ -844,7 +854,7 @@ function setfillPK(data){
 function setPKHtml(obj, status, data){
     if(data){
         var txtData = "<span class="+((data.Price-StockSocket.FieldInfo.PrePrice)>0?"red":"green")+">"+floatFixedTwo(data.Price)+"</span>\
-                       <span>"+Math.round(data.Volume/100)+"</span>";
+                       <span>"+setUnit(Math.round(data.Volume/100))+"</span>";
     }else{
         var txtData = "<span>--</span><span>--</span>";
     }
@@ -964,14 +974,14 @@ function splitData(data, isHistory) {
     
     $.each(data,function(i,object){
         if(!lastClose){
-            lastClose = object.Open;                            // 上一根柱子的收盘价
+            lastClose = object.Open;                          // 上一根柱子的收盘价
         }
         let e_date = formatDateSplit(object.Date),                 // 当天日期
             e_day = week[(new Date(e_date)).getDay()],        // 计算星期
             e_time,                                           //时间
-            e_open = floatFixedDecimal(object.Open),             // 开
-            e_highest = floatFixedDecimal(object.High),          // 高
-            e_lowest = floatFixedDecimal(object.Low),            // 低
+            e_open = floatFixedDecimal(object.Open),          // 开
+            e_highest = floatFixedDecimal(object.High),       // 高
+            e_lowest = floatFixedDecimal(object.Low),         // 低
             e_price = (KLineSocket.option.lineType=="day"&&(!isHistory))?floatFixedDecimal(object.Last):floatFixedDecimal(object.Price),           // 收盘价
             e_value = [                                       // 开收低高-蜡烛图数据格式
                 e_open, 
@@ -985,16 +995,15 @@ function splitData(data, isHistory) {
                 floatFixedDecimal((e_lowest-lastClose)*100/lastClose),
                 floatFixedDecimal((e_highest-lastClose)*100/lastClose)
             ],
-
-            // e_volume = (e_price-e_open)>0?[i,object.Volume,-1]:[i,object.Volume,1],       // 成交量-数组，存储索引，值，颜色对应的值                                         // 成交量
-            e_zValues = lastClose?floatFixedDecimal(e_price-lastClose):0,                       // 涨幅-相对昨收      
-            e_zValuesPercent = floatFixedDecimal(e_zValues*100/lastClose),                    // 涨幅百分比
-            e_amplitude = floatFixedDecimal(e_highest - e_lowest),                          // 振幅
-            e_amplPercent = floatFixedDecimal(100*e_amplitude/lastClose);                     // 振幅百分比
+            e_volumnData = object.Volume,												// 成交量---单位：股
+            e_zValues = lastClose?floatFixedDecimal(e_price-lastClose):0,               // 涨幅-相对昨收      
+            e_zValuesPercent = floatFixedDecimal(e_zValues*100/lastClose),              // 涨幅百分比
+            e_amplitude = floatFixedDecimal(e_highest - e_lowest),                      // 振幅
+            e_amplPercent = floatFixedDecimal(100*e_amplitude/lastClose);               // 振幅百分比
             if(data.length>2){
-                e_volume = (e_price-e_open)>0?[i,object.Volume,-1]:[i,object.Volume,1];   // 成交量-数组，存储索引，值，颜色对应的值                         
+                e_volume = (e_price-e_open)>0?[i,e_volumnData,-1]:[i,e_volumnData,1];   // 成交量-数组，存储索引，值，颜色对应的值                         
             }else{
-                e_volume = (e_price-e_open)>0?[KLineSocket.HistoryData.hVolumesList.length,object.Volume,-1]:[KLineSocket.HistoryData.hVolumesList.length,object.Volume,1];
+                e_volume = (e_price-e_open)>0?[KLineSocket.HistoryData.hVolumesList.length,e_volumnData,-1]:[KLineSocket.HistoryData.hVolumesList.length,e_volumnData,1];
             }
         switch(KLineSocket.option.lineType){
             case "minute":
@@ -1104,11 +1113,12 @@ function chartPaint(isHistory){
             axisPointer: {
                 link: {xAxisIndex: 'all'},
                 label: {
-                    backgroundColor: '#777' 
+                    backgroundColor: '#555' 
                 },
                 type: 'line',
                 lineStyle:{
                     type: 'dotted',
+                    color: '#000'
                 },
                 show:true,
                 triggerTooltip:false
@@ -1119,26 +1129,36 @@ function chartPaint(isHistory){
                     height: '42.4%'
                 },
                 {
-                    top: '55.8%',
+                    top: '57.8%',
+                    height: '9.2%'
+                },
+                {
+                    top: '75.4%',
                     height: '9.2%'
                 }
             ],
             dataZoom: [
                 {
                     type: 'inside',
-                    xAxisIndex: [0, 1],
+                    xAxisIndex: [0, 1, 2],
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'inside',
+                    xAxisIndex: [0, 1, 2],
                     start: 0,
                     end: 100
                 },
                 {
                     show: true,
-                    xAxisIndex: [0, 1],
+                    xAxisIndex: [0, 1, 2],
                     type: 'slider',
-                    top: '85%',
+                    top: '91.5%',
                     start: 0,
                     end: 100,
                     handleIcon: 'path://M306.1,413c0,2.2-1.8,4-4,4h-59.8c-2.2,0-4-1.8-4-4V200.8c0-2.2,1.8-4,4-4h59.8c2.2,0,4,1.8,4,4V413z',
-                    handleSize:'110%',
+                    handleSize:'100%',
                     handleStyle:{
                         color:"#f2f2f2",
                         borderColor: "#b4b4b4"
@@ -1177,43 +1197,34 @@ function chartPaint(isHistory){
                     data: KLineSocket.HistoryData.hCategoryList,
                     scale: true,
                     boundaryGap: true,
-                    axisTick:{
-                        show:false,
-                        lineStyle: {
-                            color: "#ccc"
-                        }
-                    },
-                    axisLine: { 
-                        show: false,
-                        lineStyle: { 
-                            color: '#000' 
-                        } 
-                    },
+                    axisTick:{ show:false },
+                    axisLine: { show:false },
                     splitLine: {
                         show: true,
-                        interval: 15
+                        interval: 15,
+                        lineStyle: {
+                    		color: '#e5e5e5'
+                    	}
                     },
                     axisLabel: {
+                    	show: true,
+                    	color: '#999',
+                    	fontSize: 14,
                         formatter : function(value, index){
                             if(KLineSocket.option.lineType=="minute"){
                                     return value.split(" ")[2];
                                 }else{
                                     return value;
-                                    // return value.replace(/-/g,"/");
                                 }
                         }
                     },
                     axisPointer: {
                         show:true,
                         label: {
+                        	show:true,
                             formatter: function(params){
-                                if(KLineSocket.option.lineType=="minute" || KLineSocket.option.lineType=="day"){
-                                    return params.value.replace(/-/g,"/");
-                                }else{
-                                    return params.value
-                                }
-                            },
-                            show:true
+                                return params.value.replace(/-/g,"/");
+                            }
                         }
                     }
 
@@ -1223,95 +1234,130 @@ function chartPaint(isHistory){
                     gridIndex: 1,
                     data: KLineSocket.HistoryData.hCategoryList,
                     scale: true,
-                    axisTick: {
-                            show:true,
-                            interval: function (number, string) {
-                                if (number % 30 == 0) {
-                                    return true;
-                                } else {
-                                    return false;
-                                }
-                            },
-                            inside:true
-                        },
+                    axisTick: { show:false },
                     boundaryGap: true,
-                    axisLine: {
-                        onZero: false,
-                        lineStyle: {
-                            color: "#999"
-                        }
-                    },
-                    axisLabel: {
-                        formatter : function(value, index){
-                            return value.split(" ")[2];
-                        }
-                    },
+                    axisLine: { show: false },
+                    axisLabel: { show: false },
+                    splitLine: { show: false },
                     axisPointer: {
                         label: {
-                            formatter: function(params){
-                                return params.value.replace(/-/g,"/");
-                            }
+                        	show:false
                         }
                     }
                 },
+                {
+                    type: 'category',
+                    gridIndex: 2,
+                    data: KLineSocket.HistoryData.hCategoryList,
+                    scale: true,
+                    axisTick: { show:false },
+                    boundaryGap: true,
+                    axisLine: { show: false },
+                    axisLabel: { show: false },
+                    splitLine: { show: false },
+                    axisPointer: {
+                        label: {
+                        	show:false
+                        }
+                    }
+                }
             ],
             yAxis: [
                 {
                     scale: true,
-                    splitArea: {
-                        show: false
-                    },
-                    axisTick:{
-                        show:false
-                    },
-                    axisLine: { 
-                        show: false,
-                        lineStyle: { 
-                            color: '#000' 
-                        } 
+                    splitNumber: 3,
+                    splitArea: { show: false },
+                    axisTick:{ show:false },
+                    axisLine: { show: false },
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                    		color: '#e5e5e5'
+                    	}
                     },
                     axisLabel: {
+                    	show: true,
+                    	color: '#999',
+                    	fontSize: 14,
                         formatter: function (value, index) {
                             return (value).toFixed(StockSocket.FieldInfo.Decimal);
                         }
                     },
                 },
                 {
-                    name: yAxisName,
-                    nameLocation: 'start',
-                    nameTextStyle:{
-                        align: 'right',
-                        padding: [-12,30,0,0]
-                    },
-                    nameGap: 0,
+                	type:'value',
+                    // name:'成交',
+                    // nameLocation:'end',
+                    // nameTextStyle:{
+                    //     fontSize:14,
+                    // 	color: '#555',
+                    // 	padding: [0,45,15,0]
+                    // },
+                    // nameGap: 0,
                     scale: true,
                     gridIndex: 1,
                     min: 0,
-                    axisTick:{
-                        show:false
-                    },
-                    interval:100000000000,
+                    axisTick:{ show:false },
                     axisLabel: {
                         show: true,
-                        showMaxLabel : true,
-                        showMinLabel : false,
-                        onZero : true,
+                        color: '#999',
+                        fontSize: 14,
                         formatter: function (value, index) {
-                            var obj = setUnit(value,true);
-                            var f_value = obj.value;
-                            setyAsixName(obj.unit);
-                            return f_value;
+                            setyAsixName(value);
+                            return;
                         }
                     },
                     axisLine: { 
-                        show: true,
-                        lineStyle: { 
-                            color: '#999' 
-                        },
-                        onZero : true
+                    	show: true,
+                    	inZero: true,
+                    	lineStyle: {
+                    		color: '#e5e5e5'
+                    	}
                     },
+                    splitNumber: 2,
                     splitLine: {
-                        show: false
+                        show: true,
+                        lineStyle: {
+                    		color: '#e5e5e5'
+                    	}
+                    },
+                },
+                {
+                	type:'value',
+                    // name:'成交',
+                    // nameLocation:'end',
+                    // nameTextStyle:{
+                    //     fontSize:14,
+                    // 	color: '#555',
+                    // 	padding: [0,45,15,0]
+                    // },
+                    // nameGap: 0,
+                    scale: true,
+                    gridIndex: 2,
+                    min: 0,
+                    axisTick:{ show:false },
+                    axisLabel: {
+                        show: true,
+                        color: '#999',
+                        fontSize: 14,
+                        formatter: function (value, index) {
+                            setyAsixName(value);
+                            return;
+                        }
+                    },
+                    axisLine: { 
+                    	show: true,
+                    	inZero: true,
+                    	lineStyle: {
+                    		color: '#e5e5e5'
+                    	}
+                    },
+                    splitNumber: 2,
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                    		color: '#e5e5e5'
+                    	}
                     },
                 }
             ],
@@ -1337,7 +1383,7 @@ function chartPaint(isHistory){
                     },
                     data: KLineSocket.HistoryData.hValuesList,
                     markPoint: {
-                        symbolSize: 1,
+                        symbolSize: 20,
                         data: [
                             {
                                 name: 'highest value',
@@ -1345,8 +1391,9 @@ function chartPaint(isHistory){
                                 valueDim: 'highest',
                                 label: {
                                     normal: {
-                                        position: 'top',
-                                        color: "#000"
+                                        position: 'inside',
+                                        color: "#000",
+                                        fontSize: 14
                                     }
                                 },
                                 itemStyle: {
@@ -1359,11 +1406,11 @@ function chartPaint(isHistory){
                                 name: 'lowest value',
                                 type: 'min',
                                 valueDim: 'lowest',
-                                symbolSize: 10,
                                 label: {
                                     normal: {
-                                        position: '20%',
-                                        color: "#000"
+                                        position: 'bottom',
+                                        color: "#000",
+                                        fontSize: 14
                                     }
                                 },
                                 itemStyle: {
@@ -1391,6 +1438,22 @@ function chartPaint(isHistory){
                             color: '#000'
                         }
                     },
+                },
+                {
+                    name: 'Volume',
+                    type: 'line',
+                    xAxisIndex: 2,
+                    yAxisIndex: 2,
+                    data: KLineSocket.HistoryData.hVolumesList,
+                    itemStyle: {
+                        normal: {
+                            color: '#e22f2a',
+                            color0: '#3bc25b'
+                        },
+                        emphasis: {
+                            color: '#000'
+                        }
+                    },
                 }
             ]
         });
@@ -1403,11 +1466,17 @@ function chartPaint(isHistory){
                 },
                 {
                     data: KLineSocket.HistoryData.hCategoryList
+                },
+                {
+                    data: KLineSocket.HistoryData.hCategoryList
                 }
             ],
             series: [
                 {
                     data: KLineSocket.HistoryData.hValuesList,
+                },
+                {
+                    data: KLineSocket.HistoryData.hVolumesList
                 },
                 {
                     data: KLineSocket.HistoryData.hVolumesList
@@ -1430,7 +1499,7 @@ function toolContentPosition(event) {
 // 根据窗口变化，调整柱状图单位的位置
 function chartResize() {
     var h_w = Math.round(538/830*1000)/1000,
-        top_h = Math.round(335/538*1000)/1000,
+        top_h = Math.round(286/538*1000)/1000,
         name_width = Math.round(80/830*1000)/1000,
         k_height,
         k_width;
@@ -1447,18 +1516,37 @@ function chartResize() {
     $(".kline-charts").height(k_height).width(k_width);
     // 计算div宽度
     if(width>1000){
-        $(".kline-unit").css({"width": name_width*k_width+5+"px"});
+    	$(".deal-title").css({"width": name_width*k_width+"px"});
+    	$(".macd-title").css({"width": name_width*k_width+15+6+"px"});
+
+        $(".volumn,.volMacd").css({"width": name_width*k_width+5+"px"});
+
+        $(".kline-buttons").css({"paddingLeft": name_width*k_width+1+"px"});
     }else if(width<450){
-        $(".kline-unit").css({"width": name_width*k_width-5+"px"});
+    	$(".deal-title").css({"width": name_width*k_width-10+"px"});
+    	$(".macd-title").css({"width": name_width*k_width+5+6+"px"});
+
+        $(".volumn,.volMacd").css({"width": name_width*k_width-5+"px"});
+
+        $(".kline-buttons").css({"paddingLeft": name_width*k_width+1+"px"});
     }else if(width>300){
-        $(".kline-unit").css({"width": name_width*k_width+"px"});
+    	$(".deal-title").css({"width": name_width*k_width-5+"px"});
+    	$(".macd-title").css({"width": name_width*k_width+5+6+"px"});
+
+        $(".volumn,.volMacd").css({"width": name_width*k_width+"px"});
+
+        $(".kline-buttons").css({"paddingLeft": name_width*k_width+1+"px"});
     }
-    $(".kline-unit").css({"top": k_height*top_h-5+"px"});
+    $(".macd").css({"marginTop": 200/538*k_height*0.07+"px"})
+    $(".bar-tools").css({"top": k_height*top_h+"px","height": 200/538*k_height});
 };
 // 设置成交量的单位变化状况
-function setyAsixName(yAxisName) {
-
-    $(".kline-unit").text(yAxisName);
+function setyAsixName(value) {
+	var data = setUnit(value,true);
+	var maximun = (data=="0"?"0":floatFixedZero(data.value))
+	var yAxisName = (data=="0"?"量":data.unit);
+	$(".volumn div:first").text(maximun);
+    $(".volumn div:last").text(yAxisName);
 };
 // 初始化设置显示信息
 function initMarketTool() {
@@ -1508,10 +1596,27 @@ function setToolInfo(length, showTip){
         $(".lowest", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][2])+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][2])+"%)").attr("class",KLineSocket.HistoryData.hValuesPercentList[setPoint][2]>0?"lowest pull-right red":"lowest pull-right green"); //低
         $(".highest", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][3])+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][3])+"%)").attr("class",KLineSocket.HistoryData.hValuesPercentList[setPoint][3]>0?"highest pull-right red":"highest pull-right green"); //高
         $(".z-value", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hZValuesList[setPoint])+"("+floatFixedTwo(KLineSocket.HistoryData.hZValuesListPercent[setPoint])+"%)").attr("class",KLineSocket.HistoryData.hZValuesList[setPoint]>0?"z-value pull-right red":"z-value pull-right green");   // 涨跌
-        $(".volume", countent).text((KLineSocket.HistoryData.hVolumesList[setPoint][1]/10000).toFixed(2)+"万"); //量
+        
+        
         $(".amplitude", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hZf[setPoint])+"("+floatFixedTwo(KLineSocket.HistoryData.hZfList[setPoint])+"%)");   // 振幅
         $(".price", $("#kline .kline-info")).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][1])); //收
         $(".z-value", $("#kline .kline-info")).text(floatFixedTwo(KLineSocket.HistoryData.hZValuesListPercent[setPoint])+"%"); //收
+   		
+
+   		var volume = KLineSocket.HistoryData.hVolumesList[setPoint][1];
+
+   		$(".deal-Vol em").text(parseFloat(volume/100).toFixed(2));//量--单位:手
+
+        if(volume>=100){
+        	//量--单位:手
+        	$(".volume", countent).text(setUnit(floatFixedZero(volume/100))+"手");
+	        $(".volume", $("#kline .kline-info")).text(setUnit(floatFixedZero(volume/100)));
+        }else{
+        	//量--单位:股
+        	$(".volume", countent).text(volume+"股");
+	        $(".volume", $("#kline .kline-info")).text(volume); 
+        }
+   		
     }else{
         $(".name", countent).text("-");
         $(".date", countent).text("-");
@@ -1524,5 +1629,6 @@ function setToolInfo(length, showTip){
         $(".volume", countent).text("-");
         $(".z-value", countent).text("-");
         $(".amplitude", countent).text("-");
+
     }
 };

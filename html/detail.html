@@ -57,7 +57,6 @@
                             </ul>
                         </div>
                     </div>
-
                     <!--K线图开始-->
                     <div class="canvas kline" id="kline">
                         <div class="no-data no-data-k" id="withoutData">亲，暂时没有数据哦~~~~ ^_^</div>
@@ -66,10 +65,10 @@
                             <li><span class="date"></span></li>
                             <li><span class="day"></span></li>
                             <li><span class="time"></span></li>
-                            <li>价:<span class="price red"></span></li>
-                            <li>均:<span class="average red"></span></li>
-                            <li>量:<span class="volume"></span></li>
-                            <li>幅:<span class="z-value red"></span></li>
+                            <li>价<span class="price red"></span></li>
+                            <li>均<span class="average red"></span></li>
+                            <li>量<span class="volume"></span></li>
+                            <li>幅<span class="z-value red"></span></li>
                         </ul>
                         <!-- 上部信息显示结束 -->
                         <!-- echarts图开始 -->
@@ -89,7 +88,31 @@
                                     <li>振幅<span class="amplitude pull-right"></span></li>
                                 </ul>
                             </div>
-                            <div class="kline-unit"></div>
+
+                            <div class="bar-tools">
+                                <div class="deal">
+                                    <span class="deal-title">成交</span><span class="deal-Vol">VOL : <em></em></span><span class="deal-MA5">MA5 : <em></em></span><span class="deal-MA10">MA10 : <em></em></span>
+                                </div>
+                                <div class="volumn">
+                                    <div class="volumeMax"></div>
+                                    <div class="vol-unit"></div>
+                                </div>
+                                <div class="macd">
+                                    <span class="macd-title">MACD</span><span class="macd-Dif">DIF : <em></em></span><span class="macd-Dea">DEA : <em></em></span><span class="macd-Macd">MACD : <em></em></span>
+                                </div>
+                                <div class="volMacd">
+                                    <div class="vmMax">3.78</div>
+                                    <div class="vmMin">1.93</div>
+                                </div>
+                                <div class="kline-buttons">
+                                    <span class="active">MACD</span>
+                                    <span>KDJ</span>
+                                    <span>RSI</span>
+                                    <span>BOLL</span>
+                                    <span>WR</span>
+                                    <span>DMI</span>
+                                </div>
+                            </div>
 
                         </div>
                         <!-- echarts图结束 -->
@@ -114,7 +137,7 @@
                 <div class="no-data  no-data-k" id="withoutStcData">亲，暂时没有数据哦~~~~ ^_^</div>
                 <h2>企业基本信息</h2>
                 <ul>
-                    <li class="bbi-title"><span>十大流通股</span><span>持有比例</span><span>本期持有股（万股）</span><span>持股变动数（万股）</span></li>
+                    <li class="bbi-title"><span>十大流通股</span><span>持有比例</span><span>本期持有股（股）</span><span>持股变动数（股）</span></li>
                 </ul>
             </div>
             <div class="box fr bb-data">
@@ -174,14 +197,13 @@
 
     <script type="text/javascript" src="../js/jquery.js"></script>
     <script type="text/javascript" src="../js/echarts.min.js"></script>
+    <script type="text/javascript" src="../js/moment.min.js"></script>
 
     <script type="text/javascript" src="../js/public.js"></script>
     
-    <script type="text/javascript" src="../js/utils.js"></script><!-- 公共方法 -->
+    <script type="text/javascript" src="../js/mLine.js"></script><!-- 公共方法 -->
 
     <script src="../js/kline.js"></script> <!-- K线 -->
-    
-
 
     <script>
         $(function(){
@@ -213,7 +235,6 @@
                     // 深交所接口
                     wsUrl = "ws://103.66.33.67:443";
                     stockXMlUrl = "http://172.17.20.203:6789/2";
-                    
                     break;
                 case "101":;
                 default: 

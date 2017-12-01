@@ -4,7 +4,6 @@
 	margin: 0;
 	box-sizing: border-box;
 	color: #555;
-	font-size: 14px;
 }
 ul,li{
 	list-style-type: none;
@@ -51,7 +50,7 @@ h2{
 }
 .tb-fieldName{
 	padding-right: 40px;
-	/*width: 260px;*/
+	min-width: 260px;
 	border-right: 1px solid #e5e5e5;
 }
 .tb-fn-title{
@@ -76,14 +75,29 @@ h2{
 .tb-fielList li{
 	display: block;
 	float: left;
-	width: 19%;
 	font-size: 16px;
 	line-height: 27px;
+}
+.tb-fielList li:nth-child(5n+1){
+	width: 19%;
+}
+.tb-fielList li:nth-child(5n+2){
+	width: 19%;
+}
+.tb-fielList li:nth-child(5n+3){
+	width: 25%;
+}
+.tb-fielList li:nth-child(5n+4){
+	width: 19%;
+}
+.tb-fielList li:nth-child(5n+5){
+	width: 17%;
 }
 .tb-fielList p{
 	display: inline-block;
 	text-align: justify;
 	font-style: normal;
+	font-size: 16px;
 }
 /*content*/
 .content-bar{
@@ -294,13 +308,17 @@ ul{
 }
 .kline-info li{
     display: inline-block;
-    margin: 0 10px;
     line-height: 32px;
     overflow: hidden;
     font-size: 12px;
 }
-.kline-info li:nth-child(4){
-    margin-left: 10px
+.kline-info li span:not(:empty){
+	font-size: 12px;
+	line-height: 32px;
+	margin: 0 10px;
+}
+.kline-info li:nth-child(-n+3) span{
+	margin: 0;
 }
 .kline-charts-container{
     position: relative;
@@ -320,9 +338,10 @@ ul{
     background-color: #fff;
     border: solid 1px #b4b4b4;
     display: none;
+    z-index: 999;
 }
 .kline-tooltip li{
-    line-height: 27px;
+    line-height: 26px;
     overflow: hidden;
     font-size: 14px;
     display: inline-block;
@@ -347,12 +366,96 @@ ul{
     margin-right: 10px;
     font-weight: normal;
 }
-.kline-unit{
+.bar-tools{
     position: absolute;
-    bottom: 19.2%;
     left: 0;
-    width: 50px;
-    text-align: right;
-    transform: scale(0.88);
-    color: #999
+    top: 55%;
+    width: 100%;
+    height: 200px;
+    font-size: 14px;
+    color: #999;
+    text-align: left;
+    z-index: 0;
 }
+.deal,.macd{
+	height: 9%;
+	line-height: 18px;
+}
+.deal span,
+.macd span{
+	margin: 0 20px 0 16px;
+	font-size: 14px;
+}
+.deal em,
+.macd em{
+	font-style: normal;
+	font-size: 14px;
+}
+.deal .deal-title,
+.macd .macd-title{
+	display: inline-block;
+	text-align: right;
+	margin-left: 0;
+	color: #555;
+	font-size: 14px;
+}
+.deal-Vol{
+	color: #555;
+}
+.deal-MA5{
+	color: #51c8ee;
+}
+.deal-MA10{
+	color: #2c81ff;
+}
+.macd-Dif{
+	color: #20bfeb;
+}
+.macd-Dea{
+	color: #ff8964;
+}
+.macd-Macd{
+	color: #ff6adb;
+}
+.volumn,.volMacd{
+	height: 31%;
+	padding: 0.5% 0;
+}
+.volMacd{
+	height: 30%;
+}
+.volumn div,
+.volMacd div{
+	width: 50px;
+	width: 100%;
+	text-align: right;
+	font-size: 14px;
+	text-align: right;
+	color: #999;
+}
+.volumeMax,.vmMax{
+	height: 81%;
+}
+.vmMax{
+	height: 76%;
+}
+.kline-buttons{
+	margin-top: 0.8%;
+	height: 15%;
+	font-size: 0;
+}
+.kline-buttons span{
+	display: inline-block;
+	background-color: #f2f2f2;
+	border: 1px solid #b4b4b4;
+	margin: 0;
+	padding: 0.5% 10px;
+	margin-left: -1px;
+	font-size: 14px;
+	cursor: pointer;
+	color: #555;
+}
+.kline-buttons span.active{
+	color: #2b99ff;
+}
+
