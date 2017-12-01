@@ -400,10 +400,11 @@
                             
                         }
                     }
+                    
                     var marktToolData = [
                         $this.history_data[$this.history_data.length - 1],
                         $this.z_history_data[$this.z_history_data.length - 1],
-                        $this.a_history_data[$this.a_history_data.length - 1],
+                        $this.a_history_data[$this.a_history_data.length - 1] / 100,
                         formatDate(parseFloat($this.c_data[$this.history_data.length - 1]),"0")
                         // moment(parseFloat($this.c_data[$this.history_data.length - 1])).format("YYYY-MM-DD HH:mm")
                     ];
@@ -1095,7 +1096,7 @@
                     var marktToolData = [
                         $this.history_data[count - 1], 
                         $this.z_history_data[count - 1], 
-                        $this.a_history_data[count - 1], 
+                        $this.a_history_data[count - 1] / 100, 
                         formatDate(parseFloat($this.c_data[count - 1]),"0")//moment(parseFloat($this.c_data[count - 1])).format("YYYY-MM-DD HH:mm")
                     ];
                     set_marketTool(marktToolData,$this); //设置动态行情条
@@ -1119,14 +1120,14 @@
                                 $(".dataPrice").text($this.history_data[mouseHoverPoint]).css("color",colorList[1]);
                                 $(".change").text($this.z_history_data[mouseHoverPoint]+"%").css("color",colorList[1]);
                             }
-                            $("#toolContent_M").children().eq(2).text($this.a_history_data[mouseHoverPoint]);
-                            $(".vol i").text($this.a_history_data[mouseHoverPoint]);
+                            $("#toolContent_M").children().eq(2).text( Math.round($this.a_history_data[mouseHoverPoint]/100) );
+                            $(".vol i").text($this.a_history_data[mouseHoverPoint]/100);
                             $("#quantityRatio").text($this.a_history_data[mouseHoverPoint]);
-                            if($this.a_history_data[mouseHoverPoint]>100){
-                                $(".volume").text(parseFloat($this.a_history_data[mouseHoverPoint]/100).toFixed(2) +"手"); 
-                            }else{
-                                $(".volume").text(parseFloat($this.a_history_data[mouseHoverPoint]).toFixed(2) +"股"); 
-                            }
+                            // if($this.a_history_data[mouseHoverPoint]>100){
+                            $(".volume").text((parseFloat($this.a_history_data[mouseHoverPoint])/100).toFixed(2)  +"手"); 
+                            // }else{
+                                // $(".volume").text(parseFloat($this.a_history_data[mouseHoverPoint]).toFixed(2) +"股"); 
+                            // }
                         } else {
                             $("#toolContent_M").children().eq(1).text("-");
                             $("#toolContent_M").children().eq(2).text("-");

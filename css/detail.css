@@ -1,9 +1,10 @@
 @charset 'utf-8';
-*{
+body,div,p,ul,li{
 	padding: 0;
 	margin: 0;
 	box-sizing: border-box;
 	color: #555;
+	font-size: 14px;
 }
 ul,li{
 	list-style-type: none;
@@ -17,6 +18,10 @@ h2{
 	color: #333;
 	line-height: 16px;
 	margin-bottom: 20px;
+}
+em{
+	font-style: normal;
+	font-size: 14px;
 }
 .fl{
 	float: left;
@@ -258,7 +263,6 @@ h2{
 .no-data-k~ul{
 	display: none;
 }
-
 .red{
     color: #e22f2a
 }
@@ -311,14 +315,38 @@ ul{
     line-height: 32px;
     overflow: hidden;
     font-size: 12px;
+    margin: 0 5px;
 }
-.kline-info li span:not(:empty){
+.kline-info li span{
 	font-size: 12px;
 	line-height: 32px;
-	margin: 0 10px;
+	margin: 0 0 0 5px;
 }
-.kline-info li:nth-child(-n+3) span{
+.kline-info li span:only-child{
 	margin: 0;
+}
+.kline-MAs{
+	text-align: left;
+	position: absolute;
+	left: 9.9%;
+	top: 7%;
+	font-size: 0;
+}
+.kline-MAs span{
+	margin-right: 20px;
+	font-size: 14px;
+}
+.kline-MA5{
+	color: #20bfeb;
+}
+.kline-MA10{
+	color: #2c81ff;
+}
+.kline-MA20{
+	color: #9d62ff;
+}
+.kline-MA30{
+	color: #ff6adb;
 }
 .kline-charts-container{
     position: relative;
@@ -383,12 +411,7 @@ ul{
 }
 .deal span,
 .macd span{
-	margin: 0 20px 0 16px;
-	font-size: 14px;
-}
-.deal em,
-.macd em{
-	font-style: normal;
+	margin-right: 20px;
 	font-size: 14px;
 }
 .deal .deal-title,
@@ -458,4 +481,6 @@ ul{
 .kline-buttons span.active{
 	color: #2b99ff;
 }
-
+#kline_charts{
+	z-index: 1;
+}
