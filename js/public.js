@@ -116,9 +116,9 @@ function dateToStamp(date){
             if(i==0){
                 $li.addClass("active");
             }
-            // var $a = $("<a></a>");
-            // $a.attr({"href":item.href});
-            // $a.text(item.name);
+            if(item.id){
+                $li.attr({"id":item.id});
+            }
             $li.text(item.name);
             $($el).append($li);
         });

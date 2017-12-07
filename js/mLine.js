@@ -1525,43 +1525,4 @@
         var xml = new InitXMLIChart(options);
         return xml.initXML();
     };
-
-    $.fn.toggleLi = function(options,params){
-        options = $.extend({},$.fn.toggleLi.defaults,options || {});
-        var $this = $(this);
-        var opt = $("<ul class='clearfix charts-tab'></ul>");
-
-        initLi(opt,options.data);
-
-        $this.prepend(opt);
-        var index = 0;
-        $("ul.charts-tab li").on("click",function(event){
-            $("ul li").removeClass("active");
-            $(this).addClass("active");
-            index = $(this).index();
-            if(index==0){
-                $("#MLine").show();
-                $("#kline").hide();
-            }else{
-                $("#kline").show();
-                $("#MLine").hide();
-            }
-        });
-    };
-
-    function initLi($el,data){
-        var $li;
-        $.each(data,function(i,item){
-            $li = $("<li id="+item.id+"></li>");
-            if(i==0){
-                $li.addClass("active");
-            }
-            $li.text(item.name);
-            $($el).append($li);
-        });
-    }
-
-    $.fn.toggleLi.defaults = {
-         data:[{name:"分时"}]
-    };
 })(jQuery);
