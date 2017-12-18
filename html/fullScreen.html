@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>FullScreen</title>
+	<!-- <link rel="stylesheet" type="text/css" href="../css/echarts.css" /> -->
+    <link rel="stylesheet" type="text/css" href="../css/detail.css">
+</head>
+<body class="full-screen">
+    <!-- 头部开始 -->
+    <div class="f-header">
+        <div class="fh-logo"><img src="../img/logo.png"></div>
+        <div class="fh-time"><div class="fh-date">2017/1/1</div><div class="fh-minute">12:34</div></div>
+    </div>
+    <!-- 头部结束 -->
+        
+	<div class="content">  
+        <div class="container  full-screen-container">
+            <div class="f-lineType">
+                <div class="flt-text">
+                    <img src="../img/线形.png"><span class="fl-text">Line</span><span class="fl-trangle"></span>
+                </div>
+                <div class="f-lineType-box">
+                    <span class="fl-trangle flb-tragle"></span>
+                    <span class="fl-trangle flb-tragle2"></span>
+                    <ul class="flb-toggle">
+                        <li class="active"><img src="../img/线形.png"><span class="fl-text">Line</span></li>
+                        <li><img src="../img/面积.png"><span class="fl-text">Area</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="f-search">
+                <input type="text" class="fs-text" value="新华网">
+                <input type="button">
+                <ul id="url_list">
+                    <li><span>新华网新华网新华网</span><span>000001</span></li>
+                    <li><span>新华网1</span><span>000002</span></li>
+                    <li><span>新华网2</span><span>000003</span></li>
+                    <li><span>新华网3</span><span>000004</span></li>
+                    <li><span>新华网4</span><span>000005</span></li>
+                    <li><span>新华网5</span><span>000006</span></li>
+                    <li><span>新华网6</span><span>000007</span></li>
+                    <li><span>新华网7</span><span>000008</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <ul class="f-legend">
+            
+        </ul>
+        <div id="kline_charts" class="fl f-kline-charts">
+            
+        </div>
+        
+        <!-- 右侧信息框开始 -->
+        <div class="fr f-stockInfo">
+            <!-- <div class="no-data no-data-k" id="withoutStockData"></div> -->
+            <div class="f-tb-fieldName">
+                <div class="tb-fn-title f-tbfn-title">-</div>
+                <div class="tb-fn-num f-tbfn-num">
+                    <span>-</span>
+                    <span>-</span>
+                    <span>-</span>
+                </div>
+            </div>
+            <ul class="tb-fielList f-tb-fielList">
+                <li><p>最高：</p><span class="red">-</span></li>
+                <li><p>今开：</p><span class="green">-</span></li>
+                <li><p>最低：</p><span class="green">-</span></li>
+                <li><p>昨收：</p><span>-</span></li>
+
+                <li><p>成交额：</p><span>-</span></li>
+                <li><p>市盈率：</p><span>-</span></li>
+                <li><p>成交量：</p><span>-</span></li>
+                <li><p>市&nbsp;&nbsp;&nbsp;&nbsp;值：</p><span>-</span></li>
+                <li><p>换手率：</p><span>-</span></li>
+                <li><p>振&nbsp;&nbsp;&nbsp;&nbsp;幅：</p><span>-</span></li>
+            </ul>
+            <div class="f-latest-stock">
+                <h2>最近访问股</h2>
+                <ul class="f-ls-list">
+                    <li><span>新华传媒</span><span>6.04</span><span class="black">0.00%</span></li>
+                    <li><span>新华传媒</span><span>6.04</span><span class="red">0.00%</span></li>
+                    <li><span>新华传媒</span><span>6.04</span><span class="green">0.00%</span></li>
+                    <li><span>新华传媒</span><span>6.04</span><span class="black">0.00%</span></li>
+                    <li><span>新华传媒</span><span>6.04</span><span class="black">0.00%</span></li>
+                </ul>
+            </div>
+        </div>
+        <!-- 右侧信息框结束 -->
+        
+    </div>
+	
+    
+
+	<script src="../js/jquery.js"></script>
+	<script src="../js/highstock.js"></script>
+	<script src="../js/moment.min.js"></script>
+	<script src="../js/public.js"></script> 
+
+    <script src="../js/kLineHighCharts.js"></script>
+    <script type="text/javascript">
+
+
+        $(function(){
+			// 行情echarts切换标签
+            $(".container").toggleLi(
+                {
+                    data:[
+                        {name:"分时",id:"mline"},
+                        {name:"日K",id:"day"},
+                        {name:"分钟",id:"minute"}
+                    ],
+                    width:'120px',
+                    lineHeight: '60px'
+                }
+            );
+            var wsUrl, stockXMlUrl;
+            wsUrl = "ws://103.66.33.67:443";
+            stockXMlUrl = "http://172.17.20.203:6789/2";
+            //指数与个股区分
+            var url = location.href;
+            var id, exchangeID, wsUrl, stockXMlUrl;
+            if(url.indexOf("?")>-1){
+                id = getQueryString("id");//main.js里的getQueryString
+                exchangeID = getQueryString("exchangeID");
+            }else{
+                id = "1";
+                exchangeID = "101";
+            }
+            var wsUrl, stockXMlUrl;
+            switch(exchangeID){
+                case "2":
+                    // 深交所接口
+                    wsUrl = "ws://103.66.33.67:443";
+                    stockXMlUrl = "http://172.17.20.203:6789/2";
+                    break;
+                case "101":;
+                default: 
+                    // 上证指数接口
+                    wsUrl = "ws://172.17.20.203:7681";
+                    stockXMlUrl = "http://172.17.20.203:6789/101";
+            }
+
+            // 初始化K线图
+            $.queryKLine({
+                InstrumentID: id,
+                ExchangeID: exchangeID,
+                wsUrl:wsUrl,
+                stockXMlUrl:stockXMlUrl,
+                pageSize: "Large"
+            });
+            
+            $.queryStockInfo({
+                InstrumentID: id,
+                ExchangeID: exchangeID,
+                wsUrl:wsUrl,
+                stockXMlUrl:stockXMlUrl,
+                pageSize: "Large"
+            });
+        }); 
+
+        /*
+         * 右侧提示下拉框效果
+         */
+        $(".fs-text").focus(function(){
+            $(".fs-text").keyup();
+        });
+        $(".fs-text").keyup(function(){
+            // 查询输入的值
+            var value = $(this).val(); 
+            $.each($("#url_list li"),function(i,obj){
+                // 删除之前查询的颜色
+                if($(this).find("i").length>0){
+                    var text = $(this).html().replace(eval("/<i>/g"),"").replace(eval("/<[/]i>/g"),"");
+                    $(this).html(text);
+                }
+                // 输入的值匹配
+                var txt1 = $(this).children("span:eq(0)").text();
+                var txt2 = $(this).children("span:eq(1)").text();
+                // 是否有值，如果没有输入值，不进行匹配
+                if(value&&(eval("/"+value+"/").test(txt1)||eval("/"+value+"/").test(txt2))){
+                    $("#url_list").show();
+                    $(this).show();
+                    var str1 = txt1.replace(eval("/"+value+"/"),"<i>"+value+"</i>");
+                    var str2 = txt2.replace(eval("/"+value+"/"),"<i>"+value+"</i>");
+                    $(this).children("span:eq(0)").html(str1).end().children("span:eq(1)").html(str2);
+                }else{
+                    $(this).hide();
+                    // 如果没有匹配项，隐藏ul
+                    if($("#url_list").height()<$(this).height()+2){
+                        $("#url_list").hide();
+                    }  
+                }    
+            })
+        });
+        // 点击选择了某个选项后 更新输入框内容
+        $("#url_list li").click(function(){
+            $(".fs-text").val($(this).children("span:eq(1)").text());
+            $("#url_list").hide();
+        })
+        //给document绑定一个一次性的click事件，点击关闭菜单
+        $(document).click(function(){
+            $("#url_list").hide();
+        });
+        $("#url_list,.fs-text").click(function(event){
+            event.stopPropagation();
+        });
+
+
+        /*
+         * 分时图的下拉选择 线还是区域
+         */
+        $(".f-lineType").click(function(){
+            
+            if($(".f-lineType-box").hasClass("clicked")){
+                $(".f-lineType-box").removeClass("clicked");
+                $(".f-lineType-box").hide();
+            }else{
+                $(".f-lineType-box").addClass("clicked")
+                $(".f-lineType-box").show();
+            }
+        });
+        $(".flb-toggle").on("click","li",function(){
+            var html = "<span class=\"fl-trangle\"></span>";
+            html = $(this).html()+html;
+            $(".flt-text").html(html);
+            // $(this).parent().toggle();
+        })
+        // $(".flb-toggle").on("click","li",function(){
+        //     var html = "<span class=\"fl-trangle\"></span>"
+        //     html = $(this).html()+html;
+        //     $(".flt-text").html(html);
+        //     $(".f-lineType-box").hide();
+        // })
+    </script>
+</body>
+</html>
