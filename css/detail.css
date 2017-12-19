@@ -665,7 +665,6 @@ ul{
 } 
 #url_list li{
 	width: 100%;
-	display: none;
 }
 #url_list li span{
 	display: inline-block;

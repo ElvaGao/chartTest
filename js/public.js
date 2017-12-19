@@ -107,23 +107,6 @@ function formatDateSplit(date) {
     var D = date.substring(6, 8);
     return Y + "-" + M + "-" + D;
 };
-// //093000 -> 09:30
-// function formatTime(time) {
-//     time = time.toString();
-//     //TODO 后台返回的数据时间没有补0
-//     if (time.length !== 6) {
-//         var diff = 6 - (time.length);
-//         var zero = "";
-//         for (var i = 0; i < diff; i++) {
-//             zero += "0";
-//         }
-//         time = zero + time;
-//     }
-//     var H = time.substring(0, 2);
-//     var m = time.substring(2, 4);
-//     time = H + ":" + m;
-//     return time;
-// };
 // 将"2017-01-01 02:03" 转换为时间戳 1483207380(整数)
 function dateToStamp(date){
     if(date.indexOf("-")>-1){

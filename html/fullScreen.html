@@ -30,17 +30,9 @@
                 </div>
             </div>
             <div class="f-search">
-                <input type="text" class="fs-text" value="新华网">
+                <input type="text" class="fs-text" value="">
                 <input type="button">
                 <ul id="url_list">
-                    <li><span>新华网新华网新华网</span><span>000001</span></li>
-                    <li><span>新华网1</span><span>000002</span></li>
-                    <li><span>新华网2</span><span>000003</span></li>
-                    <li><span>新华网3</span><span>000004</span></li>
-                    <li><span>新华网4</span><span>000005</span></li>
-                    <li><span>新华网5</span><span>000006</span></li>
-                    <li><span>新华网6</span><span>000007</span></li>
-                    <li><span>新华网7</span><span>000008</span></li>
                 </ul>
             </div>
         </div>
@@ -147,66 +139,115 @@
                 InstrumentID: id,
                 ExchangeID: exchangeID,
                 wsUrl:wsUrl,
-                stockXMlUrl:stockXMlUrl,
-                pageSize: "Large"
+                stockXMlUrl:stockXMlUrl
             });
             
             $.queryStockInfo({
                 InstrumentID: id,
                 ExchangeID: exchangeID,
                 wsUrl:wsUrl,
-                stockXMlUrl:stockXMlUrl,
-                pageSize: "Large"
+                stockXMlUrl:stockXMlUrl
             });
+
         }); 
 
         /*
-         * 右侧提示下拉框效果
+         * 查询下拉框效果
          */
         $(".fs-text").focus(function(){
             $(".fs-text").keyup();
         });
+        var timer;
         $(".fs-text").keyup(function(){
+
+            // 连续按键会清除查询
+            clearTimeout(timer);
+
+            // 点击回车
+            $("body").keydown(function() {
+                if (event.keyCode == "13") {//keyCode=13是回车键
+                    if($("#url_list li").length>0){
+                        queryNew($("#url_list li:eq(0)")[0]);
+                    }
+                }
+            });
+            $(".f-search input:eq(1)").click(function() {
+                if($("#url_list li").length>0){
+                    queryNew($("#url_list li:eq(0)")[0]);
+                }
+            });
+
             // 查询输入的值
             var value = $(this).val(); 
-            $.each($("#url_list li"),function(i,obj){
-                // 删除之前查询的颜色
-                if($(this).find("i").length>0){
-                    var text = $(this).html().replace(eval("/<i>/g"),"").replace(eval("/<[/]i>/g"),"");
-                    $(this).html(text);
-                }
-                // 输入的值匹配
-                var txt1 = $(this).children("span:eq(0)").text();
-                var txt2 = $(this).children("span:eq(1)").text();
-                // 是否有值，如果没有输入值，不进行匹配
-                if(value&&(eval("/"+value+"/").test(txt1)||eval("/"+value+"/").test(txt2))){
-                    $("#url_list").show();
-                    $(this).show();
-                    var str1 = txt1.replace(eval("/"+value+"/"),"<i>"+value+"</i>");
-                    var str2 = txt2.replace(eval("/"+value+"/"),"<i>"+value+"</i>");
-                    $(this).children("span:eq(0)").html(str1).end().children("span:eq(1)").html(str2);
-                }else{
-                    $(this).hide();
-                    // 如果没有匹配项，隐藏ul
-                    if($("#url_list").height()<$(this).height()+2){
-                        $("#url_list").hide();
-                    }  
-                }    
-            })
-        });
-        // 点击选择了某个选项后 更新输入框内容
-        $("#url_list li").click(function(){
-            $(".fs-text").val($(this).children("span:eq(1)").text());
-            $("#url_list").hide();
-        })
-        //给document绑定一个一次性的click事件，点击关闭菜单
-        $(document).click(function(){
-            $("#url_list").hide();
-        });
-        $("#url_list,.fs-text").click(function(event){
-            event.stopPropagation();
+            // Code是不为空的数字时，进行查询
+            if((/^[0-9]*$/gi).test(value)&&value!=""&&value!=null){
+                timer = setTimeout(function(){
+                    var url = "http://103.66.33.58:443/?ExchangeID=0&Codes="+value;
+                    $.ajax({
+                        url:  url,
+                        type: 'GET',
+                        dataType: 'json',
+                        async:false,
+                        cache:false,
+                        error: function(data){
+                            console.log("请求代码表出错");
+                        },
+                        success: function(data){
+                            var dataArr = data.CodeInfo;
+
+                            if(dataArr){
+                                setSearchUlOptions(dataArr,value);
+                                $("#url_list").show();
+                            }else{
+                                $("#url_list").hide();
+                            }
+                            
+                        }
+                    });
+                },300);
+            }else{
+                $("#url_list").hide();
+            }
         });
 
+        // 查询的数据，拼接后放入ul中
+        var setSearchUlOptions = function(data,value){
+            var html = "";       
+            $.each(data,function(i,dataObj){
+                var spanName = "<span>"+dataObj.InstrumentName+"</span>",
+                    spanCode = "<span>"+dataObj.InstrumentCode+"</span>";
+                // 是否有值，如果没有输入值，不进行匹配
+                if(eval("/"+value+"/").test(spanName)||eval("/"+value+"/").test(spanCode)){
+                    spanName = spanName.replace(eval("/"+value+"/"),"<i>"+value+"</i>");
+                    spanCode = spanCode.replace(eval("/"+value+"/"),"<i>"+value+"</i>");
+                };
+                html += "<li eId="+dataObj.ExchangeID+">"+spanName+spanCode+"</li>";
+            });
+            $("#url_list").html(html);
+
+
+            // 点击选择了某个选项后 更新输入框内容 打开新页面查询新数据
+            $("#url_list li").click(function(){
+                queryNew(this);
+            });
+
+            // 点击其他地方，关闭菜单
+            $(document).click(function(){
+                $("#url_list").hide();
+            });
+            $("#url_list,.fs-text").click(function(event){
+                event.stopPropagation();
+            });
+        };
+        function queryNew(eleLi){
+            var exchangeID = $(eleLi).attr("eid");
+            var id = Number($(eleLi).children("span:eq(1)").text());
+            $(".fs-text").val($(eleLi).children("span:eq(1)").text());
+            $("#url_list").hide();
+            // 打开新页面
+            var location = window.location.href.split("?")[0];
+            window.location.href = location+"?id="+id+"&exchangeID="+exchangeID;
+        }
 
         /*
          * 分时图的下拉选择 线还是区域
@@ -226,13 +267,7 @@
             html = $(this).html()+html;
             $(".flt-text").html(html);
             // $(this).parent().toggle();
-        })
-        // $(".flb-toggle").on("click","li",function(){
-        //     var html = "<span class=\"fl-trangle\"></span>"
-        //     html = $(this).html()+html;
-        //     $(".flt-text").html(html);
-        //     $(".f-lineType-box").hide();
-        // })
+        });
     </script>
 </body>
 </html>
