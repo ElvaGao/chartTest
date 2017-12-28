@@ -149,25 +149,35 @@ function getColorName(data, compareData){
     return className;
 };
 // 数据单位统一
-function setUnit(data,type){
+function setUnit(data,type,lang){
     var fh = data>0?"":"-";
     var data = Math.abs(data);
-    if(data!=0&&data!="0"){
-        if(type){
-            var obj={};
-            var unit,value;
-                (data/100000000>=1?((unit="亿")&&(value=data/100000000)):
-                    (data/10000>=1?((unit="万")&&(value=data/10000)):
-                        ((unit="量")&&(value=data))
-                        ));
-            obj.unit = unit;
-            obj.value = fh+floatFixedTwo(value);
-            return obj;
+    if(lang=="En"){
+        if(data!=0&&data!="0"){
+            return (data/1000000>1?fh+floatFixedTwo(data/1000000)+"m"
+                        :(data/1000>1?fh+floatFixedTwo(data/1000)+"k"
+                            :fh+data));
         }else{
-            return (data/100000000>1?fh+floatFixedTwo(data/100000000)+"亿":(data/10000>1?fh+floatFixedTwo(data/10000)+"万":fh+data));
+            return "0";
         }
     }else{
-        return "0";
+        if(data!=0&&data!="0"){
+            if(type){
+                var obj={};
+                var unit,value;
+                    (data/100000000>=1?((unit="亿")&&(value=data/100000000)):
+                        (data/10000>=1?((unit="万")&&(value=data/10000)):
+                            ((unit="量")&&(value=data))
+                            ));
+                obj.unit = unit;
+                obj.value = fh+floatFixedTwo(value);
+                return obj;
+            }else{
+                return (data/100000000>1?fh+floatFixedTwo(data/100000000)+"亿":(data/10000>1?fh+floatFixedTwo(data/10000)+"万":fh+data));
+            }
+        }else{
+            return "0";
+        }
     }
 };
 

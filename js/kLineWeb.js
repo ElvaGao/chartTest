@@ -46,9 +46,12 @@ var lastClose=0;
                         var KCharts =  KLineSocket.KChart.getOption();
                         if(KCharts){
                             KLineSocket.KChart.setOption({
-                                xAxis: [{data: null},{data: null},{data: null}],
-                                yAxis: [{data: null},{data: null},{data: null}],
-                                series: [{data: null},{data: null},{data: null}]
+                                // xAxis: [{data: null},{data: null},{data: null}],
+                                // yAxis: [{data: null},{data: null},{data: null}],
+                                // series: [{data: null},{data: null},{data: null}]
+                                xAxis: [{data: null},{data: null}],
+                                yAxis: [{data: null},{data: null}],
+                                series: [{data: null},{data: null}]
                             });
                         }
                         $("#withoutData").show().siblings().hide();
@@ -943,9 +946,9 @@ function splitData(data, isHistory) {
             e_amplPercent = (100*e_amplitude/lastClose);               // 振幅百分比
 
         if(isHistory){
-            e_volume = (e_price-e_open)>0?[i,e_volumnData,-1]:[i,e_volumnData,1];   // 成交量-数组，存储索引，值，颜色对应的值                         
+            e_volume = (e_price-e_open)>=0?[i,e_volumnData,-1]:[i,e_volumnData,1];   // 成交量-数组，存储索引，值，颜色对应的值                         
         }else{
-            e_volume = (e_price-e_open)>0?[KLineSocket.HistoryData.hVolumesList.length,e_volumnData,-1]:[KLineSocket.HistoryData.hVolumesList.length,e_volumnData,1];  
+            e_volume = (e_price-e_open)>=0?[KLineSocket.HistoryData.hVolumesList.length,e_volumnData,-1]:[KLineSocket.HistoryData.hVolumesList.length,e_volumnData,1];  
         }
 
         lastClose = e_price;
@@ -1057,33 +1060,75 @@ function chartPaint(isHistory){
             grid: [
                 {
                     top: "5%",
-                    height: '42.4%'
+                    height: '62.4%'
                 },
                 {
-                    top: '57.8%',
-                    height: '9.2%'
+                    top: '77.8%',
+                    height: '12.2%'
                 },
-                {
-                    top: '75.4%',
-                    height: '9.2%'
-                }
+                // {
+                //     top: "5%",
+                //     height: '42.4%'
+                // },
+                // {
+                //     top: '57.8%',
+                //     height: '9.2%'
+                // },
+                // {
+                //     top: '75.4%',
+                //     height: '9.2%'
+                // }
             ],
+            // dataZoom: [
+            //     {
+            //         type: 'inside',
+            //         xAxisIndex: [0, 1, 2],
+            //         start: 0,
+            //         end: 100
+            //     },
+            //     {
+            //         type: 'inside',
+            //         xAxisIndex: [0, 1, 2],
+            //         start: 0,
+            //         end: 100
+            //     },
+            //     {
+            //         show: true,
+            //         xAxisIndex: [0, 1, 2],
+            //         type: 'slider',
+            //         top: '91.5%',
+            //         start: 0,
+            //         end: 100,
+            //         handleIcon: 'path://M306.1,413c0,2.2-1.8,4-4,4h-59.8c-2.2,0-4-1.8-4-4V200.8c0-2.2,1.8-4,4-4h59.8c2.2,0,4,1.8,4,4V413z',
+            //         handleSize:'100%',
+            //         handleStyle:{
+            //             color:"#f2f2f2",
+            //             borderColor: "#b4b4b4"
+            //         },
+            //         dataBackground: {
+            //             lineStyle: {
+            //                 color: "rgba(0,0,0,1)"
+            //             },
+            //             areaStyle: {
+            //                 color: "rgba(0,0,0,0)"
+            //             }
+            //         },
+            //         labelFormatter: function (valueStr) {
+            //             return KLineSocket.HistoryData.hCategoryList[valueStr];
+            //         },
+            //         showDetail: true
+            //     },
+            // ],
             dataZoom: [
                 {
                     type: 'inside',
-                    xAxisIndex: [0, 1, 2],
-                    start: 0,
-                    end: 100
-                },
-                {
-                    type: 'inside',
-                    xAxisIndex: [0, 1, 2],
+                    xAxisIndex: [0, 1],
                     start: 0,
                     end: 100
                 },
                 {
                     show: true,
-                    xAxisIndex: [0, 1, 2],
+                    xAxisIndex: [0, 1],
                     type: 'slider',
                     top: '91.5%',
                     start: 0,
@@ -1176,22 +1221,22 @@ function chartPaint(isHistory){
                         }
                     }
                 },
-                {
-                    type: 'category',
-                    gridIndex: 2,
-                    data: KLineSocket.HistoryData.hCategoryList,
-                    scale: true,
-                    axisTick: { show:false },
-                    boundaryGap: true,
-                    axisLine: { show: false },
-                    axisLabel: { show: false },
-                    splitLine: { show: false },
-                    axisPointer: {
-                        label: {
-                            show:false
-                        }
-                    }
-                }
+                // {
+                //     type: 'category',
+                //     gridIndex: 2,
+                //     data: KLineSocket.HistoryData.hCategoryList,
+                //     scale: true,
+                //     axisTick: { show:false },
+                //     boundaryGap: true,
+                //     axisLine: { show: false },
+                //     axisLabel: { show: false },
+                //     splitLine: { show: false },
+                //     axisPointer: {
+                //         label: {
+                //             show:false
+                //         }
+                //     }
+                // }
             ],
             yAxis: [
                 {
@@ -1254,36 +1299,36 @@ function chartPaint(isHistory){
                         }
                     }
                 },
-                {
-                    type:'value',
-                    scale: true,
-                    gridIndex: 2,
-                    min: 0,
-                    axisTick:{ show:false },
-                    axisLabel: {
-                        show: true,
-                        color: '#999',
-                        fontSize: 14,
-                        formatter: function (value, index) {
-                            setyAsixName(value);
-                            return;
-                        }
-                    },
-                    axisLine: { 
-                        show: true,
-                        inZero: true,
-                        lineStyle: {
-                            color: '#e5e5e5'
-                        }
-                    },
-                    splitNumber: 2,
-                    splitLine: {
-                        show: true,
-                        lineStyle: {
-                            color: '#e5e5e5'
-                        }
-                    }
-                }
+                // {
+                //     type:'value',
+                //     scale: true,
+                //     gridIndex: 2,
+                //     min: 0,
+                //     axisTick:{ show:false },
+                //     axisLabel: {
+                //         show: true,
+                //         color: '#999',
+                //         fontSize: 14,
+                //         formatter: function (value, index) {
+                //             setyAsixName(value);
+                //             return;
+                //         }
+                //     },
+                //     axisLine: { 
+                //         show: true,
+                //         inZero: true,
+                //         lineStyle: {
+                //             color: '#e5e5e5'
+                //         }
+                //     },
+                //     splitNumber: 2,
+                //     splitLine: {
+                //         show: true,
+                //         lineStyle: {
+                //             color: '#e5e5e5'
+                //         }
+                //     }
+                // }
             ],
             series: [
                 {
@@ -1356,19 +1401,19 @@ function chartPaint(isHistory){
                         }
                     },
                 },
-                {
-                    name: 'MACD',
-                    type: 'line',
-                    xAxisIndex: 2,
-                    yAxisIndex: 2,
-                    data: KLineSocket.HistoryData.hVolumesList,
-                    itemStyle: {
-                        normal: {
-                            color: '#e22f2a',
-                            color0: '#3bc25b'
-                        }
-                    },
-                }
+                // {
+                //     name: 'MACD',
+                //     type: 'line',
+                //     xAxisIndex: 2,
+                //     yAxisIndex: 2,
+                //     data: KLineSocket.HistoryData.hVolumesList,
+                //     itemStyle: {
+                //         normal: {
+                //             color: '#e22f2a',
+                //             color0: '#3bc25b'
+                //         }
+                //     },
+                // }
             ]
         });
     }else{
@@ -1381,9 +1426,9 @@ function chartPaint(isHistory){
                 {
                     data: KLineSocket.HistoryData.hCategoryList
                 },
-                {
-                    data: KLineSocket.HistoryData.hCategoryList
-                }
+                // {
+                //     data: KLineSocket.HistoryData.hCategoryList
+                // }
             ],
             series: [
                 {
@@ -1392,9 +1437,9 @@ function chartPaint(isHistory){
                 {
                     data: KLineSocket.HistoryData.hVolumesList
                 },
-                {
-                    data: KLineSocket.HistoryData.hVolumesList
-                }
+                // {
+                //     data: KLineSocket.HistoryData.hVolumesList
+                // }
             ]
         }); 
     }

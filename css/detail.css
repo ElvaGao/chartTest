@@ -19,7 +19,7 @@ h2{
 	line-height: 16px;
 	margin-bottom: 18px;
 }
-em{
+i,em{
 	font-style: normal;
 	font-size: 14px;
 }
@@ -410,7 +410,8 @@ ul{
 	/*z-index: 2;*/
 }
 .deal{
-	top: 53.7%;
+	/*top: 53.7%;*/
+	top: 73.4%;
 }
 .deal span,
 .macd span{
@@ -448,6 +449,7 @@ ul{
 }
 .volumn{
 	top: 57.5%;
+	top: 77%;
 	height: 9%;
 }
 .volMacd{
@@ -643,9 +645,12 @@ ul{
 	width: 360px;
 	top: 54px;
 	left: 0;
-	max-height: 288px;
+	max-height: 281px;
 	overflow-y: scroll;
 	display: none;
+}
+#url_list .active{
+	background-color: #274378;
 }
 #url_list::-webkit-scrollbar{  
     width: 13px;  
@@ -689,18 +694,24 @@ ul{
 .content{
 	position: relative;
 	overflow: hidden;
+	padding-bottom: 100px;
 }
-.f-kline-charts{
+.f-kline{
 	width: 72.916%;
 	/*width: 100%;*/
-	height: 540px;
+	height: 734px;
 	padding-left: 40px;
+	margin-top: 40px;
 	box-sizing: border-box;
+}
+.f-kline-charts{
+	/*width: 100%;*/
+	height: 734px;
 }
 .f-stockInfo{
 	width: 25.44%;
 	/*width: 100%;*/
-	/*margin-top: 40px;*/
+	margin-top: 40px;
 }
 
 .f-tb-fieldName{
@@ -818,60 +829,11 @@ ul{
 	padding-right: 27px;
 	box-sizing: border-box;
 }
-.f-legend{
-	margin-left: 60px;
-    margin-top: 25px;
-    overflow: hidden;
-}
-.f-legend li{
-	float: left;
-	position: relative;
-	width: auto;
-	text-align: center;
-	line-height: 40px;
-	border-radius: 5px;
-	color: #fff;
-	font-size: 20px;
-	padding: 0 40px 0 12px;
-	margin-right: 40px;
-	border:1px solid #232735;
-	border-left: 6px solid #264378;
-	box-shadow: 2px 0px 2px #191c27;
-	background-color: #1e2131;
-	transform-origin: center;
-}
-.f-legend li span{
-	display: inline-block;
-	width: 40px;
-	height: 40px;
-	color: #7c7d87;
-	transform: rotate(45deg);
-	transition: 0.2s ease-in all;
-	right: -4px;
-	top: 0;
-	position: absolute;
-	text-align: center;
-	line-height: 40px;
-	cursor: pointer;
-}
-.f-legend .remove{
-	color: #a7a8aa;
-	opacity: 0.8;
-}
-.f-legend .remove span{
-	transform: rotate(90deg);
-}
-.highcharts-tooltip span{
-	padding: 8px 13px 3px 10px;
-	line-height: 40px;
-	width: 235px;
-}
-.highcharts-tooltip i,
-.f-kline-info i{
-	display: inline-block;
+.f-kline-info li{
+	display: block;
 	font-style: normal;
-	color: #fff;
-	font-size: 24px;
+	color: rgba(255,255,255,0.5);
+	font-size: 20px;
 }
 .f-kline-info{
 	padding: 20px 25px;
@@ -887,8 +849,140 @@ ul{
     left: 0;
     font-size: 20px;
     color: rgba(255,255,255,0.5);
-    top: 34px;
+    top: 16px;
+    display: none;
 }
-.f-kline-info i{
+.f-kline-info span{
+	display: inline-block;
 	float: right;
+	color: #fff;
+}
+
+/* 分时图 */
+.mline{
+	position: relative;
+	float: left;
+	width: 70%;
+	margin-top: 40px;
+}
+.mline_full{
+	text-align: center;
+	font-size: 18px;
+	color: #a7a8aa;
+}
+/* 分时图提示框 */
+.mline_tooltip{
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	background-color: #1e2131;
+	border: 1px solid #232735;
+	padding: 10px 20px;
+	box-shadow:0px 0px 7px rgba(0,0,0,0.35);
+	display: inline-block;
+	line-height: 30px;
+	font-family: Helvetica;
+	font-size: 20px;
+	font-style: normal;
+	min-width: 240px;
+	border-radius: 3px;
+	display: none;
+}
+.mline_tooltip>span{
+	overflow: hidden;
+	display:block;
+}
+.mline_tooltip>span>label{
+	color: rgba(255, 255, 255, 0.5);
+	float: left;
+}
+.mline_tooltip>span>i{
+	color: #fff;
+	float: right;
+	font-size: 20px;
+}
+/* 浮层信息框 */
+.mline_info{
+	box-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
+	border:1px solid #264378;
+	border-radius: 3px;
+	padding: 10px 20px;
+	display: inline-block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	background-color:#1e2131;
+	/* display: none; */
+}
+.mline_info>span{
+	font-family: Helvetica,Arial,sans-serif;
+	display: block;
+	color: rgba(255, 255, 255, 0.5);
+	font-size: 20px;
+	line-height: 30px;
+}
+.mline_info>span:last-child{
+	color: #fff;
+	font-size: 24px;
+	margin-top: 10px;
+}
+.lastPrice{
+	font-size: 24px;
+}
+.mline_info>.arrow{
+	background: url(../img/arrow.png) no-repeat;
+    background-color: #1e2131;
+    display: block;
+    width: 26px;
+    height: 12px;
+    position: absolute;
+	bottom: -10px;
+	left: 50%;
+	transform: translateX(-100%);
+}
+.point_label{
+	background-color:#44c96e;
+	color: #fff;
+	font-size: 20px;
+	padding: 3px 5px;
+	border-radius: 3px;
+	position: absolute;
+	right: 0;
+	top:0;	
+	/* bottom: 53px; */
+	display: none;
+	/* top: 25px; */
+}
+#f_kline_charts div:last-child:not(:empty){
+	margin-top: -145px;
+	padding: 16px 22px !important;
+	border: 1px solid #264378 !important;
+	background-color: #1e2131 !important;
+	font-size: 20px !important;
+	color: rgba(255,255,255,0.5) !important;
+	box-shadow: 0 0 7px rgba(0,0,0,0.35) !important;
+	border-radius: 5px !important;
+	line-height: 30px !important;
+	width: 265px !important;
+	height: 106px !important;
+}
+#f_kline_charts div:last-child i{
+	display: inline-block !important;
+	margin-top: 10px !important;
+	font-size: 24px !important;
+	color: rgba(255,255,255,1) !important;
+	font-style: normal !important;
+	line-height: 30px !important;
+}
+#markNewPoint{
+	position: absolute;
+	width: auto;
+	display: inline-block;
+	background-color: #44c96e;
+	padding: 0 10px;
+	font-size: 18px;
+	line-height: 25px;
+	color: #fff;
+	border-radius: 3px;
+	right: 0;
 }

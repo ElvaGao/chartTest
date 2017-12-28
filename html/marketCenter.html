@@ -13,8 +13,12 @@
                 <h1 class="market-title fl">行情中心</h1>
                 <span class="mc-tab-li fl"></span>
                 <span class="fr search-input">
-                    <input placeholder="请输入股票名称/代码" />
+                    <input placeholder="请输入股票名称/代码" id="searchInput" onkeydown="searchCode(event)"/>
                     <a href="javascript:void(0)" class="search-btn">搜索</a>
+                    <div id="searchEnd" class="search">
+                        <table>
+                        </table>
+                    </div>
                 </span>
             </div>
         </div>
@@ -22,8 +26,8 @@
         <div class="wrap">
             <div class="market-charts">
                 <div class="fl market-chart-one">
-                    <h2 class="market-chart-title">上证指数(1A0001)</h2>
-                    <span class="market-chart-decs"><i>3249.77</i><i>-0.79%</i><i>-25.80</i></span>
+                    <h2 class="market-chart-title">平安银行(000001)</h2>
+                    <span class="market-chart-decs"><i>-</i><i>-</i><i>-</i></span>
                     <div class="market-main-chart">
                         <a href="#">
                             <div id="main1" style="height:242px;"></div>
@@ -31,8 +35,8 @@
                     </div>
                 </div>
                 <div class="fl market-chart-one">
-                    <h2 class="market-chart-title">深圳指数(399001)</h2>
-                    <span class="market-chart-decs"><i>3249.77</i><i>-0.79%</i><i>-25.80</i></span>
+                    <h2 class="market-chart-title">万 科Ａ(000002)</h2>
+                    <span class="market-chart-decs"><i>-</i><i>-</i><i>-</i></span>
                     <div class="market-main-chart">
                         <a href="#">
                             <div id="main2" style="height:242px;"></div>
@@ -40,8 +44,8 @@
                     </div>
                 </div>
                 <div class="fl market-chart-one">
-                    <h2 class="market-chart-title">创业扳指(39006)</h2>
-                    <span class="market-chart-decs"><label><i>3249.77</i><i>-0.79%</i><i>-25.80</i></label></span>
+                    <h2 class="market-chart-title">国农科技(000004)</h2>
+                    <span class="market-chart-decs"><i>-</i><i>-</i><i>-</i></span>
                     <div class="market-main-chart">
                         <a href="#">
                             <div id="main3" style="height:242px;"></div>
@@ -73,7 +77,7 @@
                             <li><a href="">成交额<i></i></a></li>
                         </ul>
                     </li>
-                    <li class="zdf-list-one zdf-list-detail">
+                    <!-- <li class="zdf-list-one zdf-list-detail">
                         <ul class="clearfix">
                             <li>1</li>
                             <li>603602</li>
@@ -85,7 +89,7 @@
                             <li>21.86<i></i></li>
                             <li>21.86<i></i></li>
                             <li>21.86<i></i></li>
-                            <li>21.86134564<i></i></li>
+                            <li>21.86<i></i></li>
                             <li>21.86<i></i></li>
                             <li>21.86<i></i></li>
                             <li>21.86<i></i></li>
@@ -110,10 +114,10 @@
                             <li>21.86<i></i></li>
                             <li>21.86<i></i></li>
                         </ul>
-                    </li>
+                    </li> -->
                 </ul>
             </div>
-            <div class="M-box"></div>
+            <!-- <div class="M-box"></div> -->
         </div>
     </body>
     <script type="text/javascript" src="../js/jquery.js"></script>
@@ -138,36 +142,36 @@
                     lineHeight:"80px"
                 }
             );
-            $(".M-box").pagination({
-                prevContent:"上一页",
-                nextContent:"下一页",
-                totalData:100,
-                showData:5,
-                keepShowPN:true
-            });
+            // $(".M-box").pagination({
+            //     prevContent:"上一页",
+            //     nextContent:"下一页",
+            //     totalData:100,
+            //     showData:5,
+            //     keepShowPN:true
+            // });
             //jump为0表示不跳转，为1是跳转
-            $(".zdf-list").showList({
-                title:"沪深A涨跌幅",
-                dataTit:[
-                    {liTilt:"序号",jump:0},
-                    {liTilt:"代码",jump:0},
-                    {liTilt:"名称",jump:0},
-                    {liTilt:"现价",jump:1},
-                    {liTilt:"涨跌",jump:1},
-                    {liTilt:"涨幅",jump:1},
-                    {liTilt:"今开",jump:1},
-                    {liTilt:"最高",jump:1},
-                    {liTilt:"最低",jump:1},
-                    {liTilt:"昨收",jump:1},
-                    {liTilt:"换手",jump:1},
-                    {liTilt:"量比",jump:1},
-                    {liTilt:"振幅",jump:1},
-                    {liTilt:"成交量",jump:1},
-                    {liTilt:"成交额",jump:1},
-                ],
-                data:[]
+            // $(".zdf-list").showList({
+            //     title:"沪深A涨跌幅",
+            //     dataTit:[
+            //         {liTilt:"序号",jump:0},
+            //         {liTilt:"代码",jump:0},
+            //         {liTilt:"名称",jump:0},
+            //         {liTilt:"现价",jump:1},
+            //         {liTilt:"涨跌",jump:1},
+            //         {liTilt:"涨幅",jump:1},
+            //         {liTilt:"今开",jump:1},
+            //         {liTilt:"最高",jump:1},
+            //         {liTilt:"最低",jump:1},
+            //         {liTilt:"昨收",jump:1},
+            //         {liTilt:"换手",jump:1},
+            //         {liTilt:"量比",jump:1},
+            //         {liTilt:"振幅",jump:1},
+            //         {liTilt:"成交量",jump:1},
+            //         {liTilt:"成交额",jump:1},
+            //     ],
+            //     data:[]
                 
-            });
+            // });
         });
         function tabLi(index){
             $(".canvas").hide();
