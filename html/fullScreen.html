@@ -33,7 +33,7 @@
                     <span class="fl-trangle flb-tragle"></span>
                     <span class="fl-trangle flb-tragle2"></span>
                     <ul class="flb-toggle">
-                        <li class="active">
+                        <li>
                             <img src="../img/线形.png">
                             <span class="fl-text">Line</span>
                         </li>
@@ -51,179 +51,214 @@
                 </ul>
             </div>
         </div>
-        
-        <!-- 分时图 -->
-        <div class="mline" id="MLine">
-            <div id="mline_charts" class="mline_full" style="width:100%;height:730px;">
-                暂无数据
-                <!-- 提示框 -->
-            </div>
-            <div class="mline_tooltip">
-                <span>
-                    <label>Open</label>
-                    <i id="open">-</i>
-                </span>
-                <span>
-                    <label>High</label>
-                    <i id="high">-</i>
-                </span>
-                <span>
-                    <label>Low</label>
-                    <i id="low">-</i>
-                </span>
-                <span>
-                    <label>Close</label>
-                    <i id="close">-</i>
-                </span>
-                <span>
-                    <label>Volume</label>
-                    <i id="volume">-</i>
-                </span>
-                <span>
-                    <label>% Change</label>
-                    <i id="change">-</i>
-                </span>
-            </div>
-            <label class="point_label">13.38</label>
-            <!-- /* 浮层信息框 */ -->
-            <!-- <div class="mline_info">
-                <span class="stockDate">06/20/2017</span>
-                <span>
-                    <label class="stockName">平安银行</label>
-                    <i class="lastPrice">21,1000</i>
-                </span>
-                <span class="arrow"></span>
-            </div> -->
-        </div>
-
-        <!--K线图开始-->
-        <div class="canvas kline fl f-kline" id="kline" style="display: none;">
-            <div class="no-data no-data-k" id="withoutData">亲，暂时没有数据哦~~~~ ^_^</div>
-            <!-- echarts图开始 -->
-            <div class="kline-charts-container">
-                <div id="f_kline_charts" class="f-kline-charts">
-                    <span id="markNewPoint">444</span>
+        <div class="chart_area">
+            <!-- 分时图 -->
+            <div class="mline" id="MLine">
+                <div id="mline_charts" class="mline_full" style="width:100%;height:730px;">
+                    暂无数据
+                    <!-- 提示框 -->
                 </div>
-                <div id="kline_tooltip" class="f-kline-info">
-                    <ul class="list-unstyled">
-                        <!-- <li><span class="name"></span></li> -->
-                        <!-- <li class="text-justify"><span class="date"></span><span class="day"></span><span class="time"></span></li> -->
-                        <li>Open<span class="open fr"></span></li>
-                        <li>High<span class="highest fr"></span></li>
-                        <li>Low<span class="lowest fr"></span></li>
-                        <li>Close<span class="price fr"></span></li>
-                        <li>Volume<span class="volume fr"></span></li>
-                        <li>% Change<span class="z-value fr"></span></li>
+                <div class="mline_tooltip">
+                    <span>
+                        <label>Open</label>
+                        <i id="open">-</i>
+                    </span>
+                    <span>
+                        <label>High</label>
+                        <i id="high">-</i>
+                    </span>
+                    <span>
+                        <label>Low</label>
+                        <i id="low">-</i>
+                    </span>
+                    <span>
+                        <label>Close</label>
+                        <i id="close">-</i>
+                    </span>
+                    <span>
+                        <label>Volume</label>
+                        <i id="volume">-</i>
+                    </span>
+                    <span>
+                        <label>% Change</label>
+                        <i id="change">-</i>
+                    </span>
+                </div>
+                <label class="point_label">13.38</label>
+                <!-- /* 浮层信息框 */ -->
+                <!-- <div class="mline_info">
+                    <span class="stockDate">06/20/2017</span>
+                    <span>
+                        <label class="stockName">平安银行</label>
+                        <i class="lastPrice">21,1000</i>
+                    </span>
+                    <span class="arrow"></span>
+                </div> -->
+            </div>
+
+            <!--K线图开始-->
+            <div class="canvas kline fl f-kline" id="kline" style="display: none;">
+                <div class="no-data no-data-k" id="withoutData">亲，暂时没有数据哦~~~~ ^_^</div>
+                <!-- echarts图开始 -->
+                <div class="kline-charts-container">
+                    <div id="f_kline_charts" class="f-kline-charts">
+                        <span id="markNewPoint">444</span>
+                    </div>
+                    <div id="kline_tooltip" class="f-kline-info">
+                        <ul class="list-unstyled">
+                            <!-- <li><span class="name"></span></li> -->
+                            <!-- <li class="text-justify"><span class="date"></span><span class="day"></span><span class="time"></span></li> -->
+                            <li>Open
+                                <span class="open fr"></span>
+                            </li>
+                            <li>High
+                                <span class="highest fr"></span>
+                            </li>
+                            <li>Low
+                                <span class="lowest fr"></span>
+                            </li>
+                            <li>Close
+                                <span class="price fr"></span>
+                            </li>
+                            <li>Volume
+                                <span class="volume fr"></span>
+                            </li>
+                            <li>% Change
+                                <span class="z-value fr"></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- echarts图结束 -->
+            </div>
+            <!--K线图结束-->
+            <!-- 右侧信息框开始 -->
+            <div class="fr f-stockInfo">
+                <!-- <div class="no-data no-data-k" id="withoutStockData"></div> -->
+                <div class="f-tb-fieldName">
+                    <div class="tb-fn-title f-tbfn-title">-</div>
+                    <div class="tb-fn-num f-tbfn-num">
+                        <span>-</span>
+                        <span>-</span>
+                        <span>-</span>
+                    </div>
+                </div>
+                <ul class="tb-fielList f-tb-fielList">
+                    <li>
+                        <p>最高：</p>
+                        <span class="red">-</span>
+                    </li>
+                    <li>
+                        <p>今开：</p>
+                        <span class="green">-</span>
+                    </li>
+                    <li>
+                        <p>最低：</p>
+                        <span class="green">-</span>
+                    </li>
+                    <li>
+                        <p>昨收：</p>
+                        <span>-</span>
+                    </li>
+
+                    <li>
+                        <p>成交额：</p>
+                        <span>-</span>
+                    </li>
+                    <li>
+                        <p>市盈率：</p>
+                        <span>-</span>
+                    </li>
+                    <li>
+                        <p>成交量：</p>
+                        <span>-</span>
+                    </li>
+                    <li>
+                        <p>市&nbsp;&nbsp;&nbsp;&nbsp;值：</p>
+                        <span>-</span>
+                    </li>
+                    <li>
+                        <p>换手率：</p>
+                        <span>-</span>
+                    </li>
+                    <li>
+                        <p>振&nbsp;&nbsp;&nbsp;&nbsp;幅：</p>
+                        <span>-</span>
+                    </li>
+                </ul>
+                <div class="f-latest-stock">
+                    <h2>最近访问股</h2>
+                    <ul class="f-ls-list">
+                        <li>
+                            <span>新华传媒</span>
+                            <span>6.04</span>
+                            <span class="black">0.00%</span>
+                        </li>
+                        <li>
+                            <span>新华传媒</span>
+                            <span>6.04</span>
+                            <span class="red">0.00%</span>
+                        </li>
+                        <li>
+                            <span>新华传媒</span>
+                            <span>6.04</span>
+                            <span class="green">0.00%</span>
+                        </li>
+                        <li>
+                            <span>新华传媒</span>
+                            <span>6.04</span>
+                            <span class="black">0.00%</span>
+                        </li>
+                        <li>
+                            <span>新华传媒</span>
+                            <span>6.04</span>
+                            <span class="black">0.00%</span>
+                        </li>
                     </ul>
                 </div>
             </div>
-            <!-- echarts图结束 -->
+            <!-- 右侧信息框结束 -->
         </div>
-        <!--K线图结束-->
-        <!-- 右侧信息框开始 -->
-        <div class="fr f-stockInfo">
-            <!-- <div class="no-data no-data-k" id="withoutStockData"></div> -->
-            <div class="f-tb-fieldName">
-                <div class="tb-fn-title f-tbfn-title">-</div>
-                <div class="tb-fn-num f-tbfn-num">
-                    <span>-</span>
-                    <span>-</span>
-                    <span>-</span>
-                </div>
-            </div>
-            <ul class="tb-fielList f-tb-fielList">
-                <li>
-                    <p>最高：</p>
-                    <span class="red">-</span>
-                </li>
-                <li>
-                    <p>今开：</p>
-                    <span class="green">-</span>
-                </li>
-                <li>
-                    <p>最低：</p>
-                    <span class="green">-</span>
-                </li>
-                <li>
-                    <p>昨收：</p>
-                    <span>-</span>
-                </li>
-
-                <li>
-                    <p>成交额：</p>
-                    <span>-</span>
-                </li>
-                <li>
-                    <p>市盈率：</p>
-                    <span>-</span>
-                </li>
-                <li>
-                    <p>成交量：</p>
-                    <span>-</span>
-                </li>
-                <li>
-                    <p>市&nbsp;&nbsp;&nbsp;&nbsp;值：</p>
-                    <span>-</span>
-                </li>
-                <li>
-                    <p>换手率：</p>
-                    <span>-</span>
-                </li>
-                <li>
-                    <p>振&nbsp;&nbsp;&nbsp;&nbsp;幅：</p>
-                    <span>-</span>
-                </li>
-            </ul>
-            <div class="f-latest-stock">
-                <h2>最近访问股</h2>
-                <ul class="f-ls-list">
-                    <li>
-                        <span>新华传媒</span>
-                        <span>6.04</span>
-                        <span class="black">0.00%</span>
-                    </li>
-                    <li>
-                        <span>新华传媒</span>
-                        <span>6.04</span>
-                        <span class="red">0.00%</span>
-                    </li>
-                    <li>
-                        <span>新华传媒</span>
-                        <span>6.04</span>
-                        <span class="green">0.00%</span>
-                    </li>
-                    <li>
-                        <span>新华传媒</span>
-                        <span>6.04</span>
-                        <span class="black">0.00%</span>
-                    </li>
-                    <li>
-                        <span>新华传媒</span>
-                        <span>6.04</span>
-                        <span class="black">0.00%</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <!-- 右侧信息框结束 -->
-
+        <footer class="bottom">
+            <span class="b_info">
+                <em>澳元/美元 </em>
+                <i>0.7575</i>
+                <i>
+                    <i class="b_arrow"></i>0.52%</i>
+            </span>
+            <span class="b_info">
+                <em>澳元/美元 </em>
+                <i>0.7575</i>
+                <i>
+                    <i class="b_arrow"></i>0.52%</i>
+            </span>
+            <span class="b_info">
+                <em>澳元/美元 </em>
+                <i>0.7575</i>
+                <i>
+                    <i class="b_arrow"></i>0.52%</i>
+            </span>
+        </footer>
     </div>
 
 
     <script src="../js/jquery.js"></script>
     <script src="../js/echarts.js"></script>
     <script src="../js/moment.min.js"></script>
-    <script src="../js/public.js"></script> <!-- 公共方法 -->
+    <script src="../js/public.js"></script>
+    <!-- 公共方法 -->
 
     <!-- 分时图  -->
     <script src="../js/mLineFull.js"></script>
+    <script src="../js/mousewheel.js"></script>
 
-    <script type="text/javascript" src="../js/kLineFull.js"></script> <!-- K线 -->
-    
+    <script type="text/javascript" src="../js/kLineFull.js"></script>
+    <!-- K线 -->
+
     <script type="text/javascript">
 
-        $(function(){
-			// 行情echarts切换标签
+        $(function () {
+            // 行情echarts切换标签
             $(".container").toggleLi(
                 {
                     data: [
@@ -253,13 +288,13 @@
                 case "2":
                     // 深交所接口
                     wsUrl = "ws://103.66.33.67:443";
-                    stockXMlUrl = "http://172.17.20.203:6789/2";
+                    stockXMlUrl = "http://103.66.33.125/2:80";
                     break;
                 case "101": ;
                 default:
                     // 上证指数接口
                     wsUrl = "ws://172.17.20.203:7681";
-                    stockXMlUrl = "http://172.17.20.203:6789/101";
+                    stockXMlUrl = "http://103.66.33.125/101:80";
                     break;
             }
 
@@ -287,205 +322,15 @@
             });
 
             $.selectOption({
-                container: ".f-search",
                 input: ".fs-text",
                 submit: "#fSearch",
-                list: "#url_list"
+                list: "#url_list",
+                bar: ".bar",
+                thumb: ".bar-thumb"
             });
 
-        }); 
-
-
-        /*
-         * 查询下拉框效果
-         */
-        ;(function ($) {
-            /*
-             * 查询下拉框效果
-             */
-            $.selectOption = function (option) {
-                var selectOpt = new $.selectOptionEl(option);
-                selectOpt.bingKeyUpEvents();
-                selectOpt.bindClose();
-                selectOpt.bindSubmit();
-                selectOpt.bindFocus();
-
-            };
-
-            $.selectOptionEl = function (option) {
-                this.default = {
-                    timer: "",
-                    indexLi: "",
-                };
-
-                this.options = $.extend({}, this.default, option);
-            };
-
-            // 点击其他地方，关闭菜单
-            $(document).click(function () {
-                $("#url_list").hide();
-            });
-            $("#url_list,.fs-text").click(function (event) {
-                event.stopPropagation();
-            });
-
-            $.selectOptionEl.prototype = {
-                bingKeyUpEvents:    function(){
-                                        var ele = this;
-                                        // 绑定键盘事件
-                                        $(ele.options.input).keyup(function(e){
-                                            var keyCode = e.keyCode?e.keyCode:8;
-                                            // 查询输入的值
-                                            var value = $(this).val();
-                                            // Code是不为空的数字时，进行查询
-                                            if((keyCode==8||keyCode>=48&&keyCode<=57||keyCode>=65&&keyCode<=90)&&value!=""&&value!=null){
-                                                // 延时查询
-                                                ele.options.timer = setTimeout(function(){
-                                                    var url = "http://103.66.33.58:443/?ExchangeID=0&Codes="+value;
-                                                    $.ajax({
-                                                        url:  url,
-                                                        type: 'GET',
-                                                        dataType: 'json',
-                                                        async:false,
-                                                        cache:false,
-                                                        error: function(data){
-                                                            console.log("请求代码表出错");
-                                                        },
-                                                        success: function(data){
-                                                            indexLi = 0;
-                                                            var dataArr = data.CodeInfo;
-                                                            if(dataArr){
-                                                                ele.setSearchUlOptions(dataArr,value);
-                                                                $(ele.options.list).show();
-                                                            }else{
-                                                                $(ele.options.list).hide();
-                                                            }
-                                                        }
-                                                    });
-                                                },300);
-                                            }else{
-                                                // 连续按键会清除查询
-                                                clearTimeout(ele.options.timer);
-                                            }
-                                            switch (keyCode) {
-                                                case 8:
-                                                    if(value==""||value==null){
-                                                        $(ele.options.list).hide();
-                                                    }
-                                                    break;
-                                                case 13:    // 回车
-                                                    $(ele.options.submit).click();
-                                                    break;
-                                                case 38:
-                                                    ele.moveSelectOption(-1);
-                                                    break;  //上
-                                                case 40:
-                                                    ele.moveSelectOption(1);
-                                                    break; //下
-                                                default:;
-                                            }
-                                        });
-                                    },
-                bindClose:  function () {
-                                var ele = this;
-                                // 点击其他地方，关闭菜单
-                                $(document).click(function () {
-                                    $(ele.options.list).hide();
-                                });
-                                $(ele.options.list + "," + ele.options.input).click(function (event) {
-                                    event.stopPropagation();
-                                });
-                            },
-                bindSubmit:     function () {
-                                    var ele = this;
-                                    // 点击搜索按钮
-                                    $(ele.options.submit).click(function () {
-                                        if ($(ele.options.list).children("li").length > 0) {
-                                            ele.queryNew($(ele.options.list).children(".active")[0]);
-                                        }
-                                    });
-
-                                },
-                // 点击搜索框会出现
-                bindFocus:      function () {
-                                    var ele = this;
-                                    $(ele.options.input).focus(function () {
-                                        $(ele.options.input).keyup();
-                                    });
-                                },
-                // 键盘上下键响应事件
-                moveSelectOption:   function (direct) {
-                                        indexLi += direct;
-                                        if (direct == -1) {
-                                            if (indexLi < 0) {
-                                                indexLi = $("#url_list li").length - 1;
-                                            }
-                                        } else {
-                                            if (indexLi > $("#url_list li").length - 1) {
-                                                indexLi = 0;
-                                            }
-                                        }
-                                        $(this.options.list).children("li").eq(indexLi).addClass("active").
-                                            siblings().removeClass("active");
-                                        $(this.options.list).scrollTop(46 * (indexLi > 0 ? (indexLi - 3) : 0));
-                                    },
-                // 拼接查询到的接口数据
-                setSearchUlOptions: function (data, value) {
-                                        var ele = this;
-                                        var html = "";
-                                        $.each(data, function (i, dataObj) {
-                                            var spanName = "<span>" + dataObj.InstrumentName + "</span>",
-                                                spanCode = "<span>" + dataObj.InstrumentCode + "</span>";
-                                            // 是否有值，如果没有输入值，不进行匹配
-                                            if (eval("/" + value + "/").test(spanName) || eval("/" + value + "/").test(spanCode)) {
-                                                spanName = spanName.replace(eval("/" + value + "/"), "<i>" + value + "</i>");
-                                                spanCode = spanCode.replace(eval("/" + value + "/"), "<i>" + value + "</i>");
-                                            };
-                                            html += "<li eId=" + dataObj.ExchangeID + ">" + spanName + spanCode + "</li>";
-                                        });
-                                        $(ele.options.list).html(html);
-                                        if ($(ele.options.list).children("li").length > 0) $(ele.options.list).children("li:eq(0)").addClass("active");
-                                        // 点击选择了某个选项后 更新输入框内容 打开新页面查询新数据
-                                        $(ele.options.list).children("li").click(function () {
-                                            ele.queryNew(this);
-                                        });
-                                    },
-                queryNew:       function (eleLi) {
-                                    var ele = this;
-                                    var exchangeID = $(eleLi).attr("eid");
-                                    var id = Number($(eleLi).children("span:eq(1)").text());
-                                    $(ele.options.input).val($(eleLi).children("span:eq(1)").text());
-                                    $(ele.options.list).hide();
-                                    // 打开新页面
-                                    var location = window.location.href.split("?")[0];
-                                    window.location.href = location + "?id=" + id + "&exchangeID=" + exchangeID;
-                                }
-
-            };
-
-        })(jQuery);
-
-
-
-        /*
-         * 分时图的下拉选择 线还是区域
-         */
-        $(".f-lineType").click(function () {
-
-            if ($(".f-lineType-box").hasClass("clicked")) {
-                $(".f-lineType-box").removeClass("clicked");
-                $(".f-lineType-box").hide();
-            } else {
-                $(".f-lineType-box").addClass("clicked")
-                $(".f-lineType-box").show();
-            }
         });
-        $(".flb-toggle").on("click", "li", function () {
-            var html = "<span class=\"fl-trangle\"></span>";
-            html = $(this).html() + html;
-            $(".flt-text").html(html);
-            // $(this).parent().toggle();
-        });
+
     </script>
 </body>
 

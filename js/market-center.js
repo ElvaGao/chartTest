@@ -1,5 +1,5 @@
 var wsUrlDevelop = 'ws://103.66.33.67:443';//'ws://103.66.33.31:443';//开发
-var stockXMlUrl = "http://172.17.20.203:6789/2";//"../xml/ths.xml";//"http://172.17.20.203:6789/101";
+var stockXMlUrl = "http://103.66.33.125/2:80";//"../xml/ths.xml";//"http://172.17.20.203:6789/101";
 var exponentDateTime = [];//解析XML后得到的数组 所有指数的时间、类型、id、小数位数等
 var elementId;
 var ZSId,ExchangeID;

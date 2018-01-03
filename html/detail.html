@@ -202,7 +202,7 @@
     <!-- 页面结束 -->
 
     <script type="text/javascript" src="../js/jquery.js"></script>
-    <script type="text/javascript" src="../js/echarts.min.js"></script>
+    <script type="text/javascript" src="../js/echarts.js"></script>
     <script type="text/javascript" src="../js/moment.min.js"></script>
 
     <script type="text/javascript" src="../js/public.js"></script>
@@ -240,13 +240,14 @@
                 case "2":
                     // 深交所接口
                     wsUrl = "ws://103.66.33.67:443";
-                    stockXMlUrl = "http://172.17.20.203:6789/2";
+                    stockXMlUrl = "http://103.66.33.125/2:80";
                     break;
                 case "101":;
+                case "1":;
                 default: 
                     // 上证指数接口
                     wsUrl = "ws://172.17.20.203:7681";
-                    stockXMlUrl = "http://172.17.20.203:6789/101";
+                    stockXMlUrl = "http://103.66.33.125/101:80";
             }
 
             // 初始化分时图

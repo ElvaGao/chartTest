@@ -537,6 +537,12 @@
                             }
                         ]
                     });
+                    $(".point_label").text(fvalue?fvalue:"-");
+                    var pixel = myChart.convertToPixel({seriesIndex: 1}, [$this.v_data[$this.history_data.length-1], ''+$this.history_data[$this.history_data.length-1]]);
+                    $(".point_label").css({'top':pixel[1]-12});
+                    if(fvalue >= yc){
+                        $(".point_label").css({"background-color":"#c23a39"});
+                    }
                 }else{
                     // $("#noData").show();
                     // $("#toolContent_M").hide();
@@ -800,7 +806,7 @@
                                             return (params.value);
                                         },
                                         padding:[3,5,5,5],
-                                        show:true
+                                        show:false
                                     }
                                 },
                                 splitArea:{
@@ -827,6 +833,9 @@
                                 axisPointer:{
                                     lineStyle:{
                                         color:"transparent"
+                                    },
+                                    label:{
+                                        show:false
                                     }
                                 }
                             }
@@ -874,13 +883,13 @@
                                     }
                                 },
                                 axisPointer: {
-                                    // show:false,
+                                    show:false,
                                     label: {
                                         formatter: function (params, value, s) {
                                             return parseFloat(params.value).toFixed(2) + "%";
                                         }
                                     },
-                                    snap: true,
+                                    // snap: true
                                 }
                             },
                             {
@@ -934,7 +943,7 @@
                                             return parseFloat(params.value).toFixed($this.decimal);
                                         }
                                     },
-                                    snap: true,
+                                    snap: true
                                 }
                             },
                             {
@@ -1049,42 +1058,6 @@
                                             name: 'Y 轴值为 100 的水平线',
                                             yAxis: middleY,
                                         },
-                                        // [
-                                        //     {
-                                        //         // name: '两个坐标之间的标线',
-                                        //         coord: [$this.v_data[0], ''+price[price.length-1]],
-                                        //         // symbol:'roundRect',
-                                        //         symbolSize:0,
-                                        //         lineStyle:{
-                                        //             normal:{
-                                        //                 color:'#fff',
-                                        //                 width:0
-                                        //             }
-                                        //         },
-                                        //         label:{
-                                        //             normal: {
-                                        //                 position: "end",
-                                        //                 formatter: function (params) {
-                                        //                     return price[price.length-1] + " ";
-                                        //                 }
-                                        //             }
-                                        //         },
-                                        //     },
-                                        //     {
-                                        //         coord: [$this.v_data[$this.v_data.length-1], ''+price[price.length-1]],
-                                        //         symbol:'image://../img/roundRect.png',
-                                        //         symbolSize:0,
-                                        //         // symbolOffset:['50%',0],
-                                        //         label:{
-                                        //             normal: {
-                                        //                 position: "end",
-                                        //                 formatter: function (params) {
-                                        //                     return price[price.length-1] + " ";
-                                        //                 }
-                                        //             }
-                                        //         },
-                                        //     }
-                                        // ],
                                     ],
                                     symbol: ['none', 'none']
                                 },
@@ -1094,17 +1067,18 @@
                                         width:1
                                     }
                                 },
-                                // areaStyle:{
-                                //     normal:{
-                                //         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                                //             offset: 0,
-                                //             color: 'rgba(43, 153, 255,0.3)'
-                                //         }, {
-                                //             offset: 1,
-                                //             color: 'rgba(43, 153, 255,0.1)'
-                                //         }])
-                                //     }
-                                // },
+                                areaStyle:{
+                                    normal:{
+                                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                            offset: 0,
+                                            color: 'rgba(43, 153, 255,0.3)'
+                                        }, {
+                                            offset: 1,
+                                            color: 'rgba(43, 153, 255,0.1)'
+                                        }]),
+                                        opacity:0
+                                    }
+                                },
                                 yAxisIndex: 1
                             },
                             {
@@ -1236,7 +1210,7 @@
 
     }
 
-    $(document).keyup(function (e) {
+    $("#kline,#MLine").keyup(function (e) {
         var keyCode = e.keyCode;
         switch (keyCode) {
             case 37:
@@ -1374,7 +1348,7 @@
                 });    
             }
         }
-    };
+    }
 
     // 接收到清盘指令重绘图表
     function redrawChart(data,$this){
@@ -1562,10 +1536,55 @@
     // ecahrts图进行缩放
     $(window).resize(function(){
         if($("#kline").css("display")=="none"){
-            myChart.resize({width:"auto",height:"auto"});
+            if(myChart){
+                myChart.resize({width:"auto",height:"auto"});
+            }
         }else{
             chartResize();
         }         
     });
 
+     /*
+        * 分时图的下拉选择 线还是区域
+        */
+    $(".flt-text").click(function () {
+        if ($(".f-lineType-box").hasClass("clicked")) {
+            $(".f-lineType-box").removeClass("clicked");
+            $(".f-lineType-box").hide();
+        } else {
+            $(".f-lineType-box").addClass("clicked")
+            $(".f-lineType-box").show();
+        }
+    });
+    $(".flb-toggle li").on("click", function (event) {
+        var html = "<span class=\"fl-trangle\"></span>";
+        html = $(this).html() + html;
+        $(".flt-text").html(html);
+        if(myChart){
+            if($(this).index() == 0){
+                myChart.setOption({
+                    series:[{},{
+                        areaStyle:{
+                            normal:{
+                                opacity:0
+                            }
+                        }
+                    }]
+                });
+            }else if($(this).index() == 1){
+                myChart.setOption({
+                    series:[{},{
+                        areaStyle:{
+                            normal:{
+                                opacity:1
+                            }
+                        }
+                    }]
+                });
+            }
+        }
+        $(".f-lineType-box").removeClass("clicked");
+        $(".f-lineType-box").hide();
+        return false;
+    });
 })(jQuery);

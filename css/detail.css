@@ -590,6 +590,7 @@ ul{
 	width: 154px;
 	border: none;
 	border: 1px solid #1e2131;
+	box-sizing: border-box;
 }
 .f-lineType-box li:last-child{
 	border-top: none;
@@ -645,7 +646,7 @@ ul{
 	width: 360px;
 	top: 54px;
 	left: 0;
-	max-height: 281px;
+	max-height: 276px;
 	overflow-y: scroll;
 	display: none;
 }
@@ -681,6 +682,9 @@ ul{
     overflow: hidden;
     text-overflow: ellipsis;
 }
+#url_list li span i{
+	font-size: 24px;
+}
 #url_list li i{
 	font-style: normal;
 	color: #2b99ff;
@@ -694,7 +698,7 @@ ul{
 .content{
 	position: relative;
 	overflow: hidden;
-	padding-bottom: 100px;
+	padding-bottom: 80px;
 }
 .f-kline{
 	width: 72.916%;
@@ -711,7 +715,8 @@ ul{
 .f-stockInfo{
 	width: 25.44%;
 	/*width: 100%;*/
-	margin-top: 40px;
+	background-color: #20283f;
+	padding: 40px 20px 40px 40px;
 }
 
 .f-tb-fieldName{
@@ -944,14 +949,12 @@ ul{
 	background-color:#44c96e;
 	color: #fff;
 	font-size: 20px;
-	padding: 3px 5px;
+	padding: 0px 10px;
 	border-radius: 3px;
 	position: absolute;
 	right: 0;
 	top:0;	
-	/* bottom: 53px; */
 	display: none;
-	/* top: 25px; */
 }
 #f_kline_charts div:last-child:not(:empty){
 	margin-top: -145px;
@@ -985,4 +988,37 @@ ul{
 	color: #fff;
 	border-radius: 3px;
 	right: 0;
+}
+.bottom{
+	border-top: 1px solid #264378;
+	line-height: 80px;
+	height: 80px;
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+	background-color: #1e2131;
+}
+.b_info{
+	width: 33%;
+	text-align: center;
+	display: inline-block;
+}
+.b_info>em,.b_info>i{
+	font-size: 30px;
+	font-family: '微软雅黑';
+	color: #fff;
+	margin: 0 15px;
+}
+.b_info>i{
+	color: #C23A39;
+}
+.b_arrow{
+	width: 0;
+	height: 0;
+	border-top: 10px solid #C23A39;
+	border-left: 10px dashed transparent;
+	border-right: 10px dashed transparent;
+	padding-top: 3px;
+	display: inline-block;
+	margin-right: 10px;
 }

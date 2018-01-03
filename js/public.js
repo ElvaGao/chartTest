@@ -194,11 +194,10 @@ function setUnit(data,type,lang){
         var opt = $("<ul class='clearfix' id='tab'></ul>");
 
         initLi(opt,options);
-
         $this.prepend(opt);
         var index = 0;
-        $("ul li").on("click",function(event){
-            $("ul li").removeClass("active");
+        $("ul.clearfix li").on("click",function(event){
+            $("ul.clearfix li").removeClass("active");
             $(this).addClass("active");
             index = $(this).index();
 

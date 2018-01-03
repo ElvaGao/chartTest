@@ -105,6 +105,165 @@ function tabLi(index){
     }
 }
 /*
+ * 查询下拉框效果
+ */
+; (function ($) {
+    $.selectOption = function (option) {
+        var selectOpt = new $.selectOptionEl(option);
+        selectOpt.bingKeyUpEvents();
+        selectOpt.bindClose();
+        selectOpt.bindSubmit();
+        selectOpt.bindFocus();
+
+    };
+
+    $.selectOptionEl = function (option) {
+        this.default = {
+            timer: "",
+            indexLi: "",
+        };
+
+        this.options = $.extend({}, this.default, option);
+    };
+
+    // 点击其他地方，关闭菜单
+    $(document).click(function () {
+        $("#url_list").hide();
+    });
+    $("#url_list,.fs-text").click(function (event) {
+        event.stopPropagation();
+    });
+
+    $.selectOptionEl.prototype = {
+        bingKeyUpEvents: function () {
+            var ele = this;
+            // 绑定键盘事件
+            $(ele.options.input).keyup(function (e) {
+                var keyCode = e.keyCode ? e.keyCode : 8;
+                // 查询输入的值
+                var value = $(this).val();
+                // Code是不为空的数字时，进行查询
+                if ((keyCode == 8 || keyCode >= 48 && keyCode <= 57 || keyCode >= 65 && keyCode <= 90) && value != "" && value != null) {
+                    // 延时查询
+                    ele.options.timer = setTimeout(function () {
+                        var url = "http://103.66.33.58:443/?ExchangeID=0&Codes=" + value;
+                        $.ajax({
+                            url: url,
+                            type: 'GET',
+                            dataType: 'json',
+                            async: false,
+                            cache: false,
+                            error: function (data) {
+                                console.log("请求代码表出错");
+                            },
+                            success: function (data) {
+                                indexLi = 0;
+                                var dataArr = data.CodeInfo;
+                                if (dataArr) {
+                                    ele.setSearchUlOptions(dataArr, value);
+                                    $(ele.options.list).show();
+                                } else {
+                                    $(ele.options.list).hide();
+                                }
+                            }
+                        });
+                    }, 300);
+                } else {
+                    // 连续按键会清除查询
+                    clearTimeout(ele.options.timer);
+                }
+                switch (keyCode) {
+                    case 13:    // 回车
+                        $(ele.options.submit).click();
+                        break;
+                    case 38:
+                        ele.moveSelectOption(-1);
+                        break;  //上
+                    case 40:
+                        ele.moveSelectOption(1);
+                        break; //下
+                    default: ;
+                }
+            });
+        },
+        bindClose: function () {
+            var ele = this;
+            // 点击其他地方，关闭菜单
+            $(document).click(function () {
+                $(ele.options.list).hide();
+            });
+            $(ele.options.list + "," + ele.options.input).click(function (event) {
+                event.stopPropagation();
+            });
+        },
+        bindSubmit: function () {
+            var ele = this;
+            // 点击搜索按钮
+            $(ele.options.submit).click(function () {
+                if ($(ele.options.list).children("li").length > 0) {
+                    ele.queryNew($(ele.options.list).children(".active")[0]);
+                }
+            });
+
+        },
+        // 点击搜索框会出现
+        bindFocus: function () {
+            var ele = this;
+            $(ele.options.input).focus(function () {
+                $(ele.options.input).keyup();
+            });
+        },
+        // 键盘上下键响应事件
+        moveSelectOption: function (direct) {
+            indexLi += direct;
+            if (direct == -1) {
+                if (indexLi < 0) {
+                    indexLi = $("#url_list li").length - 1;
+                }
+            } else {
+                if (indexLi > $("#url_list li").length - 1) {
+                    indexLi = 0;
+                }
+            }
+            $(this.options.list).children("li").eq(indexLi).addClass("active").
+                siblings().removeClass("active");
+            $(this.options.list).scrollTop(46 * (indexLi > 0 ? (indexLi - 3) : 0));
+        },
+        // 拼接查询到的接口数据
+        setSearchUlOptions: function (data, value) {
+            var ele = this;
+            var html = "";
+            $.each(data, function (i, dataObj) {
+                var spanName = "<span>" + dataObj.InstrumentName + "</span>",
+                    spanCode = "<span>" + dataObj.InstrumentCode + "</span>";
+                // 是否有值，如果没有输入值，不进行匹配
+                if (eval("/" + value + "/").test(spanName) || eval("/" + value + "/").test(spanCode)) {
+                    spanName = spanName.replace(eval("/" + value + "/"), "<i>" + value + "</i>");
+                    spanCode = spanCode.replace(eval("/" + value + "/"), "<i>" + value + "</i>");
+                };
+                html += "<li eId=" + dataObj.ExchangeID + ">" + spanName + spanCode + "</li>";
+            });
+            $(ele.options.list).html(html);
+            if ($(ele.options.list).children("li").length > 0) $(ele.options.list).children("li:eq(0)").addClass("active");
+            // 点击选择了某个选项后 更新输入框内容 打开新页面查询新数据
+            $(ele.options.list).children("li").click(function () {
+                ele.queryNew(this);
+            });
+        },
+        queryNew: function (eleLi) {
+            var ele = this;
+            var exchangeID = $(eleLi).attr("eid");
+            var id = Number($(eleLi).children("span:eq(1)").text());
+            $(ele.options.input).val($(eleLi).children("span:eq(1)").text());
+            $(ele.options.list).hide();
+            // 打开新页面
+            var location = window.location.href.split("?")[0];
+            window.location.href = location + "?id=" + id + "&exchangeID=" + exchangeID;
+        }
+    };
+
+})(jQuery);
+/*
  * websocket
  */
 // 指数/个股信息参数
@@ -417,6 +576,7 @@ function reqStockInfo(options){
         dataType: 'xml',
         async:false,
         cache:false,
+        timeout:60000,
         error: function(xml){
             console.log("请求代码表出错");
         },
@@ -971,8 +1131,10 @@ function chartPaint(isHistory){
                         normal: {
                             color: '#c23a39',
                             color0: '#44c96e',
+                            colorD: 'rgba(255,255,255,0.5)',
                             borderColor: '#c23a39',
-                            borderColor0: '#44c96e'
+                            borderColor0: '#44c96e',
+                            borderColorD: 'rgba(255,255,255,0.5)'
                         }
                     },
                     barWidth: 8,
@@ -1061,8 +1223,11 @@ function updatePointLabel(value,index){
         }
     }
 
-    $("#markNewPoint").css({top:pixel[1]-12,marginRight: (100-$("#markNewPoint").width())/2})
-        .text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hCategoryList.length-1][1]));
+    var openValue = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hCategoryList.length-1][0];
+    var lastValue = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hCategoryList.length-1][1];
+    var Bgcolor = lastValue>openValue?"#c23a39":(lastValue==openValue?"#62646f":"#44c96e");
+    $("#markNewPoint").css({top:pixel[1]-12,marginRight: (100-$("#markNewPoint").width())/2,backgroundColor:Bgcolor})
+        .text(floatFixedDecimal(lastValue));
 }
 // 根据窗口变化，调整柱状图单位的位置
 function chartResize() {
