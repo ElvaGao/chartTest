@@ -61,11 +61,13 @@ var lastClose=0;
                         KLineSocket.getKQXKZQAll();
                         // 发起新请求
                         KLineSocket.getHistoryKQAll();
+                        $("#withoutData").show().siblings().hide();
                         break;
                     case "day":
                         KLineSocket.getKQXQAll();
                         // 发起新请求
                         KLineSocket.getHistoryKQAll();
+                        $("#withoutData").show().siblings().hide();
                         break;
                     default:;
                 };
@@ -573,15 +575,16 @@ function reqStockInfo(options){
     $.ajax({
         url:  options.stockXMlUrl,
         type: 'GET',
-        dataType: 'xml',
+        dataType: 'json',
         async:false,
         cache:false,
         timeout:60000,
-        error: function(xml){
+        error: function(json){
             console.log("请求代码表出错");
         },
-        success: function(xml){
-            var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
+        success: function(json){
+            // var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
+            var allZSCode = json;
             //  获取交易名字和小数位数
             setStockInfo(allZSCode,options.InstrumentID);
             // 发起websocket请求-reqStockInfo中去写
@@ -693,18 +696,11 @@ function setFieldInfo(data){
 };
 // 代码表：获取 指数/个股 名称，小数位数，InstrumentCode，Code
 function setStockInfo(_codeList,id){
-    var fieldInsCode;
-    $.each(_codeList,function(){
-        if($(this).attr("id") == id){
-
-            StockSocket.FieldInfo.Name = $(this).attr("name");
-            StockSocket.FieldInfo.Decimal = $(this).parent().attr("PriceDecimal");
-            // 所属市场代码
-            fieldInsCode = $(this).parent().parent().attr("code");
-            // 股票代码
-            StockSocket.FieldInfo.Code = $(this).attr("code");
-        };
-    });
+    var codeInfo = _codeList.CodeInfo[0];
+    StockSocket.FieldInfo.Name = codeInfo.InstrumentName;
+    StockSocket.FieldInfo.Decimal = codeInfo.PriceDecimal;
+    // 股票代码
+    StockSocket.FieldInfo.Code = codeInfo.InstrumentCode;
     $(".tb-fn-title").html("<span class=\"fl\">"+StockSocket.FieldInfo.Name+"</span><span class=\"fl\">"+StockSocket.FieldInfo.Code+"</span>");
 };
 

@@ -10,9 +10,7 @@
     var WebSocketConnect = function(opt) {
         this.ws = null;
         this.defaults = {
-            //wsUrl : 'ws://103.66.33.37:80'; //生产
             wsUrl : opt.wsUrl,//"ws://172.17.20.203:7681",  //开发
-            // wsUrl : "ws://103.66.33.67:443",  //开发       
             lockReconnect : false,//避免重复连接 连接锁如果有正在连接的则锁住
             timeout : 60000,//60秒
             timeoutObj : null,
@@ -78,7 +76,6 @@
     
     // 初始化代码表
     var InitXMLIChart = function(opt){
-        // this.socket = null,
         this.defaults = {
             // 请求代码表地址
             stockXMlUrl:opt.stockXMlUrl,
@@ -138,22 +135,25 @@
         $.ajax({
             url:  _options.stockXMlUrl,
             type: 'GET',
-            dataType: 'xml',
+            dataType: 'json',
             async:false,
             cache:false,
             timeout:60000,
             error: function(xml){
                 console.log("请求代码表出错");
             },
-            success: function(xml){
-                var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
-                var exponentDateTime = getExponentDateTime(xml,allZSCode);
-                
-                compareTime(exponentDateTime,_options);
-
-                socket = new WebSocketConnect(_options);
-                var ws = socket.createWebSocket();
-                initEvent(ws,_this);
+            success: function(data){
+                // var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
+                // var exponentDateTime = getExponentDateTime(xml,allZSCode);
+                if(data.ReturnCode == 0){
+                    data = data.CodeInfo[0];
+                    compareTime(data,_options);
+                    socket = new WebSocketConnect(_options);
+                    var ws = socket.createWebSocket();
+                    initEvent(ws,_this);
+                }else{
+                    console.log("请求码表出错");
+                }
             }
         });
     };
@@ -174,6 +174,7 @@
                     endTime = st.split("-")[1];
                     startTime1 = et.split("-")[0];
                     endTime1 = et.split("-")[1];
+                    startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
                 }else{
                     startTime = _codeList[i].attributes["ts"].value.split("-")[0];
                     endTime = _codeList[i].attributes["ts"].value.split("-")[1];
@@ -211,9 +212,9 @@
                     endTime = st.split("-")[1];
                     startTime1 = et.split("-")[0];
                     endTime1 = et.split("-")[1];
-                    if($($(_codeList[i]).parent("product")[0]).attr("name") == "指数"){
-                        startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+"1";
-                    }
+                    // if($($(_codeList[i]).parent("product")[0]).attr("name") == "指数"){
+                    startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
+                    // }
                 }else{
                     startTime = elValue.split("-")[0];
                     endTime = elValue.split("-")[1];
@@ -235,39 +236,48 @@
         return exponentDateTime;
     }
     //1、用id判断出是哪个指数，获取其开始时间和结束时间、保留小数位
-    function compareTime(dateList,_options){
-        for(let i=0;i<dateList.length;i++){
-            if( _options.id == dateList[i].id ){
-                _options.decimal = parseInt(dateList[i].decimalCount);//保留小数位数
-                _options.typeIndex = dateList[i].type;//指数类型
-                var startT = parseInt(dateList[i].startTime.split(":")[0]);
-                var endT = parseInt(dateList[i].endTime.split(":")[0]);
-                if(dateList[i].endTime1){
-                    endT = parseInt(dateList[i].endTime1.split(":")[0]);
-                }
-                var json,json1;
-                if(startT > endT){//国际时间，跨天了，需要将当前时间减一
-                    sub = -1;
-                    json = {
-                        startTime:dateList[i].startTime,
-                        endTime:dateList[i].endTime1
-                    };
-                    _options.nowDateTime.push(json);
-                }else{//未跨天
-                    sub = 0;
-                    json = {
-                        startTime:dateList[i].startTime,
-                        endTime:dateList[i].endTime
-                    };
-                    _options.nowDateTime.push(json);
-                    if(dateList[i].startTime1){
-                        json1 = {
-                            startTime1:dateList[i].startTime1,
-                            endTime1:dateList[i].endTime1
-                        };
-                        _options.nowDateTime.push(json1);
-                    }
-                }
+    function compareTime(data,_options){
+        var startTime,endTime,startTime1,endTime1;
+        if(data.time.indexOf(";")>-1){//分段时间
+            startTime = (data.time.split(";")[0]).split("-")[0];
+            endTime = (data.time.split(";")[0]).split("-")[1];
+            startTime1 = (data.time.split(";")[1]).split("-")[0];
+            endTime1 = (data.time.split(";")[1]).split("-")[1];
+            startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
+        }else{//无分段时间
+            startTime = data.time.split("-")[0];
+            endTime = data.time.split("-")[1];
+            startTime1 = endTime1 = "";
+        }
+        _options.decimal = parseInt(data.PriceDecimal);//保留小数位数
+        _options.typeIndex = data.ProductType;//指数类型
+        _options.stockName = data.InstrumentName;
+        var startT = parseInt(startTime.split(":")[0]);
+        var endT = parseInt(endTime.split(":")[0]);
+        if(endTime1){
+            endT = parseInt(endTime1.split(":")[0]);
+        }
+        var json,json1;
+        if(startT > endT){//国际时间，跨天了，需要将当前时间减一
+            sub = -1;
+            json = {
+                startTime:startTime,
+                endTime:endTime1
+            };
+            _options.nowDateTime.push(json);
+        }else{//未跨天
+            sub = 0;
+            json = {
+                startTime:startTime,
+                endTime:endTime
+            };
+            _options.nowDateTime.push(json);
+            if(startTime1){
+                json1 = {
+                    startTime1:startTime1,
+                    endTime1:endTime1
+                };
+                _options.nowDateTime.push(json1);
             }
         }
     }
@@ -730,7 +740,8 @@
                                         padding:[3,5,5,5],
                                         show:true
                                     }
-                                }
+                                },
+                                boundaryGap:false
                             },
                             {
                                 type:"category",
@@ -790,7 +801,8 @@
                                 splitLine: {
                                     show: false
                                 },
-                                gridIndex: 1
+                                gridIndex: 1,
+                                boundaryGap:false
                             },
                             // {
                             //     type:"category",
@@ -1187,7 +1199,7 @@
                         } else {
                             $("#toolContent").css("left", continerWidth - toolContent - 60);
                         }
-                        $(".fName").text(StockSocket.FieldInfo.Name);
+                        $(".fName").text($this.stockName);
                     }
                 }else{
                     $("#noData").show();

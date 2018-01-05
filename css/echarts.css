@@ -126,14 +126,16 @@ body{
     top:50px;
     left:80px;
     border:1px solid #b4b4b4;
+    background-color: #fff; 
+    padding: 5px 0;
 }
 #toolContent>ul>li{
     font-size: 14px;
     color: #555;
     padding: 0 10px;
-    line-height:40px;height:40px;
+    line-height:30px;
+    height:30px;
     text-align:left;
-    background-color: #fff; 
     overflow: hidden;
 }
 #toolContent>ul>li>span{

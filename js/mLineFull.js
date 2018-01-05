@@ -141,22 +141,24 @@
         $.ajax({
             url:  _options.stockXMlUrl,
             type: 'GET',
-            dataType: 'xml',
+            dataType: 'json',
             async:false,
             cache:false,
             timeout:60000,
             error: function(xml){
                 console.log("请求代码表出错");
             },
-            success: function(xml){
-                var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
-                var exponentDateTime = getExponentDateTime(xml,allZSCode);
-                
-                compareTime(exponentDateTime,_options);
-
-                socket = new WebSocketConnect(_options);
-                var ws = socket.createWebSocket();
-                initEvent(ws,_this);
+            success: function(data){
+                if(data.ReturnCode == 0){
+                    data = data.CodeInfo[0];
+                    compareTime(data,_options);
+    
+                    socket = new WebSocketConnect(_options);
+                    var ws = socket.createWebSocket();
+                    initEvent(ws,_this);
+                }
+                // var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
+                // var exponentDateTime = getExponentDateTime(xml,allZSCode);
             }
         });
     };
@@ -177,6 +179,7 @@
                     endTime = st.split("-")[1];
                     startTime1 = et.split("-")[0];
                     endTime1 = et.split("-")[1];
+                    startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
                 }else{
                     startTime = _codeList[i].attributes["ts"].value.split("-")[0];
                     endTime = _codeList[i].attributes["ts"].value.split("-")[1];
@@ -214,9 +217,9 @@
                     endTime = st.split("-")[1];
                     startTime1 = et.split("-")[0];
                     endTime1 = et.split("-")[1];
-                    if($($(_codeList[i]).parent("product")[0]).attr("name") == "指数"){
-                        startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+"1";
-                    }
+                    // if($($(_codeList[i]).parent("product")[0]).attr("name") == "指数"){
+                        startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
+                    // }
                 }else{
                     startTime = elValue.split("-")[0];
                     endTime = elValue.split("-")[1];
@@ -238,40 +241,48 @@
         return exponentDateTime;
     }
     //1、用id判断出是哪个指数，获取其开始时间和结束时间、保留小数位、股票名字
-    function compareTime(dateList,_options){
-        for(let i=0;i<dateList.length;i++){
-            if( _options.id == dateList[i].id ){
-                _options.decimal = parseInt(dateList[i].decimalCount);//保留小数位数
-                _options.typeIndex = dateList[i].type;//指数类型
-                _options.stockName = dateList[i].name;
-                var startT = parseInt(dateList[i].startTime.split(":")[0]);
-                var endT = parseInt(dateList[i].endTime.split(":")[0]);
-                if(dateList[i].endTime1){
-                    endT = parseInt(dateList[i].endTime1.split(":")[0]);
-                }
-                var json,json1;
-                if(startT > endT){//国际时间，跨天了，需要将当前时间减一
-                    sub = -1;
-                    json = {
-                        startTime:dateList[i].startTime,
-                        endTime:dateList[i].endTime1
-                    };
-                    _options.nowDateTime.push(json);
-                }else{//未跨天
-                    sub = 0;
-                    json = {
-                        startTime:dateList[i].startTime,
-                        endTime:dateList[i].endTime
-                    };
-                    _options.nowDateTime.push(json);
-                    if(dateList[i].startTime1){
-                        json1 = {
-                            startTime1:dateList[i].startTime1,
-                            endTime1:dateList[i].endTime1
-                        };
-                        _options.nowDateTime.push(json1);
-                    }
-                }
+    function compareTime(data,_options){
+        var startTime,endTime,startTime1,endTime1;
+        if(data.time.indexOf(";")>-1){//分段时间
+            startTime = (data.time.split(";")[0]).split("-")[0];
+            endTime = (data.time.split(";")[0]).split("-")[1];
+            startTime1 = (data.time.split(";")[1]).split("-")[0];
+            endTime1 = (data.time.split(";")[1]).split("-")[1];
+            startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
+        }else{//无分段时间
+            startTime = data.time.split("-")[0];
+            endTime = data.time.split("-")[1];
+            startTime1 = endTime1 = "";
+        }
+        _options.decimal = parseInt(data.PriceDecimal);//保留小数位数
+        _options.typeIndex = data.ProductType;//指数类型
+        _options.stockName = data.InstrumentName;
+        var startT = parseInt(startTime.split(":")[0]);
+        var endT = parseInt(endTime.split(":")[0]);
+        if(endTime1){
+            endT = parseInt(endTime1.split(":")[0]);
+        }
+        var json,json1;
+        if(startT > endT){//国际时间，跨天了，需要将当前时间减一
+            sub = -1;
+            json = {
+                startTime:startTime,
+                endTime:endTime1
+            };
+            _options.nowDateTime.push(json);
+        }else{//未跨天
+            sub = 0;
+            json = {
+                startTime:startTime,
+                endTime:endTime
+            };
+            _options.nowDateTime.push(json);
+            if(startTime1){
+                json1 = {
+                    startTime1:startTime1,
+                    endTime1:endTime1
+                };
+                _options.nowDateTime.push(json1);
             }
         }
     }
@@ -815,7 +826,8 @@
                                     areaStyle:{
                                         color:['rgba(255,255,255,0.1)','transparent']
                                     }
-                                }
+                                },
+                                boundaryGap:false
                             },
                             {
                                 type:"category",
@@ -837,7 +849,8 @@
                                     label:{
                                         show:false
                                     }
-                                }
+                                },
+                                boundaryGap:false
                             }
                         ],
                         yAxis: [

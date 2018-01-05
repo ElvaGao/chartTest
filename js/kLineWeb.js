@@ -60,11 +60,13 @@ var lastClose=0;
                         break;
                     case "minute":
                         KLineSocket.getKQXKZQAll();
+                        $("#withoutData").show().siblings().hide();
                         // 发起新请求
                         KLineSocket.getHistoryKQAll();
                         break;
                     case "day":
                         KLineSocket.getKQXQAll();
+                        $("#withoutData").show().siblings().hide();
                         // 发起新请求
                         KLineSocket.getHistoryKQAll();
                         break;
@@ -451,14 +453,14 @@ function reqStockInfo(options){
     $.ajax({
         url:  options.stockXMlUrl,
         type: 'GET',
-        dataType: 'xml',
+        dataType: 'json',
         async:false,
         cache:false,
-        error: function(xml){
+        error: function(json){
             console.log("请求代码表出错");
         },
-        success: function(xml){
-            var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
+        success: function(json){
+            var allZSCode =  json;
             //  获取交易名字和小数位数
             setStockInfo(allZSCode,options.InstrumentID);
             // 发起websocket请求-reqStockInfo中去写
@@ -570,19 +572,15 @@ function setFieldInfo(data){
 };
 // 代码表：获取 指数/个股 名称，小数位数，InstrumentCode，Code
 function setStockInfo(_codeList,id){
-    var fieldInsCode;
-    $.each(_codeList,function(){
-        if($(this).attr("id") == id){
+    var codeInfo = _codeList.CodeInfo[0];
+    StockSocket.FieldInfo.Name = codeInfo.InstrumentName;
+    StockSocket.FieldInfo.Decimal = codeInfo.PriceDecimal;
+    // 股票代码
+    StockSocket.FieldInfo.Code = codeInfo.InstrumentCode;
+    // 所属市场代码
+    var fieldInsCode = $(this).parent().parent().attr("code");
 
-            StockSocket.FieldInfo.Name = $(this).attr("name");
-            StockSocket.FieldInfo.Decimal = $(this).parent().attr("PriceDecimal");
-            // 所属市场代码
-            fieldInsCode = $(this).parent().parent().attr("code");
-            // 股票代码
-            StockSocket.FieldInfo.Code = $(this).attr("code");
-        };
-    });
-    $(".tb-fn-title").text(StockSocket.FieldInfo.Name+"("+StockSocket.FieldInfo.Code+"."+fieldInsCode+")");
+    $(".tb-fn-title").text(StockSocket.FieldInfo.Name+"("+StockSocket.FieldInfo.Code+(fieldInsCode==undefined?"":"."+fieldInsCode)+")");
 };
 // 查询十大流通股和公司信息
 function requireCom(reqComOpt,code){

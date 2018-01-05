@@ -4,7 +4,6 @@
 <head>
     <meta charset="utf-8">
     <title>FullScreen</title>
-    <!-- <link rel="stylesheet" type="text/css" href="../css/echarts.css" /> -->
     <link rel="stylesheet" type="text/css" href="../css/detail.css">
 </head>
 
@@ -250,7 +249,6 @@
 
     <!-- 分时图  -->
     <script src="../js/mLineFull.js"></script>
-    <script src="../js/mousewheel.js"></script>
 
     <script type="text/javascript" src="../js/kLineFull.js"></script>
     <!-- K线 -->
@@ -270,9 +268,6 @@
                     lineHeight: '60px'
                 }
             );
-            var wsUrl, stockXMlUrl;
-            // wsUrl = "ws://103.66.33.67:443";
-            // stockXMlUrl = "http://172.17.20.203:6789/2";
             //指数与个股区分
             var url = location.href;
             var id, exchangeID, wsUrl, stockXMlUrl;
@@ -283,20 +278,19 @@
                 id = "1";
                 exchangeID = "101";
             }
-            var wsUrl, stockXMlUrl;
+            var stockXMlUrl = "http://103.66.33.58:443/GetCalcData?ExchangeID="+exchangeID+"&Codes="+id;
+            var wsUrl;
             switch (exchangeID) {
                 case "2":
                     // 深交所接口
                     wsUrl = "ws://103.66.33.67:443";
-                    stockXMlUrl = "http://103.66.33.125/2:80";
                     break;
-                case "101": ;
-                default:
+                    case "101": ;
+                    default:
                     // 上证指数接口
                     wsUrl = "ws://172.17.20.203:7681";
-                    stockXMlUrl = "http://103.66.33.125/101:80";
                     break;
-            }
+                }
 
             // 初始化K线图
             $.queryKLine({

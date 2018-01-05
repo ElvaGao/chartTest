@@ -1,45 +1,29 @@
 var wsUrlDevelop = 'ws://103.66.33.67:443';//'ws://103.66.33.31:443';//开发
-var stockXMlUrl = "http://103.66.33.125/2:80";//"../xml/ths.xml";//"http://172.17.20.203:6789/101";
+var stockXMlUrl = "http://103.66.33.58:443/GetCalcData";//"../xml/ths.xml";//"http://172.17.20.203:6789/101";
 var exponentDateTime = [];//解析XML后得到的数组 所有指数的时间、类型、id、小数位数等
 var elementId;
 var ZSId,ExchangeID;
 var LSData = ZCData = DYData = QPDATA = null;
 
 $(function(){
-    //第一次打开终端,初始化代码表第一次默认请求
-    $.ajax({
-        url: stockXMlUrl,
-        type: 'GET',
-        dataType: 'xml',
-        async:false,
-        cache:false,
-        timeout:60000,
-        error: function(xml){
-            console.log("请求代码表出错");
-        },
-        success: function(xml){
-            var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
-            exponentDateTime = getExponentDateTime(xml,allZSCode);
-            $("#main1").initMline(
-                {
-                    id:"1",
-                    exchangeID:"2"
-                }
-            );
-            $("#main2").initMline(
-                {
-                    id:"2",
-                    exchangeID:"2"
-                }
-            );
-            $("#main3").initMline(
-                {
-                    id:"4",
-                    exchangeID:"2"
-                }
-            );
+    $("#main1").initMline(
+        {
+            id:"1",
+            exchangeID:"2"
         }
-    }); 
+    );
+    $("#main2").initMline(
+        {
+            id:"2",
+            exchangeID:"2"
+        }
+    );
+    $("#main3").initMline(
+        {
+            id:"4",
+            exchangeID:"2"
+        }
+    );
 
     // 点击其他地方收回搜索下拉列表
     $("body").on("click",function(e){
@@ -54,23 +38,47 @@ $(function(){
         elementId = $this.attr("id");
         ZSId = options.id;
         ExchangeID = options.exchangeID;
+        var xmlData;
 
         socket = new WebSocketConnect();
         var ws = socket.createWebSocket();
 
-        var opt = {
-            id:ZSId,
-            exchangeID:ExchangeID,
-            elementId:elementId,
-            socket:socket,
-        };
-        var chartsInit = new InitMlineCharts(opt);
-        chartsInit.initEvent(ws);
+        //第一次打开终端,初始化代码表第一次默认请求
+        $.ajax({
+            url: stockXMlUrl,
+            type: 'GET',
+            dataType: 'json',
+            data:{"ExchangeID":ExchangeID,"Codes":ZSId},
+            async:false,
+            cache:false,
+            timeout:60000,
+            error: function(xml){
+                console.log("请求代码表出错");
+            },
+            success: function(data){
+                // var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
+                // exponentDateTime = getExponentDateTime(xml,allZSCode);
+                if(data.ReturnCode == 0){
+                    xmlData = data.CodeInfo[0];
+                    var opt = {
+                        id:ZSId,
+                        exchangeID:ExchangeID,
+                        elementId:elementId,
+                        socket:socket,
+                        xmlData:xmlData
+                    };
+                    var chartsInit = new InitMlineCharts(opt);
+                    chartsInit.initEvent(ws);
+                }else{
+                    console.log("请求码表出错");
+                }
+            }
+        }); 
     };
     var InitMlineCharts = function(opt){
         this.myChart = null;
         this.options = {
-            oneZSInfo : compareTime(exponentDateTime,ZSId),
+            oneZSInfo : compareTime(opt.xmlData,ZSId),
             id:opt.id,
             elementId:opt.elementId,
             socket:opt.socket,
@@ -258,10 +266,12 @@ $(function(){
             console.log("没有数据");
             return;
         }
-        var yc = $this.yc;//昨收
-        // var interval = $this.interval;//间隔   计算Y轴最大值和最小值用到
+        var yc = parseFloat($this.yc);//昨收
         var decimal = $this.oneZSInfo[0].decimal;//保留的小数位数
         var sub = $this.oneZSInfo[0].sub;//是否跨天交易  -1为跨天 0未跨天
+        var limitUp = (yc + yc*0.1).toFixed($this.decimal);
+        var limitDown = (yc - yc*0.1).toFixed($this.decimal);
+
         if(type == "add"){
             if(!$this.myChart){
                 console.log("图表还没有没有初始化呢  ^-^");
@@ -370,22 +380,46 @@ $(function(){
                 startTime = $this.oneZSInfo[0].startTime;
                 endTime = $this.oneZSInfo[0].endTime;
             }
+            $this.v_data = getxAxis(data[0].Date,$this);
+            var lastDate = dateToStamp(formatDate(data[data.length-1].Date) +" "+formatTime(data[data.length-1].Time));
             var price = [];//价格
             var volume = [];//成交量
             var zdfData = [];//涨跌幅
-            $.each(data, function (i, o) {
-                var fvalue,r1;
-                fvalue = parseFloat(o.Price);//价格
-                price.push(o.Price);
-                volume.push(o.Volume);
-                zdfData.push((((fvalue-parseFloat(yc))/parseFloat(yc))* 100).toFixed(2));
-                if(fvalue > 0){
-                    r1 = Math.abs(fvalue - parseFloat(yc));
-                    if (r1 > $this.interval) {
-                        $this.interval = r1;
+            for(var i=0;i<$this.c_data.length;i++){
+                if(lastDate < $this.c_data[i]){
+                    break;
+                }
+                for(var j=0;j<data.length;j++){
+                    var dateStamp = dateToStamp(formatDate(data[j].Date) +" "+formatTime(data[j].Time));
+                    if($this.c_data[i] == dateStamp){
+                        var fvalue = parseFloat(data[j].Price);//价格
+                        if(data[j].Price >= limitUp){
+                            price[i] = limitUp;
+                            zdfData[i] = 0.10;
+                        }else if(data[j].Price <= limitDown){
+                            price[i] = limitDown;
+                            zdfData[i] = 0.10;
+                        }else{
+                            price[i] = data[j].Price;
+                            zdfData[i] = (((fvalue-yc)/yc)* 100).toFixed(2);
+                        }
+                        
+                        volume[i] = data[j].Volume;
+                        
+                        if(fvalue > 0){
+                            r1 = Math.abs(fvalue - yc);
+                            if (r1 > $this.interval) {
+                                $this.interval = r1;
+                            }
+                        }
+                        break;
+                    }else{
+                        price[i] = null;
+                        volume[i] = null;
+                        zdfData[i] = null;
                     }
                 }
-            });
+            }
 
             $this.history_data = price;//价格历史数据
             $this.z_history_data = zdfData;//涨跌幅历史数据
@@ -415,7 +449,6 @@ $(function(){
 
             var split = parseFloat(((maxY - minY) / 6).toFixed(4));
             var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(4));
-            $this.v_data = getxAxis(data[0].Date,$this);
 
             var option = {
                 grid:{
@@ -546,57 +579,7 @@ $(function(){
                             color: "#999"
                         }
                     },
-                },
-                // {
-                //     show:false,
-                //     min: minY1,
-                //     max: maxY1,
-                //     interval: split1,
-                //     boundaryGap: [0, '100%'],
-                //     axisTick: {
-                //         show: false
-                //     },
-                //     type: "value",
-                //     splitLine:{
-                //         lineStyle:{
-                //             color:"transparent"
-                //         },
-                //         show:false
-                //     },
-                //     axisLine:{
-                //         lineStyle:{
-                //             color:'transparent'
-                //         },
-                //         show:false
-                //     },
-                //     axisLabel: {
-                //         formatter: function (value, index) {
-                //             if (index == 3) {
-                //                 return "";
-                //             } else {
-                //                 return parseFloat(value).toFixed(2) + "%";
-                //             }
-                //         },
-                //         textStyle: {
-                //             color: function (value, index) {
-                //                 if (parseFloat(value) > 0) {
-                //                     return colorList[0];
-                //                 } else {
-                //                     return colorList[1];
-                //                 }
-                //             }
-                //         },
-                //         show:false
-                //     },
-                //     axisPointer: {
-                //         label: {
-                //             formatter: function (params, value, s) {
-                //                 return parseFloat(params.value).toFixed(2) + "%";
-                //             }
-                //         },
-                //         show:false
-                //     }
-                // }
+                }
                 ],
                 series:{
                     type:'line',
@@ -649,40 +632,15 @@ $(function(){
             $this.myChart = echarts.init(document.getElementById($this.elementId));
             $this.myChart.setOption(option);
 
-            count = $this.myChart.getOption().series[0].data.length;
-            
-            var marktToolData = [$this.history_data[count - 1], $this.z_history_data[count - 1], $this.a_history_data[count - 1], moment(parseFloat($this.c_data[count - 1])).format("YYYY-MM-DD HH:mm")];
-            set_marketTool(marktToolData,$this); //设置动态行情条
 
-            $this.myChart.on('showTip', function (params) {
-                $this.mouseHoverPoint = params.dataIndex;
-                var htmlStr = '';
-                if ($this.history_data[$this.mouseHoverPoint]) {
-                    var size = (parseFloat($this.history_data[$this.mouseHoverPoint]) - parseFloat(yc)).toFixed(decimal);
-                    if($this.history_data[$this.mouseHoverPoint] >= yc){
-                        htmlStr = '<label class="col_e22"><i style="font-size: 24px;margin-right: 10px;">'+$this.history_data[$this.mouseHoverPoint]+'</i><i style="margin-right: 10px;">+'+$this.z_history_data[$this.mouseHoverPoint]+'%</i><i>+'+size+'</i></label>';
-                    }else{
-                        htmlStr = '<label class="col_3bc"><i style="font-size: 24px;margin-right: 10px;">'+$this.history_data[$this.mouseHoverPoint]+'</i><i style="margin-right: 10px;">'+$this.z_history_data[$this.mouseHoverPoint]+'%</i><i>'+size+'</i></label>';
-                    }
-                    $("#"+$this.elementId).parents(".market-main-chart").siblings(".market-chart-decs").html(htmlStr);
-                } else {
-                    htmlStr = '<label class="col_e22"><i>-</i><i>-</i><i>-</i></label>';
-                    $("#"+$this.elementId).parents(".market-main-chart").siblings(".market-chart-decs").html(htmlStr);
-                }
-            });
-        }
-    }
-
-    function set_marketTool(data,_this) {
-        if (!_this.isHoverGraph || _this.isHoverGraph && !_this.history_data[_this.mouseHoverPoint] && data) {
-            var htmlStr = '';
-            var size = (parseFloat(data[0]) - parseFloat(_this.yc)).toFixed(_this.oneZSInfo[0].decimal);
-            if(parseFloat(data[0]) >= parseFloat(_this.yc)){
-                htmlStr = '<label class="col_e22"><i style="font-size: 24px;margin-right: 10px;">'+data[0]+'</i><i style="margin-right: 10px;">+'+data[1]+'%</i><i>+'+size+'</i></label>';
+            var size = (parseFloat($this.history_data[$this.history_data.length-1]) - parseFloat(yc)).toFixed(decimal);
+            if($this.history_data[$this.history_data.length-1] >= yc){
+                htmlStr = '<label class="col_e22"><i style="font-size: 24px;margin-right: 10px;">'+parseFloat($this.history_data[$this.history_data.length-1]).toFixed(decimal)+'</i><i style="margin-right: 10px;">+'+$this.z_history_data[$this.history_data.length-1]+'%</i><i>+'+size+'</i></label>';
             }else{
-                htmlStr = '<label class="col_3bc"><i style="font-size: 24px;margin-right: 10px;">'+data[0]+'</i><i style="margin-right: 10px;">'+data[1]+'%</i><i>'+size+'</i></label>';
+                htmlStr = '<label class="col_3bc"><i style="font-size: 24px;margin-right: 10px;">'+parseFloat($this.history_data[$this.history_data.length-1]).toFixed(decimal)+'</i><i style="margin-right: 10px;">'+$this.z_history_data[$this.history_data.length-1]+'%</i><i>'+size+'</i></label>';
             }
-            $("#"+_this.elementId).parents(".market-main-chart").siblings(".market-chart-decs").html(htmlStr);
+            $("#"+$this.elementId).parents(".market-main-chart").siblings(".market-chart-decs").html(htmlStr);
+            $("#"+$this.elementId).parents(".market-main-chart").siblings(".market-chart-title").text($this.oneZSInfo[0].imName+"("+$this.oneZSInfo[0].code+")");
         }
     }
 
@@ -774,47 +732,60 @@ $(function(){
         return $this.v_data;
     }
     //1、用id判断出是哪个指数，获取其开始时间和结束时间、保留小数位
-    function compareTime(dateList,id){
-        var decimal,typeIndex,sub;
+    function compareTime(dataXML,id){
+        var decimal,typeIndex,sub,startTime,endTime,startTime1,endTime1,imName,code;
         var ZSInfo = new Array();
-        for(let i=0;i<dateList.length;i++){
-            if( id == dateList[i].id ){
-                decimal = parseInt(dateList[i].decimalCount);//保留小数位数
-                typeIndex = dateList[i].type;//指数类型
-                var start = parseInt(dateList[i].startTime.split(":")[0]);
-                var end = parseInt(dateList[i].endTime.split(":")[0]);
-                if(dateList[i].endTime1){
-                    end = parseInt(dateList[i].endTime1.split(":")[0]);
-                }
-                var json,json1;
-                if(start > end){//国际时间，需要将当前时间减一
-                    json = {
-                        ZSId:id,
-                        sub : -1,
-                        decimal:decimal,
-                        typeIndex:typeIndex,
-                        startTime:dateList[i].startTime,
-                        endTime:dateList[i].endTime1
-                    };
-                    ZSInfo.push(json);
-                }else{
-                    json = {
-                        sub : 0,
-                        id:id,
-                        decimal:decimal,
-                        typeIndex:typeIndex,
-                        startTime:dateList[i].startTime,
-                        endTime:dateList[i].endTime
-                    };
-                    ZSInfo.push(json);
-                    if(dateList[i].startTime1){
-                        json1 = {
-                            startTime1:dateList[i].startTime1,
-                            endTime1:dateList[i].endTime1
-                        };
-                        ZSInfo.push(json1);
-                    }
-                }
+        if(dataXML.time.indexOf(";")>-1){//分段时间
+            startTime = (dataXML.time.split(";")[0]).split("-")[0];
+            endTime = (dataXML.time.split(";")[0]).split("-")[1];
+            startTime1 = (dataXML.time.split(";")[1]).split("-")[0];
+            endTime1 = (dataXML.time.split(";")[1]).split("-")[1];
+            startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
+        }else{//无分段时间
+            startTime = dataXML.time.split("-")[0];
+            endTime = dataXML.time.split("-")[1];
+            startTime1 = endTime1 = "";
+        }
+        code = dataXML.InstrumentCode;
+        decimal = parseInt(dataXML.PriceDecimal);//保留小数位数
+        typeIndex = dataXML.ProductType;//指数类型
+        imName = dataXML.InstrumentName;
+        var start = parseInt(startTime.split(":")[0]);
+        var end = parseInt(endTime.split(":")[0]);
+        if(endTime1){
+            end = parseInt(endTime1.split(":")[0]);
+        }
+        var json,json1;
+        if(start > end){//国际时间，需要将当前时间减一
+            json = {
+                ZSId:id,
+                sub : -1,
+                imName:imName,
+                code:code,
+                decimal:decimal,
+                typeIndex:typeIndex,
+                startTime:startTime,
+                endTime:endTime1
+            };
+            ZSInfo.push(json);
+        }else{
+            json = {
+                sub : 0,
+                id:id,
+                code:code,
+                imName:imName,
+                decimal:decimal,
+                typeIndex:typeIndex,
+                startTime:startTime,
+                endTime:endTime
+            };
+            ZSInfo.push(json);
+            if(startTime1){
+                json1 = {
+                    startTime1:startTime1,
+                    endTime1:endTime1
+                };
+                ZSInfo.push(json1);
             }
         }
         return ZSInfo;
@@ -899,6 +870,7 @@ function getExponentDateTime(xmlCode,_codeList){
                     endTime = st.split("-")[1];
                     startTime1 = et.split("-")[0];
                     endTime1 = et.split("-")[1];
+                    startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
                 }else{
                     startTime = _codeList[i].attributes["ts"].value.split("-")[0];
                     endTime = _codeList[i].attributes["ts"].value.split("-")[1];
@@ -911,7 +883,7 @@ function getExponentDateTime(xmlCode,_codeList){
                     endTime:endTime,
                     startTime1:startTime1,
                     endTime1:endTime1,
-                    decimalCount:decimalCount,
+                    decimalCount:parseInt(decimalCount),
                     type:type
                 };
                 exponentDateTime.push(json);
@@ -936,9 +908,9 @@ function getExponentDateTime(xmlCode,_codeList){
                     endTime = st.split("-")[1];
                     startTime1 = et.split("-")[0];
                     endTime1 = et.split("-")[1];
-                    if($($(_codeList[i]).parent("product")[0]).attr("name") == "指数"){
-                        startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+"1";
-                    }
+                    // if($($(_codeList[i]).parent("product")[0]).attr("name") == "指数"){
+                        startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
+                    // }
                 }else{
                     startTime = elValue.split("-")[0];
                     endTime = elValue.split("-")[1];
@@ -951,7 +923,7 @@ function getExponentDateTime(xmlCode,_codeList){
                     endTime:endTime,
                     startTime1:startTime1,
                     endTime1:endTime1,
-                    decimalCount:decimalCount,
+                    decimalCount:parseInt(decimalCount),
                     type:type
                 };
                 exponentDateTime.push(json);
@@ -978,7 +950,7 @@ function throttle(method,value){
 // 搜索
 function search(value){
     $.ajax({
-        url:"http://103.66.33.58:443",
+        url:"http://103.66.33.58:443/GetCodes",
         data:{"ExchangeID":0,"Codes":value},
         dataType:"json",
         success:function(data){
