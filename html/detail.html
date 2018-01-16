@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>行情详情</title>
+    <link rel="stylesheet" type="text/css" href="../css/echarts.css" />
+    <link rel="stylesheet" type="text/css" href="../css/detail.css">
+</head>
+<body>
+     <!-- 页面开始 -->
+    <div class="container-detail">
+        <!-- 上部信息框开始 -->
+        <div class="box top-bar">
+            <div class="no-data no-data-k" id="withoutStockData"></div>
+            <div class="fl tb-fieldName">
+                <div class="tb-fn-title">-</div>
+                <div class="tb-fn-num">
+                    <span class="green">-</span>
+                    <span class="green">-</span>
+                    <span class="green">-</span>
+                </div>
+            </div>
+            <ul class="fl tb-fielList">
+                <li><p>最高：</p><span class="red">-</span></li>
+                <li><p>今开：</p><span class="green">-</span></li>
+                <li><p>成交额：</p><span>-</span></li>
+                <li><p>市盈率：</p><span>-</span></li>
+                <li><p>换手率：</p><span>-</span></li>
+                <li><p>最低：</p><span class="green">-</span></li>
+                <li><p>昨收：</p><span>-</span></li>
+                <li><p>成交量：</p><span>-</span></li>
+                <li><p>市&nbsp;&nbsp;&nbsp;&nbsp;值：</p><span>-</span></li>
+                <li><p>振&nbsp;&nbsp;&nbsp;&nbsp;幅：</p><span>-</span></li>
+            </ul>
+        </div>
+        <!-- 上部信息框结束 -->
+        <!-- 中部开始 -->
+        <div class="content-bar">
+            <!-- echarts图形开始 -->
+            <div class="box fl echarts">
+                <div class="container">
+                    <div class="canvas" id="MLine">
+                        <div class="no-data" id="noData">亲，暂时没有数据哦~~~~ ^_^</div>
+                        <input type="text" class="charts-focus" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;width:0;height:0;color:transparent;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);">
+                        <label class="canvasTitle" id="toolContent_M" style="display:none;"><i>2017-10-10 10:00</i>价<i>-</i>量<i>-</i>幅<i>-</i></label>
+                        <div id="main1" style="width:840px;height:520px;background-color:#fff;"></div>
+                        <div class="vol vol1" style="display:none;">Vol:<i>-</i></div>
+                        <label class="quantityRatio">LB:<i id="quantityRatio">0.86</i></label>
+                        <label class="quantityRatio">MACD:<i id="quantityRatio">0.86</i></label>
+                        <div class="chartsTab" style="display:none;"></div>
+                        <div id="toolContent" style="display:none;">
+                            <ul>
+                                <li class="fName"></li>
+                                <li><span class="dataTime">-</span></li>
+                                <li>价格 <span class="dataPrice"></span></li>
+                                <li>涨跌 <span class="change"></span></li>
+                                <li>成交 <span class="volume"></span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!--K线图开始-->
+                    <div class="canvas kline" id="kline">
+                        <div class="no-data no-data-k" id="withoutData">亲，暂时没有数据哦~~~~ ^_^</div>
+                        <input type="text" class="charts-focus" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;width:0;height:0;color:transparent;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);">
+                        <!-- 上部信息显示开始 -->
+                        <ul class="list-inline text-center kline-info">
+                            <li><span class="date"></span></li>
+                            <li><span class="day"></span></li>
+                            <li><span class="time"></span></li>
+                            <li>价<span class="price red"></span></li>
+                            <li>均<span class="average red"></span></li>
+                            <li>量<span class="volume"></span></li>
+                            <li>幅<span class="z-value red"></span></li>
+                        </ul>
+                        <!-- <div class="kline-MAs">
+                            <span class="kline-MA5">MA5:<em></em></span>
+                            <span class="kline-MA10">MA10:<em></em></span>
+                            <span class="kline-MA20">MA20:<em></em></span> 
+                            <span class="kline-MA30">MA30:<em></em></span>                       
+                        </div> -->
+                        <!-- 上部信息显示结束 -->
+                        <!-- echarts图开始 -->
+                        <div class="kline-charts-container">
+                            <div id="kline_charts" class="kline-charts"></div>
+                            <div id="kline_tooltip" class="kline-tooltip">
+                                <ul class="list-unstyled">
+                                    <li><span class="name"></span></li>
+                                    <li class="text-justify"><span class="date"></span><span class="day"></span><span class="time"></span></li>
+                                    <li>开盘<span class="open pull-right red"></span></li>
+                                    <li>最高<span class="highest pull-right red"></span></li>
+                                    <li>最低<span class="lowest pull-right red"></span></li>
+                                    <li>收盘<span class="price pull-right red"></span></li>
+                                    <li>涨跌<span class="z-value pull-right red"></span></li>
+                                    <li>成交<span class="volume pull-right"></span></li>
+                                    <li>换手<span class="??? pull-right"></span></li>
+                                    <li>振幅<span class="amplitude pull-right"></span></li>
+                                </ul>
+                            </div>
+
+                            <!-- <div class="bar-tools"> -->
+                                <div class="deal">
+                                    <span class="deal-title">成交</span><span class="deal-Vol">VOL : <em></em></span><!-- <span class="deal-MA5">MA5 : <em></em></span><span class="deal-MA10">MA10 : <em></em></span> -->
+                                </div>
+                                <div class="volumn">
+                                    <div class="volumeMax"></div>
+                                    <div class="vol-unit"></div>
+                                </div>
+                                <!-- <div class="macd">
+                                    <span class="macd-title">MACD</span><span class="macd-Dif">DIF : <em></em></span><span class="macd-Dea">DEA : <em></em></span><span class="macd-Macd">MACD : <em></em></span>
+                                </div>
+                                <div class="volMacd">
+                                    <div class="vmMax">3.78</div>
+                                    <div class="vmMin">1.93</div>
+                                </div>
+                                <div class="kline-buttons">
+                                    <span class="active">MACD</span>
+                                    <span>KDJ</span>
+                                    <span>RSI</span>
+                                    <span>BOLL</span>
+                                    <span>WR</span>
+                                    <span>DMI</span>
+                                </div> -->
+                            <!-- </div> -->
+
+                        </div>
+                        <!-- echarts图结束 -->
+                    </div>
+                    <!--K线图结束-->
+                </div>
+            </div>
+            <div class="box fr cb-right">
+                <div class="no-data no-data-k" id="withoutPKCJData"></div>
+                <!-- 五档盘口 -->
+                <div class="cb-pk"></div>
+                <!-- 逐笔成交 -->
+                <div class="cb-cj"></div>
+            </div>
+            <!-- echarts图形结束 -->
+        </div>
+        <!-- 中部结束 -->
+        <!-- 企业资料开始 -->
+        <div class="bottom-bar">
+
+            <div class="box fl bb-info">
+                <div class="no-data  no-data-k" id="withoutStcData">亲，暂时没有数据哦~~~~ ^_^</div>
+                <h2>企业基本信息</h2>
+                <ul>
+                    <li class="bbi-title"><span>十大流通股</span><span>持有比例</span><span>本期持有股（股）</span><span>持股变动数（股）</span></li>
+                </ul>
+            </div>
+            <div class="box fr bb-data">
+                <div class="no-data  no-data-k" id="withoutComData">亲，暂时没有数据哦~~~~ ^_^</div>
+                <h2>公司资料</h2>
+                <ul>
+                    <li>
+                        <span>公司全称：</span>
+                        <span id="com_name"></span>
+                    </li>
+                    <li>
+                        <span>主营业务：</span>
+                        <span id="com_main_pro"></span>
+                    </li>
+                    <li>
+                        <span>董&nbsp;&nbsp;事&nbsp;&nbsp;长：</span>
+                        <span id="com_psn"></span>
+                    </li>
+                    <li>
+                        <span>总&nbsp;&nbsp;经&nbsp;&nbsp;理：</span>
+                        <span id="com_gm"></span>
+                    </li>
+                    <li>
+                        <span>董秘电话：</span>
+                        <span id="com_tel"></span>
+                    </li>
+                    <li>
+                        <span>办公地址：</span>
+                        <span id="com_addr"></span>
+                    </li>
+                    <li>
+                        <span>办公网址：</span>
+                        <span id="com_website"></span>
+                    </li>
+                    <li>
+                        <span>注册资本：</span>
+                        <span id="com_zc"></span>
+                    </li>
+                    <li>
+                        <span>首次上市：</span>
+                        <span id="com_ss"></span>
+                    </li>
+                    <li>
+                        <span>总&nbsp;&nbsp;股&nbsp;&nbsp;本：</span>
+                        <span id="com_ttl_shr"></span>
+                    </li>
+                    <li>
+                        <span>流&nbsp;&nbsp;通&nbsp;&nbsp;股：</span>
+                        <span id="com_ttl_shrl"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- 企业资料结束 -->
+    </div>
+    <!-- 页面结束 -->
+
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <script type="text/javascript" src="../js/echarts.js"></script>
+    <script type="text/javascript" src="../js/moment.min.js"></script>
+
+    <script type="text/javascript" src="../js/public.js"></script>
+    
+    <script type="text/javascript" src="../js/mLineWeb.js"></script><!-- 公共方法 -->
+
+    <script type="text/javascript" src="../js/kLineWeb.js"></script> <!-- K线 -->
+
+    <script>
+        $(function(){
+            // 行情echarts切换标签
+            $(".container").toggleLi(
+                {
+                    data:[
+                        {name:"分时",id:"mline"},
+                        {name:"日K",id:"day"},
+                        {name:"分钟",id:"minute"}
+                    ]
+                }
+            );
+            $(".chartsTab").chartsTab();
+
+            //指数与个股区分
+            var url = location.href;
+            var id, exchangeID, wsUrl, stockXMlUrl;
+            if(url.indexOf("?")>-1){
+                id = getQueryString("id");//main.js里的getQueryString
+                exchangeID = getQueryString("exchangeID");
+            }else{
+                id = "1";
+                exchangeID = "101";
+            }
+            var stockXMlUrl = "http://103.66.33.58:443/GetCalcData?ExchangeID="+exchangeID+"&Codes="+id;
+            var wsUrl;
+            switch (exchangeID) {
+                case "2":
+                    // 深交所接口
+                    wsUrl = "ws://103.66.33.67:443";
+                    // stockXMlUrl = "http://103.66.33.125/2:80";
+                    break;
+                case "101": ;
+                default:
+                    // 上证指数接口
+                    wsUrl = "ws://172.17.20.203:7681";
+                    // stockXMlUrl = "http://103.66.33.125/101:80";
+            }
+
+            // 初始化分时图
+            $("#MLine").initMline({
+                id:id,
+                exchangeID:exchangeID,
+                wsUrl:wsUrl,
+                stockXMlUrl:stockXMlUrl
+            });
+            // 初始化K线图
+            $.queryKLine({
+                InstrumentID: id,
+                ExchangeID:exchangeID,
+                wsUrl:wsUrl,
+                stockXMlUrl:stockXMlUrl
+            });
+            $.queryStockInfo({
+                InstrumentID: id,
+                ExchangeID:exchangeID,
+                wsUrl:wsUrl,
+                stockXMlUrl:stockXMlUrl
+            });
+        }); 
+    </script>
+</body>
+</html>
