@@ -41,6 +41,7 @@
                 <div class="container">
                     <div class="canvas" id="MLine">
                         <div class="no-data" id="noData">亲，暂时没有数据哦~~~~ ^_^</div>
+                        <input type="text" class="charts-focus" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;width:0;height:0;color:transparent;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);">
                         <label class="canvasTitle" id="toolContent_M" style="display:none;"><i>2017-10-10 10:00</i>价<i>-</i>量<i>-</i>幅<i>-</i></label>
                         <div id="main1" style="width:840px;height:520px;background-color:#fff;"></div>
                         <div class="vol vol1" style="display:none;">Vol:<i>-</i></div>
@@ -60,6 +61,7 @@
                     <!--K线图开始-->
                     <div class="canvas kline" id="kline">
                         <div class="no-data no-data-k" id="withoutData">亲，暂时没有数据哦~~~~ ^_^</div>
+                        <input type="text" class="charts-focus" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;width:0;height:0;color:transparent;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);">
                         <!-- 上部信息显示开始 -->
                         <ul class="list-inline text-center kline-info">
                             <li><span class="date"></span></li>
@@ -270,7 +272,6 @@
                 wsUrl:wsUrl,
                 stockXMlUrl:stockXMlUrl
             });
-            
         }); 
     </script>
 </body>

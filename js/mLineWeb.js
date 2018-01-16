@@ -610,6 +610,7 @@
                     var split = parseFloat(((maxY - minY) / 6).toFixed(4));
                     var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(4));
                     var option = {
+                        backgroundColor: "#fff",
                         animation: false,
                         grid: [
                             {
@@ -1174,20 +1175,28 @@
                         }
                     });
 
+
                     $("#main1").bind("mouseenter", function (event) {
                         toolContentPosition(event);
                         $("#toolContent").show();
+
+                         _this = $("#MLine");
                     });
 
                     $("#main1").bind("mousemove", function (event) {
                         isHoverGraph = true;
                         toolContentPosition(event);
+
+                         _this = $("#MLine");
                     });
 
                     $("#main1").bind("mouseout", function (event) {
                         isHoverGraph = false;
                         $("#toolContent").hide();
                         mouseHoverPoint = 0;
+                        
+                        $(_this).children(".charts-focus").blur();
+                        _this = window;
                     });
 
                     function toolContentPosition(event) {
@@ -1237,7 +1246,7 @@
 
     }
 
-    $(document).keyup(function (e) {
+    $("#MLine,#kline").keyup(function (e) {
         var keyCode = e.keyCode;
         switch (keyCode) {
             case 37:

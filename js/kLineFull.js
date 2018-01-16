@@ -1,13 +1,20 @@
 var KLineSocket,StockSocket;
 var barMaxValue;
 var lastClose=0;
+var _this;
+$(document).keydown(function(e){
+    if(_this!=undefined&&($(_this).attr("id")=="MLine"||$(_this).attr("id")=="kline")){
+        $(_this).children(".charts-focus").focus();
+        return;
+    }
+});
 ;(function($){
     // websocket通道-查询K线
     $.queryKLine = function(option) {
         
         // 实例化websocket默认参数 
         KLineSocket = new WebSocketConnect(option);
-        KLineSocket.KChart = echarts.init(document.getElementById('f_kline_charts'),null,{renderer: 'svg'}); // K线绘制对象;
+        KLineSocket.KChart = echarts.init(document.getElementById('f_kline_charts')); // K线绘制对象;
 
         // 建立websocket连接，命名为ws
         KLineSocket.ws = KLineSocket.createWebSocket();
@@ -107,165 +114,6 @@ function tabLi(index){
     }
 }
 /*
- * 查询下拉框效果
- */
-; (function ($) {
-    $.selectOption = function (option) {
-        var selectOpt = new $.selectOptionEl(option);
-        selectOpt.bingKeyUpEvents();
-        selectOpt.bindClose();
-        selectOpt.bindSubmit();
-        selectOpt.bindFocus();
-
-    };
-
-    $.selectOptionEl = function (option) {
-        this.default = {
-            timer: "",
-            indexLi: "",
-        };
-
-        this.options = $.extend({}, this.default, option);
-    };
-
-    // 点击其他地方，关闭菜单
-    $(document).click(function () {
-        $("#url_list").hide();
-    });
-    $("#url_list,.fs-text").click(function (event) {
-        event.stopPropagation();
-    });
-
-    $.selectOptionEl.prototype = {
-        bingKeyUpEvents: function () {
-            var ele = this;
-            // 绑定键盘事件
-            $(ele.options.input).keyup(function (e) {
-                var keyCode = e.keyCode ? e.keyCode : 8;
-                // 查询输入的值
-                var value = $(this).val();
-                // Code是不为空的数字时，进行查询
-                if ((keyCode == 8 || keyCode >= 48 && keyCode <= 57 || keyCode >= 65 && keyCode <= 90) && value != "" && value != null) {
-                    // 延时查询
-                    ele.options.timer = setTimeout(function () {
-                        var url = "http://103.66.33.58:443/?ExchangeID=0&Codes=" + value;
-                        $.ajax({
-                            url: url,
-                            type: 'GET',
-                            dataType: 'json',
-                            async: false,
-                            cache: false,
-                            error: function (data) {
-                                console.log("请求代码表出错");
-                            },
-                            success: function (data) {
-                                indexLi = 0;
-                                var dataArr = data.CodeInfo;
-                                if (dataArr) {
-                                    ele.setSearchUlOptions(dataArr, value);
-                                    $(ele.options.list).show();
-                                } else {
-                                    $(ele.options.list).hide();
-                                }
-                            }
-                        });
-                    }, 300);
-                } else {
-                    // 连续按键会清除查询
-                    clearTimeout(ele.options.timer);
-                }
-                switch (keyCode) {
-                    case 13:    // 回车
-                        $(ele.options.submit).click();
-                        break;
-                    case 38:
-                        ele.moveSelectOption(-1);
-                        break;  //上
-                    case 40:
-                        ele.moveSelectOption(1);
-                        break; //下
-                    default: ;
-                }
-            });
-        },
-        bindClose: function () {
-            var ele = this;
-            // 点击其他地方，关闭菜单
-            $(document).click(function () {
-                $(ele.options.list).hide();
-            });
-            $(ele.options.list + "," + ele.options.input).click(function (event) {
-                event.stopPropagation();
-            });
-        },
-        bindSubmit: function () {
-            var ele = this;
-            // 点击搜索按钮
-            $(ele.options.submit).click(function () {
-                if ($(ele.options.list).children("li").length > 0) {
-                    ele.queryNew($(ele.options.list).children(".active")[0]);
-                }
-            });
-
-        },
-        // 点击搜索框会出现
-        bindFocus: function () {
-            var ele = this;
-            $(ele.options.input).focus(function () {
-                $(ele.options.input).keyup();
-            });
-        },
-        // 键盘上下键响应事件
-        moveSelectOption: function (direct) {
-            indexLi += direct;
-            if (direct == -1) {
-                if (indexLi < 0) {
-                    indexLi = $("#url_list li").length - 1;
-                }
-            } else {
-                if (indexLi > $("#url_list li").length - 1) {
-                    indexLi = 0;
-                }
-            }
-            $(this.options.list).children("li").eq(indexLi).addClass("active").
-                siblings().removeClass("active");
-            $(this.options.list).scrollTop(46 * (indexLi > 0 ? (indexLi - 3) : 0));
-        },
-        // 拼接查询到的接口数据
-        setSearchUlOptions: function (data, value) {
-            var ele = this;
-            var html = "";
-            $.each(data, function (i, dataObj) {
-                var spanName = "<span>" + dataObj.InstrumentName + "</span>",
-                    spanCode = "<span>" + dataObj.InstrumentCode + "</span>";
-                // 是否有值，如果没有输入值，不进行匹配
-                if (eval("/" + value + "/").test(spanName) || eval("/" + value + "/").test(spanCode)) {
-                    spanName = spanName.replace(eval("/" + value + "/"), "<i>" + value + "</i>");
-                    spanCode = spanCode.replace(eval("/" + value + "/"), "<i>" + value + "</i>");
-                };
-                html += "<li eId=" + dataObj.ExchangeID + ">" + spanName + spanCode + "</li>";
-            });
-            $(ele.options.list).html(html);
-            if ($(ele.options.list).children("li").length > 0) $(ele.options.list).children("li:eq(0)").addClass("active");
-            // 点击选择了某个选项后 更新输入框内容 打开新页面查询新数据
-            $(ele.options.list).children("li").click(function () {
-                ele.queryNew(this);
-            });
-        },
-        queryNew: function (eleLi) {
-            var ele = this;
-            var exchangeID = $(eleLi).attr("eid");
-            var id = Number($(eleLi).children("span:eq(1)").text());
-            $(ele.options.input).val($(eleLi).children("span:eq(1)").text());
-            $(ele.options.list).hide();
-            // 打开新页面
-            var location = window.location.href.split("?")[0];
-            window.location.href = location + "?id=" + id + "&exchangeID=" + exchangeID;
-        }
-    };
-
-})(jQuery);
-/*
  * websocket
  */
 // 指数/个股信息参数
@@ -273,7 +121,7 @@ var ReqStockInfoOpt = function(option){
     var ExchangeID = option.ExchangeID?option.ExchangeID:"101",
         InstrumentID = option.InstrumentID?option.InstrumentID:"1",
         wsUrl = option.wsUrl?option.wsUrl:"ws://172.17.20.203:7681",
-        stockXMlUrl = option.stockXMlUrl?option.stockXMlUrl:"http://172.17.20.203:6789/101";
+        stockXMlUrl = option.stockXMlUrl?option.stockXMlUrl:"http://103.66.33.58:443/GetCalcData?ExchangeID=1&Codes=1";
     // 不同类型K线历史数据参数扩展对象
     var historyQAll = {};
     // 对象默认请求参数
@@ -303,7 +151,7 @@ var KLineRequire = function(option, klineType){
     var ExchangeID = option.ExchangeID?option.ExchangeID:"101",
         InstrumentID = option.InstrumentID?option.InstrumentID:"1",
         wsUrl = option.wsUrl?option.wsUrl:"ws://172.17.20.203:7681",
-        stockXMlUrl = option.stockXMlUrl?option.stockXMlUrl:"http://172.17.20.203:6789/101",
+        stockXMlUrl = option.stockXMlUrl?option.stockXMlUrl:"http://103.66.33.58:443/GetCalcData?ExchangeID=1&Codes=1",
         klineType = klineType?klineType:"minute";
     // 不同类型K线历史数据参数扩展对象
     var historyQAll = {};
@@ -395,7 +243,7 @@ var KLineRequire = function(option, klineType){
 // websocket连接
 var WebSocketConnect = function(options){
     this.wsUrl = options.wsUrl?options.wsUrl:"ws://172.17.20.203:7681";
-    this.stockXMlUrl = options.stockXMlUrl?options.stockXMlUrl:"http://172.17.20.203:6789/101";
+    this.stockXMlUrl = options.stockXMlUrl?options.stockXMlUrl:"http://103.66.33.58:443/GetCalcData?ExchangeID=1&Codes=1";
     this.ws = null;
     this.lockReconnect = false;
     this.timeout = 60000;       //60秒
@@ -535,7 +383,7 @@ var initSocketEvent = function(socket, klineType){
                                     // 页面信息接口
                                     if(!klineType){
                                         StockSocket.FieldInfo.PrePrice = data[0].PreClose;
-                                        // setFieldInfo(data[data.length-1]);
+                                        setFieldInfo(data[data.length-1]);
                                     }
                                     // K线接口
                                     if(klineType&&klineType!="mline"){
@@ -609,9 +457,10 @@ function setFieldInfo(data){
         // StockSocket.FieldInfo.fHSRate = data.fHSRate;
         
         price = data.Last;
-        zf = floatFixedTwo((high - low)/StockSocket.FieldInfo.PrePrice*100);
+        // 未开盘时，昨收为0，计算涨跌幅和振幅会出现NAN，于是进行区分，为0%
+        zf = StockSocket.FieldInfo.PrePrice==0?floatFixedTwo(0):floatFixedTwo((high - low)/StockSocket.FieldInfo.PrePrice*100);
         zd = price - StockSocket.FieldInfo.PrePrice;
-        zdf = floatFixedTwo((zd/StockSocket.FieldInfo.PrePrice)*100);
+        zdf = StockSocket.FieldInfo.PrePrice==0?floatFixedTwo(0):floatFixedTwo((zd/StockSocket.FieldInfo.PrePrice)*100);
 
         $.each($(".tb-fielList li"),function(index,obj){
 
@@ -749,17 +598,22 @@ function KCharts(socket, dataList, isHistory){
         $("#f_kline_charts").bind("mouseenter", function (event) {
             toolContentPosition(event);
             // $("#kline_tooltip").show();
+            _this = $("#kline");
         });
         $("#f_kline_charts").bind("mousemove", function (event) {
             KLineSocket.KLineSet.isHoverGraph = true;
             // $("#kline_tooltip").show();
             toolContentPosition(event);
+
+            _this = $("#kline");
         });
         $("#f_kline_charts").bind("mouseout", function (event) {
             KLineSocket.KLineSet.isHoverGraph = false;
             // $("#kline_tooltip").hide();
             KLineSocket.KLineSet.mouseHoverPoint = 0;
             initMarketTool();// 显示信息
+            $(_this).children(".charts-focus").blur();
+            _this = window;
         });
 
 
@@ -926,6 +780,7 @@ function chartPaint(isHistory){
     if(isHistory){
         // 绘制K线图
         KLineSocket.KChart.setOption(option = {
+            backgroundColor: "#1e2131",
             animation: false,
             tooltip: {
                 trigger: 'axis',
@@ -933,7 +788,7 @@ function chartPaint(isHistory){
                 formatter:  function(params){
                                 var index = params[0].dataIndex;
 
-                                var timeList = KLineSocket.HistoryData.hCategoryList[index].split(" ")
+                                var timeList = KLineSocket.HistoryData.hCategoryList[index].split(" ");
                                 return  timeList[0].replace(/-/gi,"/")
                                         +" "+(timeList[2]?timeList[2]:"")
                                         +"<br><i>"+StockSocket.FieldInfo.Name+" "+floatFixedDecimal(KLineSocket.HistoryData.hValuesList[index][1])+"</i>";
@@ -1149,7 +1004,7 @@ function chartPaint(isHistory){
                             opacity: 0.8,
                             borderColor: '#1e2131',
                             shadowColor: '#fff',
-                            shadowBlur: 100
+                            shadowBlur: 0
                         }
                     },
                     barWidth: 3,

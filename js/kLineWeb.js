@@ -1,6 +1,13 @@
 var KLineSocket,StockSocket;
 var barMaxValue;
 var lastClose=0;
+var _this;
+$(document).keydown(function(e){
+    if(_this!=undefined&&($(_this).attr("id")=="MLine"||$(_this).attr("id")=="kline")){
+        $(_this).children(".charts-focus").focus();
+        return;
+    }
+});
 ;(function($){
     // websocket通道-查询K线
     $.queryKLine = function(option) {
@@ -89,6 +96,9 @@ var lastClose=0;
 
         // 存储当前个股/指数信息
         reqStockInfo(StockSocket.option);
+        // 个股需要查询企业信息，公司信息
+        var reqComOpt = ["23000171","23000138","23000164","23000188"];
+        requireCom(reqComOpt, StockSocket.FieldInfo.Code);
         // 发起websocket请求-reqStockInfo中去写
         // initSocketEvent(StockSocket); 
         // 个股需要查询企业信息，公司信息
@@ -114,7 +124,7 @@ var ReqStockInfoOpt = function(option){
     var ExchangeID = option.ExchangeID?option.ExchangeID:"101",
         InstrumentID = option.InstrumentID?option.InstrumentID:"1",
         wsUrl = option.wsUrl?option.wsUrl:"ws://172.17.20.203:7681",
-        stockXMlUrl = option.stockXMlUrl?option.stockXMlUrl:"http://172.17.20.203:6789/101";
+        stockXMlUrl = option.stockXMlUrl?option.stockXMlUrl:"http://103.66.33.58:443/GetCalcData?ExchangeID=1&Codes=1";
     // 不同类型K线历史数据参数扩展对象
     var historyQAll = {};
     // 对象默认请求参数
@@ -160,7 +170,7 @@ var KLineRequire = function(option, klineType){
     var ExchangeID = option.ExchangeID?option.ExchangeID:"101",
         InstrumentID = option.InstrumentID?option.InstrumentID:"1",
         wsUrl = option.wsUrl?option.wsUrl:"ws://172.17.20.203:7681",
-        stockXMlUrl = option.stockXMlUrl?option.stockXMlUrl:"http://172.17.20.203:6789/101",
+        stockXMlUrl = option.stockXMlUrl?option.stockXMlUrl:"http://103.66.33.58:443/GetCalcData?ExchangeID=1&Codes=1",
         klineType = klineType?klineType:"minute";
     // 不同类型K线历史数据参数扩展对象
     var historyQAll = {};
@@ -252,7 +262,7 @@ var KLineRequire = function(option, klineType){
 // websocket连接
 var WebSocketConnect = function(options){
     this.wsUrl = options.wsUrl?options.wsUrl:"ws://172.17.20.203:7681";
-    this.stockXMlUrl = options.stockXMlUrl?options.stockXMlUrl:"http://172.17.20.203:6789/101";
+    this.stockXMlUrl = options.stockXMlUrl?options.stockXMlUrl:"http://103.66.33.58:443/GetCalcData?ExchangeID=1&Codes=1";
     this.ws = null;
     this.lockReconnect = false;
     this.timeout = 60000;       //60秒
@@ -465,15 +475,13 @@ function reqStockInfo(options){
             setStockInfo(allZSCode,options.InstrumentID);
             // 发起websocket请求-reqStockInfo中去写
             initSocketEvent(StockSocket); 
-            // 个股需要查询企业信息，公司信息
-            var reqComOpt = ["23000171","23000138","23000164","23000188"];
-            requireCom(reqComOpt, StockSocket.FieldInfo.Code);
         }
     });
 };
 // 设置顶部信息  当前指数/个股 请求快照数据
 function setFieldInfo(data){
     var high,low,open,zf,price,zd,zdf,dealVal,dealVol;
+
     if(data){
         $("#withoutStockData").hide().siblings().show();
         StockSocket.FieldInfo.PrePrice = data.PreClose;
@@ -488,9 +496,10 @@ function setFieldInfo(data){
         // StockSocket.FieldInfo.fHSRate = data.fHSRate;
         
         price = data.Last;
-        zf = floatFixedTwo((high - low)/StockSocket.FieldInfo.PrePrice*100);
+        // 未开盘时，昨收为0，计算涨跌幅和振幅会出现NAN，于是进行区分，为0%
+        zf = StockSocket.FieldInfo.PrePrice==0?floatFixedTwo(0):floatFixedTwo((high - low)/StockSocket.FieldInfo.PrePrice*100);
         zd = price - StockSocket.FieldInfo.PrePrice;
-        zdf = floatFixedTwo((zd/StockSocket.FieldInfo.PrePrice)*100);
+        zdf = StockSocket.FieldInfo.PrePrice==0?floatFixedTwo(0):floatFixedTwo((zd/StockSocket.FieldInfo.PrePrice)*100);
 
         $.each($(".tb-fielList li"),function(index,obj){
 
@@ -591,7 +600,7 @@ function requireCom(reqComOpt,code){
             url:  reqUrl+reqComObj+"&P_NODE_CODE="+code,
             type: 'GET',
             dataType: 'json',
-            async:false,
+            async:true,
             cache:false,
             error: function(data){
                 console.log("请求公司信息出错");
@@ -844,7 +853,6 @@ function KCharts(socket, dataList, isHistory){
         // 初始化并显示数据栏和数据信息框的信息
         initMarketTool();
 
-
         /*
          * K线图事件绑定
          */
@@ -862,17 +870,24 @@ function KCharts(socket, dataList, isHistory){
         $("#kline_charts").bind("mouseenter", function (event) {
             toolContentPosition(event);
             $("#kline_tooltip").show();
+
+            _this = $("#kline");
         });
         $("#kline_charts").bind("mousemove", function (event) {
             KLineSocket.KLineSet.isHoverGraph = true;
             $("#kline_tooltip").show();
             toolContentPosition(event);
+
+            _this = $("#kline");
         });
         $("#kline_charts").bind("mouseout", function (event) {
             KLineSocket.KLineSet.isHoverGraph = false;
             $("#kline_tooltip").hide();
             KLineSocket.KLineSet.mouseHoverPoint = 0;
             initMarketTool();// 显示信息
+
+            $(_this).children(".charts-focus").blur();
+            _this = window;
         });
 
     }
@@ -1036,6 +1051,7 @@ function chartPaint(isHistory){
     if(isHistory){
         // 绘制K线图
         KLineSocket.KChart.setOption(option = {
+            backgroundColor: "#fff",
             animation: false,
             tooltip: {
                 trigger: 'axis',

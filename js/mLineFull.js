@@ -658,6 +658,7 @@
 
                     // 绘制图表 配置参数
                     var option = {
+                        backgroundColor: "#1e2131",
                         animation: false,
                         grid: [
                             {
@@ -690,8 +691,8 @@
                             enterable:false,
                             transitionDuration:0,
                             formatter:function(params){
-                                var str = '<p>'+params[0].axisValueLabel+'</p>'+
-                                '<p style="font-size:24px;margin-top: 10px;color: #fff;">'+$this.stockName+(params[1].value?params[1].value:"-")+'</i></p>';
+                                var str = '<p style="font-size:20px;color:rgba(255,255,255,0.5);text-align:left;">'+((params[0].axisValueLabel).split(" ")[0]).replace(/-/g,"/")+'</p>'+
+                                '<p style="font-size:24px;margin-top: 10px;color: #fff;text-align:left;">'+$this.stockName+(params[1].value?params[1].value:"-")+'</i></p>';
                                 return str;
                             },
                             backgroundColor:"#1e2131",
@@ -707,7 +708,7 @@
                             axisPointer: {
                                 type:'cross',
                                 crossStyle:{
-                                    color:'rgba(255,255,255,0.5)',
+                                    color:'rgba(255,255,255,0.5);',
                                 }
                             },
                         },
@@ -1109,7 +1110,8 @@
                                             }else{
                                                 return colorList[1];
                                             }
-                                        }
+                                        },
+                                        opacity: 0.8,
                                     }
                                 }
                             }
@@ -1156,17 +1158,24 @@
                     $("#mline_charts").bind("mouseenter", function (event) {
                         toolContentPosition(event);
                         $(".mline_tooltip").show();
+
+                        _this = $("#MLine");
                     });
 
                     $("#mline_charts").bind("mousemove", function (event) {
                         isHoverGraph = true;
                         toolContentPosition(event);
+
+                         _this = $("#MLine");
                     });
 
                     $("#mline_charts").bind("mouseout", function (event) {
                         isHoverGraph = false;
                         $(".mline_tooltip").hide();
                         mouseHoverPoint = 0;
+
+                        $(_this).children(".charts-focus").blur();
+                        _this = window;
                     });
                     
                     $(".point_label").show();
@@ -1222,8 +1231,14 @@
         }
 
     }
-
+     $("#MLine,#kline").mouseover(function(){
+        $(this).children(".kline-focus").focus();
+    });
+    $("#MLine,#kline").mouseout(function(){
+        $(this).children(".kline-focus").blur();
+    });
     $("#kline,#MLine").keyup(function (e) {
+        $(window).off("scroll");
         var keyCode = e.keyCode;
         switch (keyCode) {
             case 37:
