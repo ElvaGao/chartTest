@@ -969,12 +969,22 @@ function chartPaint(isHistory){
                                 var valueClose = KLineSocket.HistoryData.hValuesList[params[0].dataIndex][1];
                                 var pixelClose = KLineSocket.KChart.convertToPixel({yAxisIndex:0}, valueClose );
 
-                                var poxelPos = pixelHigh;
-                                if(poxelPos<200){
-                                    poxelPos = pixelClose + 200;
+                                var valueLast = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][1];
+                                var pixelLast = KLineSocket.KChart.convertToPixel({xAxisIndex: 0}, KLineSocket.HistoryData.hCategoryList[KLineSocket.HistoryData.hValuesList.length-1] );
+
+                                var poxelPosTop = pixelHigh;
+                                if(poxelPosTop<200){
+                                    poxelPosTop = pixelClose + 100;
                                 }
-                                console.log(poxelPos)
-                                return [pos[0],poxelPos];
+                                var posLeft = pos[0] - 125;
+                                if(posLeft<30){
+                                    posLeft = pos[0] + 30;
+                                }
+                                if(posLeft>pixelLast-170){
+                                    posLeft = pixelLast - 290;
+                                }
+                                
+                                return [posLeft,poxelPosTop];
                           }
             },
             axisPointer: {
