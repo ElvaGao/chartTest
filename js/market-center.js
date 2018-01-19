@@ -1,35 +1,83 @@
-var wsUrlDevelop = 'ws://103.66.33.67:443';//'ws://103.66.33.31:443';//开发
+var wsUrlDevelop = 'ws://103.66.33.67:80';//'ws://103.66.33.31:443';//开发
 var stockXMlUrl = "http://103.66.33.58:443/GetCalcData";//"../xml/ths.xml";//"http://172.17.20.203:6789/101";
 var exponentDateTime = [];//解析XML后得到的数组 所有指数的时间、类型、id、小数位数等
 var elementId;
 var ZSId,ExchangeID;
 var LSData = ZCData = DYData = QPDATA = null;
+var _FirstS = [{name:"上证综指",sectionid:1,code:"000001"},{name:"深证成指",sectionid:1,code:"399001"},{name:"沪深300",sectionid:1,code:"399007"}];
+var _SecS = [{name:"深证成指",sectionid:2,code:"399001"},{name:"创业板",sectionid:2,code:"395004"},{name:"中小板",sectionid:2,code:"399003"}];
+var _ThirS = [{name:"上证综指",sectionid:3,code:"000001"},{name:"深证成指",sectionid:3,code:"399001"},{name:"沪深300",sectionid:3,code:"399007"}];
+var _FourthS = [{name:"深证成指",sectionid:4,code:"399001"},{name:"创业板",sectionid:4,code:"395004"},{name:"中小板",sectionid:4,code:"399003"}];
+var _FifthS = [{name:"深证成指",sectionid:5,code:"399001"},{name:"创业板",sectionid:5,code:"395004"},{name:"中小板",sectionid:5,code:"399003"}];
+var _SixthS = [{name:"深证成指",sectionid:6,code:"399001"},{name:"创业板",sectionid:6,code:"395004"},{name:"中小板",sectionid:6,code:"399003"}];
+
 
 $(function(){
     $("#main1").initMline(
         {
-            id:"1",
-            exchangeID:"2"
+            id:_FirstS[0].code,
+            exchangeID:"2",
+            stockName:_FirstS[0].name,
+            stockCode:_FirstS[0].code,
         }
     );
     $("#main2").initMline(
         {
-            id:"2",
-            exchangeID:"2"
+            id:_FirstS[1].code,
+            exchangeID:"2",
+            stockName:_FirstS[1].name,
+            stockCode:_FirstS[1].code,
         }
     );
     $("#main3").initMline(
         {
-            id:"4",
-            exchangeID:"2"
+            id:_FirstS[2].code,
+            exchangeID:"2",
+            stockName:_FirstS[2].name,
+            stockCode:_FirstS[2].code,
         }
     );
-
+    checkoutBlock();
     // 点击其他地方收回搜索下拉列表
     $("body").on("click",function(e){
         $("#searchEnd").slideUp();
     });
 });
+// 查询板块
+function checkoutBlock(){
+    $.ajax({
+        url:"http://103.66.33.58:443/GetSections?",
+        data:{"SectionClass":5},
+        type:"GET",
+        dataType:'json',
+        async:false,
+        success:function(data){
+            var jsonB=[];
+            if(data && data.ReturnCode == 0 && data.SectionsInfo){
+                data = data.SectionsInfo;
+                for(var i=0;i<data.length;i++){
+                    jsonB.push({
+                        name:data[i].SectionName,
+                        SectionID:data[i].SectionID
+                    });
+                }
+                initTabBlock(jsonB);
+            }
+        },
+        error:function(data){
+            console.log("未能查出板块数据");
+        }
+    });
+}
+function initTabBlock(jsonB){
+    $(".mc-tab-li").toggleLi(
+        {
+            data:jsonB,
+            width:"100px",
+            lineHeight:"80px"
+        }
+    );
+}
 ;(function($,window,document,undefined){
     $.fn.initMline = function(options,params){
         var socket = null;
@@ -65,7 +113,9 @@ $(function(){
                         exchangeID:ExchangeID,
                         elementId:elementId,
                         socket:socket,
-                        xmlData:xmlData
+                        xmlData:xmlData,
+                        stockName:options.stockName,
+                        stockCode:options.stockCode
                     };
                     var chartsInit = new InitMlineCharts(opt);
                     chartsInit.initEvent(ws);
@@ -92,9 +142,11 @@ $(function(){
             a_history_data:[],//成交量
             yc:null,//昨收
             nowDateTime:[],
+            stockName:opt.stockName,
+            stockCode:opt.stockCode,
             // 获取历史数据
             LSData:{
-                "MsgType": "C213",
+                "MsgType": "Q3011",
                 "ExchangeID": opt.exchangeID,
                 "InstrumentID": opt.id,
                 "StartIndex": "0",
@@ -104,27 +156,27 @@ $(function(){
             },
             // 获取昨收值
             ZCData:{
-                "MsgType":"S101",
-                "DesscriptionType":"3",
+                "MsgType":"S1010",
+                // "DesscriptionType":"3",
                 "ExchangeID":opt.exchangeID,
                 "InstrumentID":opt.id,
-                "Instrumenttype":"2"
+                "Instrumenttype":"1"
             },
             // 订阅实时推送
             DYData:{
-                "MsgType":"S101",
-                "DesscriptionType":"3",
+                "MsgType":"S1010",
+                // "DesscriptionType":"3",
                 "ExchangeID":opt.exchangeID,
                 "InstrumentID":opt.id,
-                "Instrumenttype":"5"
+                "Instrumenttype":"11"
             },
             // 清盘
             QPDATA:{
-                "MsgType":"S101",
-                "DesscriptionType":"3",
+                "MsgType":"Q8002",
+                // "DesscriptionType":"3",
                 "ExchangeID":opt.exchangeID,
                 "InstrumentID":opt.id,
-                "Instrumenttype":"4"
+                "PructType":"0"
             }
         };
     };
@@ -156,22 +208,22 @@ $(function(){
             var MsgType =  data["MsgType"] || data[0]["MsgType"]; //暂时用他来区分推送还是历史数据 如果存在是历史数据,否则推送行情
             switch(MsgType)
             {
-                case "R213"://订阅历史数据
+                case "R3011"://订阅历史数据
                 // 初始化图表
                 initCharts(data,'',_this);
                 break;
-                case "Q619"://订阅快照
+                case "P0001"://订阅快照
                 if(!_this.yc){
-                    _this.yc = data[0].PreClose; //获取昨收值
+                    _this.yc = data.PreClose; //获取昨收值
                     return;
                 }
                 break;
-                case "Q213"://订阅分钟线
+                case "P0011"://订阅分钟线
                     if(_this.myChart != undefined){
                         initCharts(data,"add",_this);
                     }
                 break;
-                case "Q640"://清盘
+                case "R8002"://清盘
                    var MarketStatus = data["MarketStatus"] || data[0]["MarketStatus"];
                     if(MarketStatus == 1){//收到清盘指令  操作图表
                         redrawChart(data,_this);
@@ -279,20 +331,20 @@ $(function(){
             }
             yc = parseFloat(yc);
             var a_lastData = data;
-            var last_dataTime = formatTime(a_lastData[0].Time);//moment(parseFloat(a_lastData[0].Time + "000")).format("HH:mm"); //行情最新时间
-            var last_date = dateToStamp(formatDate(a_lastData[0].Date) +" " + last_dataTime);
-            var zVale = parseFloat(((parseFloat(a_lastData[0].Price) - parseFloat(yc)) / parseFloat(yc) * 100).toFixed(2)); //行情最新涨跌幅
-            var aValue = parseFloat(a_lastData[0].Volume); //最新成交量
+            var last_dataTime = formatTime(a_lastData.Time);//moment(parseFloat(a_lastData[0].Time + "000")).format("HH:mm"); //行情最新时间
+            var last_date = dateToStamp(formatDate(a_lastData.Date) +" " + last_dataTime);
+            var zVale = parseFloat(((parseFloat(a_lastData.Price) - parseFloat(yc)) / parseFloat(yc) * 100).toFixed(2)); //行情最新涨跌幅
+            var aValue = parseFloat(a_lastData.Volume); //最新成交量
 
-            if((parseFloat(a_lastData[0].Price)) > (yc + yc*0.03).toFixed(decimal)){
-                a_lastData[0].Price = (yc + yc*0.03).toFixed(decimal);
-            }else if((parseFloat(a_lastData[0].Price)) < (yc - yc*0.03).toFixed(decimal)){
-                a_lastData[0].Price = (yc - yc*0.03).toFixed(decimal);
+            if((parseFloat(a_lastData.Price)) > (yc + yc*0.03).toFixed(decimal)){
+                a_lastData.Price = (yc + yc*0.03).toFixed(decimal);
+            }else if((parseFloat(a_lastData.Price)) < (yc - yc*0.03).toFixed(decimal)){
+                a_lastData.Price = (yc - yc*0.03).toFixed(decimal);
             }
 
             for(var i=0;i<$this.c_data.length;i++){
                 if(last_date == $this.c_data[i]){
-                    $this.history_data[i] = parseFloat(a_lastData[0].Price);
+                    $this.history_data[i] = parseFloat(a_lastData.Price);
                     $this.z_history_data[i] = parseFloat(zVale);
                     $this.a_history_data[i] = parseFloat(aValue);
                     // 中间有断开
@@ -302,7 +354,7 @@ $(function(){
                             $this.z_history_data[j].push(null);
                             $this.a_history_data[j].push(null);
                             if(j == i){
-                                $this.history_data[j] = parseFloat(a_lastData[0].Price);
+                                $this.history_data[j] = parseFloat(a_lastData.Price);
                                 $this.z_history_data[j] = parseFloat(zVale);
                                 $this.a_history_data[j] = parseFloat(aValue);
                             }
@@ -313,7 +365,7 @@ $(function(){
                 }
             }
             var fvalue, r1;
-            fvalue = parseFloat(a_lastData[0].Price);
+            fvalue = parseFloat(a_lastData.Price);
             r1 = Math.abs(fvalue - parseFloat(yc));
             if (r1 > $this.interval) {
                 $this.interval = r1;
@@ -365,11 +417,11 @@ $(function(){
                 ]
             });
         }else{
-            if(!data.d && data.d.length<=0){
+            if(!data.KLineSeriesInfo && data.KLineSeriesInfo.length<=0){
                 console.log("暂时没有数据");
                 return;
             }
-            data = data.d;
+            data = data.KLineSeriesInfo;
             var startTime=startTime1=endTime=endTime1=null;//各个指数的交易时间
             if($this.oneZSInfo.length>1){//分段计算时间
                 startTime = $this.oneZSInfo[0].startTime;
@@ -640,7 +692,7 @@ $(function(){
                 htmlStr = '<label class="col_3bc"><i style="font-size: 24px;margin-right: 10px;">'+parseFloat($this.history_data[$this.history_data.length-1]).toFixed(decimal)+'</i><i style="margin-right: 10px;">'+$this.z_history_data[$this.history_data.length-1]+'%</i><i>'+size+'</i></label>';
             }
             $("#"+$this.elementId).parents(".market-main-chart").siblings(".market-chart-decs").html(htmlStr);
-            $("#"+$this.elementId).parents(".market-main-chart").siblings(".market-chart-title").text($this.oneZSInfo[0].imName+"("+$this.oneZSInfo[0].code+")");
+            $("#"+$this.elementId).parents(".market-main-chart").siblings(".market-chart-title").text($this.stockName+"("+$this.stockCode+")");
         }
     }
 
@@ -851,7 +903,168 @@ $(function(){
 })(jQuery, window, document);
 // 点击切换处理
 function tabLi(index){
-    console.log(index);
+    var el = $(".mc-tab-li ul li").eq(index);
+    switch($(el).data("sectionid")){
+        case 1:
+        $("#main1").initMline(
+            {
+                id:_FirstS[0].code,
+                exchangeID:"2",
+                stockName:_FirstS[0].name,
+                stockCode:_FirstS[0].code,
+            }
+        );
+        $("#main2").initMline(
+            {
+                id:_FirstS[1].code,
+                exchangeID:"2",
+                stockName:_FirstS[1].name,
+                stockCode:_FirstS[1].code,
+            }
+        );
+        $("#main3").initMline(
+            {
+                id:_FirstS[2].code,
+                exchangeID:"2",
+                stockName:_FirstS[2].name,
+                stockCode:_FirstS[2].code,
+            }
+        );
+        break;
+        case 2:
+        $("#main1").initMline(
+            {
+                id:_SecS[0].code,
+                exchangeID:"2",
+                stockName:_SecS[0].name,
+                stockCode:_SecS[0].code,
+            }
+        );
+        $("#main2").initMline(
+            {
+                id:_SecS[1].code,
+                exchangeID:"2",
+                stockName:_SecS[1].name,
+                stockCode:_SecS[1].code,
+            }
+        );
+        $("#main3").initMline(
+            {
+                id:_SecS[2].code,
+                exchangeID:"2",
+                stockName:_SecS[2].name,
+                stockCode:_SecS[2].code,
+            }
+        );
+        break;
+        case 3:
+        $("#main1").initMline(
+            {
+                id:_ThirS[0].code,
+                exchangeID:"2",
+                stockName:_ThirS[0].name,
+                stockCode:_ThirS[0].code,
+            }
+        );
+        $("#main2").initMline(
+            {
+                id:_ThirS[1].code,
+                exchangeID:"2",
+                stockName:_ThirS[1].name,
+                stockCode:_ThirS[1].code,
+            }
+        );
+        $("#main3").initMline(
+            {
+                id:_ThirS[2].code,
+                exchangeID:"2",
+                stockName:_ThirS[2].name,
+                stockCode:_ThirS[2].code,
+            }
+        );
+        break;
+        case 4:
+        $("#main1").initMline(
+            {
+                id:_FourthS[0].code,
+                exchangeID:"2",
+                stockName:_FourthS[0].name,
+                stockCode:_FourthS[0].code,
+            }
+        );
+        $("#main2").initMline(
+            {
+                id:_FourthS[1].code,
+                exchangeID:"2",
+                stockName:_FourthS[1].name,
+                stockCode:_FourthS[1].code,
+            }
+        );
+        $("#main3").initMline(
+            {
+                id:_FourthS[2].code,
+                exchangeID:"2",
+                stockName:_FourthS[2].name,
+                stockCode:_FourthS[2].code,
+            }
+        );
+        break;
+        case 5:
+        $("#main1").initMline(
+            {
+                id:_FifthS[0].code,
+                exchangeID:"2",
+                stockName:_FifthS[0].name,
+                stockCode:_FifthS[0].code,
+            }
+        );
+        $("#main2").initMline(
+            {
+                id:_FifthS[1].code,
+                exchangeID:"2",
+                stockName:_FifthS[1].name,
+                stockCode:_FifthS[1].code,
+            }
+        );
+        $("#main3").initMline(
+            {
+                id:_FifthS[2].code,
+                exchangeID:"2",
+                stockName:_FifthS[2].name,
+                stockCode:_FifthS[2].code,
+            }
+        );
+        break;
+        case 6:
+        $("#main1").initMline(
+            {
+                id:_SixthS[0].code,
+                exchangeID:"2",
+                stockName:_SixthS[0].name,
+                stockCode:_SixthS[0].code,
+            }
+        );
+        $("#main2").initMline(
+            {
+                id:_SixthS[1].code,
+                exchangeID:"2",
+                stockName:_SixthS[1].name,
+                stockCode:_SixthS[1].code,
+            }
+        );
+        $("#main3").initMline(
+            {
+                id:_SixthS[2].code,
+                exchangeID:"2",
+                stockName:_SixthS[2].name,
+                stockCode:_SixthS[2].code,
+            }
+        );
+        break;
+        default:
+        break;
+    }
+    
 }
 //从XML表中摘出时间，name,id，小数位,指数类型   公共方法   返回的是数组
 function getExponentDateTime(xmlCode,_codeList){

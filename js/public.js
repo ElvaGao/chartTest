@@ -130,7 +130,7 @@ function floatFixedTwo(data) {
 // 取n位小数点
 function floatFixedDecimal(data) {
 
-    return parseFloat(data).toFixed(StockSocket.FieldInfo.Decimal);
+    return parseFloat(data).toFixed(KLineSocket.StockInfo.Decimal);
 };
 // Text填写-dom的text和color
 function setTextAndColor(domObj,data,compareData,unit,className){
@@ -209,12 +209,15 @@ function setUnit(data,type,lang){
         var $li;
         $.each(opt.data,function(i,item){
             $li = $("<li></li>");
-            $li.css({"width":opt.width,"height":opt.lineHeight,"line-height":opt.lineHeight,"border-bottom":opt.borderB,"float":"left"});
+            $li.css({"width":opt.width,"height":opt.lineHeight,"line-height":opt.lineHeight,"border-bottom":opt.borderB,"float":"left","cursor":"pointer"});
             if(i==0){
                 $li.addClass("active");
             }
             if(item.id){
                 $li.attr({"id":item.id});
+            }
+            if(item.SectionID){
+                $li.attr({"data-sectionID":item.SectionID});
             }
             $li.text(item.name);
             $($el).append($li);
@@ -231,12 +234,12 @@ function setUnit(data,type,lang){
         $this = $(this);
         $this.html("<h1>"+options.title+"</h1>");
         var htmlStr = '<ul class="clearfix"><li class="zdf-list-one"><ul class="clearfix zdf-list-title">';
-        for(let i=0;i<options.dataTit;i++){
+        for(var i=0;i<options.dataTit;i++){
             htmlStr += '<li>'+options.dataTit[i].liTilt+'</li>';
         }
         htmlStr += '</ul></li>';
         htmlStr += '<li class="zdf-list-one zdf-list-detail"><ul class="clearfix">';
-        for(let i=0;i<options.data;i++){
+        for(var i=0;i<options.data;i++){
             htmlStr += '<li>'+options.data[i].list+'</li>';
         }
         htmlStr += '</ul>';
@@ -253,7 +256,7 @@ function setUnit(data,type,lang){
         $this.append(opts);
     };
 
-    $.fn.chartsTab.defaults = {
-        data:["无","量比","MACD"]
+    $.fn.chartsTab.defaults = {//,"量比","MACD"
+        data:["无"]
     };
 })(jQuery, window, document);

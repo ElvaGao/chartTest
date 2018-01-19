@@ -26,29 +26,29 @@
         <div class="wrap">
             <div class="market-charts">
                 <div class="fl market-chart-one">
-                    <h2 class="market-chart-title">平安银行(000001)</h2>
+                    <h2 class="market-chart-title">-</h2>
                     <span class="market-chart-decs"><i>-</i><i>-</i><i>-</i></span>
                     <div class="market-main-chart">
                         <a href="./detail.html?exchangeID=2&id=1">
-                            <div id="main1" style="height:242px;"></div>
+                            <div id="main1" style="height:242px;">暂无数据</div>
                         </a>
                     </div>
                 </div>
                 <div class="fl market-chart-one">
-                    <h2 class="market-chart-title">万 科Ａ(000002)</h2>
+                    <h2 class="market-chart-title">-</h2>
                     <span class="market-chart-decs"><i>-</i><i>-</i><i>-</i></span>
                     <div class="market-main-chart">
                         <a href="./detail.html?exchangeID=2&id=2">
-                            <div id="main2" style="height:242px;"></div>
+                            <div id="main2" style="height:242px;">暂无数据</div>
                         </a>
                     </div>
                 </div>
                 <div class="fl market-chart-one">
-                    <h2 class="market-chart-title">国农科技(000004)</h2>
+                    <h2 class="market-chart-title">-</h2>
                     <span class="market-chart-decs"><i>-</i><i>-</i><i>-</i></span>
                     <div class="market-main-chart">
                         <a href="./detail.html?exchangeID=2&id=4">
-                            <div id="main3" style="height:242px;"></div>
+                            <div id="main3" style="height:242px;">暂无数据</div>
                         </a>
                     </div>
                 </div>
@@ -128,20 +128,6 @@
     <script type="text/javascript" src="../js/market-center.js"></script>
     <script>
         $(function(){
-            $(".mc-tab-li").toggleLi(
-                {
-                    data:[
-                        {name:"沪深A股",href:"#"},
-                        {name:"沪深B股",href:"#"},
-                        {name:"沪市A股",href:"#"},
-                        {name:"沪市B股",href:"#"},
-                        {name:"中小板",href:"#"},
-                        {name:"创业板",href:"#"},
-                    ],
-                    width:"100px",
-                    lineHeight:"80px"
-                }
-            );
             // $(".M-box").pagination({
             //     prevContent:"上一页",
             //     nextContent:"下一页",
@@ -173,10 +159,5 @@
                 
             // });
         });
-        function tabLi(index){
-            $(".canvas").hide();
-            $(".canvas").eq(index).show();
-        }
-
     </script>
 </html>

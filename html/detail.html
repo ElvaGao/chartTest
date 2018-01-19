@@ -4,14 +4,13 @@
 	<meta charset="utf-8">
 	<title>行情详情</title>
     <link rel="stylesheet" type="text/css" href="../css/echarts.css" />
-    <link rel="stylesheet" type="text/css" href="../css/detail.css">
+    <link rel="stylesheet" type="text/css" href="../css/detail.css" />
 </head>
 <body>
      <!-- 页面开始 -->
     <div class="container-detail">
         <!-- 上部信息框开始 -->
         <div class="box top-bar">
-            <div class="no-data no-data-k" id="withoutStockData"></div>
             <div class="fl tb-fieldName">
                 <div class="tb-fn-title">-</div>
                 <div class="tb-fn-num">
@@ -129,11 +128,31 @@
                 </div>
             </div>
             <div class="box fr cb-right">
-                <div class="no-data no-data-k" id="withoutPKCJData"></div>
                 <!-- 五档盘口 -->
-                <div class="cb-pk"></div>
+                <div class="cb-pk">
+                    <h2>五档盘口</h2>
+                    <div class="cb-title">
+                        <p>委比：<span class="cbt-wb "></span></p>
+                        <p>委差：<span class="cbt-wc "></span></p>
+                    </div>
+                    <ul class="cb-txtOffer"></ul>
+                    <ul class="cb-txtBids"></ul>
+                    <div class="cb-title cb-title-sub">
+                        <p>外盘：<span class="red cbt-wp"></span></p>
+                        <p>内盘：<span class="green cbt-np"></span></p>
+                    </div>
+                </div>
                 <!-- 逐笔成交 -->
-                <div class="cb-cj"></div>
+                <div class="cb-cj">
+                    <h2>逐笔成交</h2>
+                    <ul>
+                        <li><span>--</span><span>--</span><span>--</span><span>--</span></li>
+                        <li><span>--</span><span>--</span><span>--</span><span>--</span></li>
+                        <li><span>--</span><span>--</span><span>--</span><span>--</span></li>
+                        <li><span>--</span><span>--</span><span>--</span><span>--</span></li>
+                        <li><span>--</span><span>--</span><span>--</span><span>--</span></li>
+                    </ul>
+                </div>
             </div>
             <!-- echarts图形结束 -->
         </div>
@@ -221,17 +240,24 @@
                     data:[
                         {name:"分时",id:"mline"},
                         {name:"日K",id:"day"},
-                        {name:"分钟",id:"minute"}
+                        {name:"1分",id:"minute"},
+                        {name:"5分",id:"fivem"},
+                        {name:"10分",id:"tenm"},
+                        {name:"15分",id:"fifm"},
+                        {name:"30分",id:"thim"},
+                        {name:"60分",id:"hour"}
                     ]
                 }
             );
-            $(".chartsTab").chartsTab();
+            $(".chartsTab").chartsTab({
+                
+            });
 
             //指数与个股区分
             var url = location.href;
             var id, exchangeID, wsUrl, stockXMlUrl;
             if(url.indexOf("?")>-1){
-                id = getQueryString("id");//main.js里的getQueryString
+                id = getQueryString("id");
                 exchangeID = getQueryString("exchangeID");
             }else{
                 id = "1";
@@ -242,7 +268,7 @@
             switch (exchangeID) {
                 case "2":
                     // 深交所接口
-                    wsUrl = "ws://103.66.33.67:443";
+                    wsUrl = "ws://103.66.33.67:80";
                     // stockXMlUrl = "http://103.66.33.125/2:80";
                     break;
                 case "101": ;
@@ -261,12 +287,6 @@
             });
             // 初始化K线图
             $.queryKLine({
-                InstrumentID: id,
-                ExchangeID:exchangeID,
-                wsUrl:wsUrl,
-                stockXMlUrl:stockXMlUrl
-            });
-            $.queryStockInfo({
                 InstrumentID: id,
                 ExchangeID:exchangeID,
                 wsUrl:wsUrl,

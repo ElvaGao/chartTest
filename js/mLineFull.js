@@ -7,12 +7,26 @@
     var sub = 0;
     var colorList = ['#c23a39','#44c96e','#555','#999','#e5e5e5'];//红色,绿色,555,999
     var start = 0,zoom = 10;//左右键时应用
+
+    var timer;//定时器
+
+    var _singleTime,_endTime,_dealDate,_timeFlag;//股票更新的最后时间，交易时间的最后节点，交易日期，变量
+    function watchStock($this){//集合竞价
+        if(!myChart)return;
+        timer = setInterval(function(){
+            if(_timeFlag >= _endTime){
+                clearInterval(timer);
+                return;
+            }
+            var data = [{'Time':_timeFlag,'Date':_dealDate,'High':null,'Low':null,'Price':null,'Open':null}];
+            initCharts(data,'add',$this);
+        },3000);//30秒运行一次   监测是否有推送数据过来
+    }
+
     var WebSocketConnect = function(opt) {
         this.ws = null;
         this.defaults = {
-            //wsUrl : 'ws://103.66.33.37:80'; //生产
             wsUrl : opt.wsUrl,//"ws://172.17.20.203:7681",  //开发
-            // wsUrl : "ws://103.66.33.67:443",  //开发       
             lockReconnect : false,//避免重复连接 连接锁如果有正在连接的则锁住
             timeout : 60000,//60秒
             timeoutObj : null,
@@ -99,15 +113,15 @@
             flag_data : [], //成交量颜色记录 1为红 -1为绿
             //订阅快照请求
             HQAll : {
-                "MsgType":"S101",
-                "DesscriptionType":"3",
+                "MsgType":"S1010",
+                // "DesscriptionType":"3",
                 "ExchangeID":opt.exchangeID,
                 "InstrumentID":opt.id,
-                "Instrumenttype":"2"
+                "Instrumenttype":"1"
             },
             // 获取历史数据
             historyData : {
-                "MsgType": "C213",
+                "MsgType": "Q3011",
                 "ExchangeID": opt.exchangeID,
                 "InstrumentID": opt.id,
                 "StartIndex": "0",
@@ -117,19 +131,19 @@
             },
             // 实时推送数据
             RTDATA : {
-                "MsgType":"S101",
-                "DesscriptionType":"3",
+                "MsgType":"S1010",
+                // "DesscriptionType":"3",
                 "ExchangeID":opt.exchangeID,
                 "InstrumentID":opt.id,
-                "Instrumenttype":"5"
+                "Instrumenttype":"11"
             },
             // 清盘
             QPDATA : {
-                "MsgType":"S101",
-                "DesscriptionType":"3",
+                "MsgType":"Q8002",
+                // "DesscriptionType":"3",
                 "ExchangeID":opt.exchangeID,
                 "InstrumentID":opt.id,
-                "Instrumenttype":"4"
+                "PructType":"0"
             }
         };
         this.options = $.extend({},this.defaults,opt);
@@ -150,12 +164,16 @@
             },
             success: function(data){
                 if(data.ReturnCode == 0){
-                    data = data.CodeInfo[0];
-                    compareTime(data,_options);
-    
-                    socket = new WebSocketConnect(_options);
-                    var ws = socket.createWebSocket();
-                    initEvent(ws,_this);
+                    if(data && data.CodeInfo[0]){
+                        data = data.CodeInfo[0];
+                        compareTime(data,_options);
+        
+                        socket = new WebSocketConnect(_options);
+                        var ws = socket.createWebSocket();
+                        initEvent(ws,_this);
+                    }else{
+                        console.log("没有数据");
+                    }
                 }
                 // var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
                 // var exponentDateTime = getExponentDateTime(xml,allZSCode);
@@ -242,6 +260,7 @@
     }
     //1、用id判断出是哪个指数，获取其开始时间和结束时间、保留小数位、股票名字
     function compareTime(data,_options){
+        if(!data.time) return;
         var startTime,endTime,startTime1,endTime1;
         if(data.time.indexOf(";")>-1){//分段时间
             startTime = (data.time.split(";")[0]).split("-")[0];
@@ -285,8 +304,10 @@
                 _options.nowDateTime.push(json1);
             }
         }
+        _endTime = (endTime1?endTime1:endTime).replace(":","");
     }
     function initEvent(ws,_this){
+        // watchStock(_this);
         var $this = _this;
         ws.onclose = function () {
             socket.reconnect(); //终端重连
@@ -321,26 +342,27 @@
             // 2.2、动态添加今日的数据 
             switch(MsgType)
             {
-                case "R213"://订阅历史数据
-                    // $(document).trigger("MK_data",data);
+                case "R3011"://订阅历史数据
                     initCharts(data,'',$this);
                     break;
-                case "Q619"://订阅快照
+                case "P0001"://订阅快照
                     // $(document).trigger("SBR_HQ",data);
                     if(!yc){
-                        yc = data[0].PreClose; //获取昨收值
+                        yc = data.PreClose; //获取昨收值
                         return;
                     }
 
                     // 接口变更  日期为前一天
                     // todayDate = formatDate(data[0].Date + sub);
                 break;
-                case "Q213"://订阅分钟线
+                case "P0011"://订阅分钟线
+                    clearInterval(timer);
                     if(myChart != undefined){
                         initCharts(data,"add",$this);
+                        // watchStock($this);
                     }
                 break;
-                case "Q640"://清盘
+                case "R8002"://清盘
                     var MarketStatus = data["MarketStatus"] || data[0]["MarketStatus"];
                     if(MarketStatus == 1){//收到清盘指令  操作图表
                         redrawChart(data,$this);
@@ -383,25 +405,27 @@
             if(type == "add"){
                 if(myChart != undefined){
                     var a_lastData = data;
-                    var last_dataTime = formatTime(a_lastData[0].Time);//行情最新时间
-                    var last_date = dateToStamp(formatDate(a_lastData[0].Date) +" " + last_dataTime);//最新时间时间戳
-                    var zVale = parseFloat(((parseFloat(a_lastData[0].Price) - parseFloat(yc)) / parseFloat(yc) * 100).toFixed(2)); //行情最新涨跌幅
-                    var aValue = parseFloat(a_lastData[0].Volume); //最新成交量
-                    var oValue = parseFloat(a_lastData[0].Open); //最新开盘价
-                    var hValue = parseFloat(a_lastData[0].High); //最高价
-                    var lValue = parseFloat(a_lastData[0].Low); //最低价
+                    var last_dataTime = formatTime(a_lastData.Time);//行情最新时间
+                    _singleTime = a_lastData.Time;
+                    _timeFlag = parseInt(_singleTime) + 100;
+                    var last_date = dateToStamp(formatDate(a_lastData.Date) +" " + last_dataTime);//最新时间时间戳
+                    var zVale = parseFloat(((parseFloat(a_lastData.Price) - parseFloat(yc)) / parseFloat(yc) * 100).toFixed(2)); //行情最新涨跌幅
+                    var aValue = parseFloat(a_lastData.Volume); //最新成交量
+                    var oValue = parseFloat(a_lastData.Open); //最新开盘价
+                    var hValue = parseFloat(a_lastData.High); //最高价
+                    var lValue = parseFloat(a_lastData.Low); //最低价
 
-                    var flag = parseFloat(a_lastData[0].Price) - parseFloat(a_lastData[0].Open) >= 0 ? 1:-1;//成交量最新颜色标识
+                    var flag = parseFloat(a_lastData.Price) - parseFloat(a_lastData.Open) >= 0 ? 1:-1;//成交量最新颜色标识
 
-                    if((parseFloat(a_lastData[0].Price)) >= limitUp){
-                        a_lastData[0].Price = limitUp;
-                    }else if((parseFloat(a_lastData[0].Price)) <= limitDown){
-                        a_lastData[0].Price = limitDown;
+                    if((parseFloat(a_lastData.Price)) >= limitUp){
+                        a_lastData.Price = limitUp;
+                    }else if((parseFloat(a_lastData.Price)) <= limitDown){
+                        a_lastData.Price = limitDown;
                     }
 
                     for(var i=0;i<$this.c_data.length;i++){
                         if(last_date == $this.c_data[i]){
-                            $this.history_data[i] = parseFloat(a_lastData[0].Price);
+                            $this.history_data[i] = parseFloat(a_lastData.Price);
                             $this.z_history_data[i] = zVale;
                             $this.a_history_data[i] = aValue;
                             $this.open_data[i] = oValue;
@@ -419,7 +443,7 @@
                                     $this.high_data[j].push(null);
                                     $this.low_data[j].push(null);
                                     if(j == i){
-                                        $this.history_data[j] = parseFloat(a_lastData[0].Price);
+                                        $this.history_data[j] = parseFloat(a_lastData.Price);
                                         $this.z_history_data[j] = zVale;
                                         $this.a_history_data[j] = aValue;
                                         $this.flag_data[j] = flag;
@@ -443,7 +467,7 @@
                     ];
                     // set_marketTool(marktToolData,$this); //设置动态行情条
                     var fvalue, r1;
-                    fvalue = parseFloat(a_lastData[0].Price);
+                    fvalue = parseFloat(a_lastData.Price);
                     r1 = Math.abs(fvalue - parseFloat(yc));
                     if (r1 > $this.interval) {
                         $this.interval = r1 + r1*0.1;
@@ -554,6 +578,7 @@
                     if(fvalue >= yc){
                         $(".point_label").css({"background-color":"#c23a39"});
                     }
+                    _dealDate = a_lastData.Date;
                 }else{
                     // $("#noData").show();
                     // $("#toolContent_M").hide();
@@ -563,8 +588,8 @@
                     // $("#MLine").hide();
                 }
             }else{
-                if(data.d && data.d.length>0){
-                    data = data.d;
+                if(data.KLineSeriesInfo && data.KLineSeriesInfo.length>0){
+                    data = data.KLineSeriesInfo;
                     var price = [];//价格
                     var volume = [];//成交量
                     var zdfData = [];//涨跌幅
@@ -573,7 +598,6 @@
                     var lowPrice = [];//最低价
                     var flag = [];//现价-开盘价 值为1和-1
                     $this.v_data = getxAxis(data[0].Date,$this);
-                    // var lastDate = moment(formatDate(data[data.length-1].Date) +" "+formatTime(data[data.length-1].Time)).utc().valueOf();
                     var lastDate = dateToStamp(formatDate(data[data.length-1].Date) +" "+formatTime(data[data.length-1].Time));
 
                     for(var i=0;i<$this.c_data.length;i++){
@@ -581,7 +605,6 @@
                             break;
                         }
                         for(var j=0;j<data.length;j++){
-                            // var dateStamp = moment(formatDate(data[j].Date) +" "+formatTime(data[j].Time)).utc().valueOf();
                             var dateStamp = dateToStamp(formatDate(data[j].Date) +" "+formatTime(data[j].Time));
                             if($this.c_data[i] == dateStamp){
                                 var fvalue = parseFloat(data[j].Price);//价格
@@ -655,6 +678,10 @@
 
                     var split = parseFloat(((maxY - minY) / 6).toFixed(4));
                     var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(4));
+
+                    _dealDate = data[data.length-1].Date;
+                    _singleTime = data[data.length-1].Time;
+                    _timeFlag = parseInt(_singleTime) + 100;
 
                     // 绘制图表 配置参数
                     var option = {

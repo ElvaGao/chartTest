@@ -125,9 +125,10 @@ i,em{
 .cb-title p{
 	display: inline-block;
 	width: 50%;
-	font-size: 14px;
+	font-size: 13px;
 	padding-bottom: 6px;
 	vertical-align: top;
+	letter-spacing: -0.5px;
 }
 .cb-title p:last-child{
 	text-align: right;
@@ -137,7 +138,7 @@ i,em{
 }
 .cb-right ul span{
 	display: inline-block;
-	font-size: 14px;
+	font-size: 13px;
 	line-height: 30px;
 }
 .cb-pk{
@@ -451,6 +452,7 @@ ul{
 	top: 57.5%;
 	top: 77%;
 	height: 9%;
+	z-index: 999;
 }
 .volMacd{
 	top: 68%;
@@ -1022,3 +1024,5 @@ ul{
 	display: inline-block;
 	margin-right: 10px;
 }
+
+/* forex-detail 外汇详情页面 */
