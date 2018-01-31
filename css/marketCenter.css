@@ -213,7 +213,9 @@ body{
 .market-main-chart{
     padding-right: 40px;
 }
-
+.market-main-chart>a{
+    color: #333;
+}
 /* 涨跌幅列表 */
 .zdf-list{
     padding: 40px;

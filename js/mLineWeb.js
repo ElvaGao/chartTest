@@ -1,12 +1,13 @@
+var yc=0,xml,decimal=2;
 ;(function($,undefined){
     var socket = null;
-    var yc=0;
     var myChart = null;
     var mouseHoverPoint = 0;
     var isHoverGraph = false;
     var sub = 0;
     var colorList = ['#e22f2a','#3bc25b','#555','#999','#e5e5e5'];//红色,绿色,555,999
     var start = 0,zoom = 10;//左右键时应用
+    var stopTime = [];
     var WebSocketConnect = function(opt) {
         this.ws = null;
         this.defaults = {
@@ -18,7 +19,7 @@
         };
         // 心跳包请求参数
         this.XTB = {
-            "MsgType":"C646",
+            "MsgType":"Q8050",
             "ExchangeID":opt.exchangeID,
             "InstrumentID":opt.id
         },
@@ -91,10 +92,16 @@
             z_history_data:[],//涨跌幅历史数据
             a_history_data:[],//成交量
             flag_data : [], //成交量颜色记录 1为红 -1为绿
+            stockType:'',//指数或者个股
+            HistoryDataZBCJ:{
+                time: null,
+                price: null,
+                volumn: null,
+                dir: null
+            },//逐笔最后一条时间、成交量、成交价格、买卖方向，
             //订阅快照请求
             HQAll : {
                 "MsgType":"S1010",
-                // "DesscriptionType":"3",
                 "ExchangeID":opt.exchangeID,
                 "InstrumentID":opt.id,
                 "Instrumenttype":"1"
@@ -112,7 +119,6 @@
             // 实时推送数据
             RTDATA : {
                 "MsgType":"S1010",
-                // "DesscriptionType":"3",
                 "ExchangeID":opt.exchangeID,
                 "InstrumentID":opt.id,
                 "Instrumenttype":"11"
@@ -120,11 +126,52 @@
             // 清盘
             QPDATA : {
                 "MsgType":"Q8002",
-                // "DesscriptionType":"3",
                 "ExchangeID":opt.exchangeID,
                 "InstrumentID":opt.id,
                 "PructType":"0"
-            }
+            },
+            // 快照、盘口、扩展盘口、逐笔
+            KWatchKZ_PK_KZPK_ZB:{              
+                InstrumentID: opt.id,
+                ExchangeID: opt.exchangeID,
+                MsgType:"S1010",
+                Instrumenttype:"1,2,3,32"
+            },
+            // 快照、扩展盘口、逐笔
+            KWatchKZ_KZPK_ZB:{              
+                InstrumentID: opt.id,
+                ExchangeID: opt.exchangeID,
+                MsgType:"S1010",
+                Instrumenttype:"1,3,32"
+            },
+            // 盘口
+            watchPK : {
+                InstrumentID: opt.id,
+                ExchangeID: opt.exchangeID,
+                MsgType: "S1010",
+                Instrumenttype: "2"
+            },
+            // 扩展盘口----个股
+            watchPKExt: {
+                InstrumentID: opt.id,
+                ExchangeID: opt.exchangeID,
+                MsgType: "S1010",
+                Instrumenttype: "3"
+            },
+            // 扩展盘口---指数
+            watchPKExtZS: {
+                InstrumentID: opt.id,
+                ExchangeID: opt.exchangeID,
+                MsgType: "S1010",
+                Instrumenttype: "3"
+            },
+            // 逐笔成交
+            watchZBCJ : {
+                InstrumentID: opt.id,
+                ExchangeID: opt.exchangeID,
+                MsgType: "S1010",
+                Instrumenttype: "32"
+            },
         };
         this.options = $.extend({},this.defaults,opt);
     };
@@ -143,10 +190,10 @@
                 console.log("请求代码表出错");
             },
             success: function(data){
-                // var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
-                // var exponentDateTime = getExponentDateTime(xml,allZSCode);
                 if(data.ReturnCode == 0){
                     data = data.CodeInfo[0];
+                    // 从代码表中获取昨收值
+                    yc = data.PreClose?parseFloat(data.PreClose):0;
                     compareTime(data,_options);
                     socket = new WebSocketConnect(_options);
                     var ws = socket.createWebSocket();
@@ -157,84 +204,20 @@
             }
         });
     };
-    //从XML表中摘出时间，name,id，小数位,指数类型
-    function getExponentDateTime(xmlCode,_codeList){
-        var startTime,endTime,startTime1,endTime1,ids,names,decimalCount,type,json;
-        var exponentDateTime = [];
-        for(var i=0;i<_codeList.length;i++){
-            if(_codeList[i].attributes["ts"]){
-                decimalCount = $($(_codeList[i]).parent("product")[0]).attr("PriceDecimal");
-                type = $($(_codeList[i]).parent("product")[0]).attr("type");
-                ids = _codeList[i].attributes["id"].value;
-                names = _codeList[i].attributes["name"].value;
-                if(_codeList[i].attributes["ts"].value.indexOf(";")>-1){
-                    var st = _codeList[i].attributes["ts"].value.split(";")[0];
-                    var et = _codeList[i].attributes["ts"].value.split(";")[1];
-                    startTime = st.split("-")[0];
-                    endTime = st.split("-")[1];
-                    startTime1 = et.split("-")[0];
-                    endTime1 = et.split("-")[1];
-                    startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
-                }else{
-                    startTime = _codeList[i].attributes["ts"].value.split("-")[0];
-                    endTime = _codeList[i].attributes["ts"].value.split("-")[1];
-                    startTime1 = endTime1 = "";
-                }
-                json = {
-                    id:ids,
-                    name:names,
-                    startTime:startTime,
-                    endTime:endTime,
-                    startTime1:startTime1,
-                    endTime1:endTime1,
-                    decimalCount:decimalCount,
-                    type:type
-                };
-                exponentDateTime.push(json);
-            }else{
-                var elValue = $($(_codeList[i]).parent("product")[0]).attr("ts");
-                if(!elValue){
-                    elValue = $($(_codeList[i]).parents("EXCHANGE")).attr("ts");
-                    ids = $(_codeList[i]).attr("id");
-                    names = $(_codeList[i]).attr("name");
-                    type = $($(_codeList[i]).parent()).attr("type");
-                    decimalCount = $($(_codeList[i]).parent()).attr("PriceDecimal");
-                }else{
-                    decimalCount = $($(_codeList[i]).parent("product")[0]).attr("PriceDecimal");
-                    type = $($(_codeList[i]).parent("product")[0]).attr("type");
-                    ids = _codeList[i].attributes["id"].value;
-                    names = _codeList[i].attributes["name"].value;
-                }
-                if(elValue.indexOf(";")>-1){
-                    var st = elValue.split(";")[0];
-                    var et = elValue.split(";")[1];
-                    startTime = st.split("-")[0];
-                    endTime = st.split("-")[1];
-                    startTime1 = et.split("-")[0];
-                    endTime1 = et.split("-")[1];
-                    // if($($(_codeList[i]).parent("product")[0]).attr("name") == "指数"){
-                    startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
-                    // }
-                }else{
-                    startTime = elValue.split("-")[0];
-                    endTime = elValue.split("-")[1];
-                    startTime1 = endTime1 = "";
-                }
-                json = {
-                    id:ids,
-                    name:names,
-                    startTime:startTime,
-                    endTime:endTime,
-                    startTime1:startTime1,
-                    endTime1:endTime1,
-                    decimalCount:decimalCount,
-                    type:type
-                };
-                exponentDateTime.push(json);
-            }
+    function setStockInfo(_codeList){
+        var codeInfo = _codeList;
+        //指数[0~8],股票[16~31]
+        if(codeInfo.ProductType>=0&&codeInfo.ProductType<=8){
+            KLineSocket.StockInfo.stockType = "Field";
         }
-        return exponentDateTime;
+        if(codeInfo.ProductType>=16&&codeInfo.ProductType<=31){
+            KLineSocket.StockInfo.stockType = "Stock";
+        }
+        // 股票代码
+        KLineSocket.StockInfo.Code = codeInfo.InstrumentCode;
+        $(".tb-fn-title").text(KLineSocket.StockInfo.Name+"("+KLineSocket.StockInfo.Code+")");
     }
+    
     //1、用id判断出是哪个指数，获取其开始时间和结束时间、保留小数位
     function compareTime(data,_options){
         var startTime,endTime,startTime1,endTime1;
@@ -249,8 +232,17 @@
             endTime = data.time.split("-")[1];
             startTime1 = endTime1 = "";
         }
-        _options.decimal = parseInt(data.PriceDecimal);//保留小数位数
+        decimal = _options.decimal = parseInt(data.PriceDecimal);//保留小数位数
         _options.typeIndex = data.ProductType;//指数类型
+        //指数[0~8],股票[16~31]
+        if(data.ProductType>=0&&data.ProductType<=8){
+            _options.stockType = "Field";
+        }
+        if(data.ProductType>=16&&data.ProductType<=31){
+            _options.stockType = "Stock";
+        }
+        // 股票代码
+        $(".tb-fn-title").text(data.InstrumentName+"("+data.InstrumentCode+")");
         _options.stockName = data.InstrumentName;
         var startT = parseInt(startTime.split(":")[0]);
         var endT = parseInt(endTime.split(":")[0]);
@@ -299,6 +291,19 @@
             $this.getRealTimePush();
             // 清盘
             $this.getQP();
+            //请求盘口-买卖盘
+            //指数[0~8],股票[16~31]
+            switch($this.options.stockType){
+                case "Field": 
+                    //请求盘口扩展-内外盘-委比委差等
+                    $this.getKWatchKZ_KZPK_ZB();
+                break;
+                case "Stock": 
+                    //请求盘口扩展-内外盘-委比委差等
+                    $this.getKWatchKZ_PK_KZPK_ZB();
+                break;
+                default:;
+            }
             
             //初始化报价图;
             // if(!$(".shibors").find("#mytable").length>0){
@@ -317,19 +322,14 @@
             switch(MsgType)
             {
                 case "R3011"://订阅历史数据
-                    // $(document).trigger("MK_data",data);
                     initCharts(data,'',$this);
                     break;
                 case "P0001"://订阅快照
-                    // $(document).trigger("SBR_HQ",data);
-
+                    setFieldInfo(data);
                     if(!yc){
                         yc = data.PreClose; //获取昨收值
                         return;
                     }
-
-                    // 接口变更  日期为前一天
-                    // todayDate = formatDate(data[0].Date + sub);
                 break;
                 case "P0011"://订阅分钟线
                     if(myChart != undefined){
@@ -342,7 +342,25 @@
                         redrawChart(data,$this);
                     }
                 break;
-                case "R646":  //心跳包
+                case "P0002":    //五档盘口
+                    // if(!data || data.) return
+                    setfillPK(data);
+                break;
+                case "P0003":    //五档盘口扩展-内外盘-委比委差等
+                    switch($this.options.stockType){
+                        case "Field":
+                            setfillPKExtZS(data);
+                            break;
+                        case "Stock":
+                            setfillPKExt(data);
+                            break;
+                        default:;
+                    }
+                    break;
+                case "P0032":    //逐笔成交
+                    setfillZBCJ(data,$this);
+                    break;
+                case "R8050":  //心跳包
                     // console.log(data);
                 default:
             }
@@ -365,17 +383,241 @@
     InitXMLIChart.prototype.getQP = function(){
         socket.request(this.options.QPDATA);
     };
+    // 快照、盘口、扩展盘口、逐笔成交   个股
+    InitXMLIChart.prototype.getKWatchKZ_PK_KZPK_ZB = function(){
+        socket.request(this.options.KWatchKZ_PK_KZPK_ZB);
+    };
+    //快照、扩展盘口、逐笔成交   指数
+    InitXMLIChart.prototype.getKWatchKZ_KZPK_ZB = function(){
+        socket.request(this.options.KWatchKZ_KZPK_ZB);
+    }; 
+    // 盘口
+    InitXMLIChart.prototype.getWatchPK = function(){
+        socket.request(this.options.watchPK);
+    };
+    // 盘口扩展
+    InitXMLIChart.prototype.getWatchPKExt = function(){
+        socket.request(this.options.watchPKExt);
+    };
+    // 指数扩展盘口
+    InitXMLIChart.prototype.getWatchPKExtZS = function(){
+        socket.request(this.options.watchPKExtZS);
+    };
+    // 逐笔成交
+    InitXMLIChart.prototype.getWatchZBCJ = function(){
+        socket.request(this.options.watchZBCJ);
+    };
+    // 设置顶部信息  当前指数/个股 请求快照数据
+    function setFieldInfo(data){
+        var high,low,open,zf,price,zd,zdf,dealVal,dealVol,preClose;
+        if(data){
+            high = data.High;
+            low = data.Low;
+            open = data.Open;
+            dealVal = data.Value;
+            dealVol = data.Volume;
+            price = data.Last;
+            preClose = data.PreClose;
+            // 未开盘时，昨收为0，计算涨跌幅和振幅会出现NAN，于是进行区分，为0%
+            zf = preClose==0?floatFixedTwo(0):floatFixedTwo((high - low)/preClose*100);
+            zd = price - preClose;
+            zdf = preClose==0?floatFixedTwo(0):floatFixedTwo((zd/preClose)*100);
+
+            $.each($(".tb-fielList li"),function(index,obj){
+                var spanObj = $(obj).children("span"),
+                    compareData = preClose,
+                    data,
+                    unit;
+                switch(index){
+                    case 0:
+                        data = floatFixedDecimal(high);
+                        break;
+                    case 1:
+                        data = floatFixedDecimal(open);
+                        break;
+                    case 2:
+                        data = setUnit(floatFixedDecimal(dealVal));
+                        compareData = false;
+                        unit = "元";
+                        break;
+                    case 3:
+                        return;
+                    case 4:
+                        return;
+                    case 5:
+                        data = floatFixedDecimal(low);
+                        break;
+                    case 6:
+                        data = floatFixedDecimal(preClose);
+                        compareData = false;
+                        break;
+                    case 7:
+                        if(dealVol>=100){
+                            data = setUnit(dealVol/100);
+                            unit = "手";
+                        }else{
+                            data = dealVol;
+                            unit = "股";
+                        }
+                        compareData = false;
+                        break;
+                    case 8:
+                        return;
+                    case 9:
+                        data = zf+"%";
+                        compareData = false;
+                        break;
+                    default:;
+                }
+                setTextAndColor(spanObj, data, compareData, unit);
+                compareData = preClose;
+            });
+
+            $.each($(".tb-fn-num span"),function(index,obj){
+                var spanObj = $(obj),
+                    compareData = preClose,
+                    data,
+                    unit;
+                switch(index){
+                    case 0:
+                        data = floatFixedDecimal(price);
+                        break;
+                    case 1:
+                        data = floatFixedDecimal(zd);
+                        compareData = "0";
+                        break;
+                    case 2:
+                        data = zdf;
+                        compareData = "0";
+                        unit = "%";
+                        break;
+                    default:;
+                }
+                setTextAndColor(spanObj, data, compareData, unit);
+                compareData = preClose;
+            });
+        }
+    };
+    // 五档盘口-五档盘口数据，没有委比委差
+    function setfillPK(data){
+        if($(".cb-pk h2").length==0){
+            var html =  "<h2>五档盘口</h2>\
+                        <div class=\"cb-title\">\
+                            <p>委比：<span class=\"cbt-wb \"></span></p>\
+                            <p>委差：<span class=\"cbt-wc \"></span></p>\
+                        </div>\
+                        <ul class=\"cb-txtOffer\"></ul>\
+                        <ul class=\"cb-txtBids\"></ul>\
+                        <div class=\"cb-title cb-title-sub\">\
+                            <p>外盘：<span class=\"red cbt-wp\"></span></p>\
+                            <p>内盘：<span class=\"green cbt-np\"></span></p>\
+                        </div>";
+
+            $(".cb-pk").html(html);
+        }
+        var bids = data.Bids,       // 买
+            offer = data.Offer,     // 卖
+            obj_titalB = setUnit(data.TotalBidVolume/100,true),      // 买盘(外盘)总量
+            obj_titalO = setUnit(data.TotalOfferVolume/100,true),    // 卖盘(内盘)总量
+            txtOffer = "",
+            txtBids = "", 
+            upperCase = ["一","二","三","四","五"];
+        $.each(upperCase,function(i,obj){
+            // 拼接盘口和逐笔成交的拼接字符串
+            txtOffer = setPKHtml(obj,"卖",offer[i]) + txtOffer;
+            txtBids += setPKHtml(obj,"买",bids[i]);
+        });
+
+        $(".cb-txtOffer").html(txtOffer);
+        $(".cb-txtBids").html(txtBids);
+    };
+    // 五档扩展接口的委比委差-个股信息-存在五笔盘口信息
+    function setfillPKExt(data){
+        var wb = data.Entrustment/10000;
+        var wc = data.EntrustmentSub;//(data.OuterVolume + data.InnerVolume)*wb/100;
+        $(".cbt-wb").attr("class","cbt-wb "+getColorName(wb,0)).html( floatFixedTwo(wb)+"%" );
+        $(".cbt-wc").attr("class","cbt-wc "+getColorName(wc,0)).html( floatFixedZero(wc/100) );
+
+        $(".cbt-np").html( floatFixedZero(data.InnerVolume/100)+"手" );
+        $(".cbt-wp").html( floatFixedZero(data.OuterVolume/100)+"手" );
+    };
+    // 五档扩展接口-指数接口-没有五笔盘口数据信息
+    function setfillPKExtZS(data){
+        if($(".cb-pk h2").length==0){
+            var html = "<ul class=\"cb-zs-pk\">\
+                            <li><span>上涨数</span><span class=\"cb-zspk-szs\">--</span></li>\
+                            <li><span>平盘数</span><span class=\"cb-zspk-pps\">--</span></li>\
+                            <li><span>下跌数</span><span class=\"cb-zspk-xds\">--</span></li>\
+                        </ul>";
+            $(".cb-pk").html(html);
+        }
+        $(".cb-zspk-szs").text(data.Ups!=undefined?(yc!=undefined?floatFixedDecimal(data.Ups):floatFixedTwo(data.Ups)):"--");
+        $(".cb-zspk-pps").text(data.HoldLines!=undefined?(yc!=undefined?floatFixedDecimal(data.HoldLines):floatFixedTwo(data.HoldLines)):"--");
+        $(".cb-zspk-xds").text(data.Downs!=undefined?(yc!=undefined?floatFixedDecimal(data.Downs):floatFixedTwo(data.Downs)):"--");
+    };
+    // 五档盘口的统一拼接整个模块
+    function setPKHtml(obj, status, data){
+        if(data){
+            var txtData = "<span class="+getColorName(data.Price,yc)+">"+(yc!=undefined?floatFixedDecimal(data.Price):floatFixedTwo(data.Price))+"</span>\
+                        <span>"+setUnit(Math.round(data.Volume/100))+"</span>";
+        }else{
+            var txtData = "<span>--</span><span>--</span>";
+        }
+        
+        var text = "<li><span>"+status+obj+"</span>"+txtData+"</li>";
+        return text;
+    };
+    // 逐笔成交拼接
+    function setfillZBCJ(data,$this){
+        // 停盘后，数据日期返回0
+        if(data.Date=="0"&&data.Date==undefined){
+            return
+        }
+        // 数据处理
+        var absideStr = (data.ABSide==83)?("卖出"):((data.ABSide==66)?("买入"):(data.ABSide==0)?("平盘"):"");
+        var abside = (data.ABSide==83)?("<span class='green'>卖出</span>"):((data.ABSide==66)?("<span class='red'>买入</span>"):(data.ABSide==0)?("<span>平盘</span>"):"");
+        
+        var timeIsAlready = $this.options.time==formatTimeSec(data.Time),
+            priceIsAlready = $this.options.price==(yc!=undefined?floatFixedDecimal(data.RecorePrice):floatFixedTwo(data.RecorePrice)),
+            volumnIsAlready = $this.options.volumn==Math.round(data.Volume/100),
+            dirIsAlready = $this.options.dir==absideStr;
+        // 断网重连处理-存入数据，将新数据和存储的数据进行对比
+        $this.options.time = formatTimeSec(data.Time);
+        $this.options.price = (yc!=undefined?floatFixedDecimal(data.RecorePrice):floatFixedTwo(data.RecorePrice));
+        $this.options.volumn = Math.round(data.Volume/100);
+        $this.options.dir = absideStr;
+
+        if(timeIsAlready&&priceIsAlready&&volumnIsAlready&&dirIsAlready){
+            return;
+        }
+
+        if($(".cb-cj ul").length==0){
+            $(".cb-cj").html("<h2>逐笔成交</h2><ul></ul>");
+        }
+        // 创建新的li-内容是字符串的拼接
+        var liHtml = "<li><span>"+formatTimeSec(data.Time)+"</span><span>"+(yc!=undefined?floatFixedDecimal(data.RecorePrice):floatFixedTwo(data.RecorePrice))+"</span><span>"+Math.round(data.Volume/100)+"</span>"+abside+"</li>";
+        var html = $(".cb-cj ul").html();
+        html += liHtml;
+        $(".cb-cj ul").html(html);
+
+        // 列表中保留最多能显示的几条，移除多余的-从下而上为更新顺序
+        var minHeight = $(".cb-right")[0].offsetHeight-$(".cb-pk")[0].offsetHeight-40*3-24;
+        var length = Math.floor(minHeight/30);
+
+        if($(".cb-cj li").length>length){
+            $(".cb-cj li:lt("+ ( $(".cb-cj li").length-length ) +")").remove();
+        }
+    }
     //初始化分时图 
     function initCharts(data,type,$this){
         $this = $this.options;
         if (data) {
-            $("#noData").hide();
-            $("#toolContent_M").show();
+            // $("#noData").hide();
             $(".vol").show();
-            $(".chartsTab").show();
+            // $(".chartsTab").show();
             yc = parseFloat(yc);
-            var limitUp = (yc + yc*0.1).toFixed($this.decimal);
-            var limitDown = (yc - yc*0.1).toFixed($this.decimal);
+            var limitUp = parseFloat((yc + yc*0.1).toFixed($this.decimal));
+            var limitDown = parseFloat((yc - yc*0.1).toFixed($this.decimal));
             if(type == "add"){
                 if(myChart != undefined){
                     var a_lastData = data;
@@ -519,22 +761,24 @@
                         ]
                     });
                 }else{
-                    $("#noData").show();
-                    $("#toolContent_M").hide();
+                    // $("#noData").show();
+                    // $("#toolContent_M").hide();
                     $(".vol").hide();
-                    $(".chartsTab").hide();
+                    // $(".chartsTab").hide();
                     console.log("初始化图表失败");
                     $("#MLine").hide();
                 }
             }else{
                 if(data.KLineSeriesInfo && data.KLineSeriesInfo.length>0){
                     data = data.KLineSeriesInfo;
+                    if(!yc){
+                        yc =  parseFloat(data[data.length-1].Open);
+                    }
                     var price = [];//价格
                     var volume = [];//成交量
                     var zdfData = [];//涨跌幅
                     var flag = [];//现价-开盘价 值为1和-1
                     $this.v_data = getxAxis(data[0].Date,$this);
-                    // var lastDate = moment(formatDate(data[data.length-1].Date) +" "+formatTime(data[data.length-1].Time)).utc().valueOf();
                     var lastDate = dateToStamp(formatDate(data[data.length-1].Date) +" "+formatTime(data[data.length-1].Time));
 
                     for(var i=0;i<$this.c_data.length;i++){
@@ -546,10 +790,10 @@
                             var dateStamp = dateToStamp(formatDate(data[j].Date) +" "+formatTime(data[j].Time));
                             if($this.c_data[i] == dateStamp){
                                 var fvalue = parseFloat(data[j].Price);//价格
-                                if(data[j].Price >= limitUp){
+                                if(fvalue >= limitUp){
                                     price[i] = limitUp;
                                     zdfData[i] = 0.10;
-                                }else if(data[j].Price <= limitDown){
+                                }else if(fvalue <= limitDown){
                                     price[i] = limitDown;
                                     zdfData[i] = 0.10;
                                 }else{
@@ -583,9 +827,9 @@
                     //取绝对值  差值 
                     $this.interval = $this.interval + $this.interval*0.1;
                     if (yc) {
-                        var minY = (yc - $this.interval).toFixed($this.decimal);//(minPrice - r1).toFixed($this.decimal);//(yc - $this.interval).toFixed($this.decimal);
+                        var minY = Number((yc - $this.interval).toFixed($this.decimal));//(minPrice - r1).toFixed($this.decimal);//(yc - $this.interval).toFixed($this.decimal);
                         var middleY = yc.toFixed($this.decimal);
-                        var maxY = (yc + $this.interval).toFixed($this.decimal);//(maxPrice + r1).toFixed($this.decimal);//(yc + $this.interval).toFixed($this.decimal);
+                        var maxY = Number((yc + $this.interval).toFixed($this.decimal));//(maxPrice + r1).toFixed($this.decimal);//(yc + $this.interval).toFixed($this.decimal);
                         if(minY < limitDown){
                             minY = limitDown;
                         }
@@ -615,11 +859,11 @@
                         grid: [
                             {
                                 top: "5%",
-                                height: '60%',
+                                height: '70%',
                             },
                             {
-                                top: '75%',
-                                height: '10%',
+                                top: '85%',
+                                height: '13%',
                             },
                             // {
                             //     bottom:'-100%',
@@ -647,72 +891,73 @@
                             trigger: 'axis',
                             showContent:false
                         },
-                        dataZoom: [
-                            {
-                                type: 'inside',
-                                xAxisIndex: [0, 1],
-                                start: 0,
-                                end: 100,
-                            },
-                            {
-                                show: true,
-                                xAxisIndex: [0, 1],
-                                type: 'slider',
-                                bottom:'0',
-                                height:"40px",
-                                start: 0,
-                                end: 100,
-                                backgroundColor:"#fff",
-                                fillerColor:"rgba(0,0,0,0.2)",
-                                borderColor:"transparent",
-                                handleIcon:'path://M 100 100 L 300 100 L 300 700 L 100 700 z',
-                                handleStyle:{
-                                    color:"#f2f2f2",
-                                    borderColor:"#b4b4b4",
-                                    borderWidth:1
-                                },
-                                textStyle:{
-                                    color:colorList[3],
-                                    fontSize:14
-                                }
-                            }
-                        ],
+                        // dataZoom: [
+                        //     {
+                        //         type: 'inside',
+                        //         xAxisIndex: [0, 1],
+                        //         start: 0,
+                        //         end: 100
+                        //     },
+                        //     {
+                        //         show: true,
+                        //         xAxisIndex: [0, 1],
+                        //         type: 'slider',
+                        //         bottom:'0',
+                        //         height:"40px",
+                        //         start: 0,
+                        //         end: 100,
+                        //         backgroundColor:"#fff",
+                        //         fillerColor:"rgba(0,0,0,0.2)",
+                        //         borderColor:"transparent",
+                        //         handleIcon:'path://M 100 100 L 300 100 L 300 700 L 100 700 z',
+                        //         handleStyle:{
+                        //             color:"#f2f2f2",
+                        //             borderColor:"#b4b4b4",
+                        //             borderWidth:1
+                        //         },
+                        //         textStyle:{
+                        //             color:colorList[3],
+                        //             fontSize:14
+                        //         },
+                        //         labelFormatter: function (value) {
+                        //             if(!value) return;
+                        //             return $this.v_data[value].split(" ")[3];
+                        //         }
+                        //     }
+                        // ],
                         xAxis: [
                             {
                                 type:"category",
                                 axisTick: {
-                                    interval: function (number, string) {
-                                        if($this.typeIndex == "128" || $this.typeIndex == "224"){
-                                            if (number % 180 == 0) {
-                                                return true;
-                                            } else {
-                                                return false;
-                                            }
-                                        }else{
-                                            if (number % 30 == 0) {
-                                                return true;
-                                            } else {
-                                                return false;
-                                            }
-                                        }
-                                    },
                                     show:false
                                 },
                                 axisLabel: {
                                     interval: function (number, string) {
-                                        if($this.typeIndex == "128" || $this.typeIndex == "224"){
-                                            if (number % 180 == 0) {
-                                                return true;
-                                            } else {
-                                                return false;
-                                            }
-                                        }else{
-                                            if (number % 30 == 0) {
-                                                return true;
-                                            } else {
-                                                return false;
+                                        // if($this.typeIndex == "128" || $this.typeIndex == "224"){
+                                        //     if (number % 180 == 0) {
+                                        //         return true;
+                                        //     } else {
+                                        //         return false;
+                                        //     }
+                                        // }else{
+                                        //     if (number % 30 == 0) {
+                                        //         return true;
+                                        //     } else {
+                                        //         return false;
+                                        //     }
+                                        // }
+                                        if(number == 0 || number == $this.v_data.length-1){
+                                            return true;
+                                        }
+                                        if(stopTime){
+                                            if(string.indexOf(stopTime[0].split(" ")[1])>-1){
+                                                return true
                                             }
                                         }
+                                        if(string.indexOf("00")>-1){
+                                            return true
+                                        }
+
                                     },
                                     formatter: function (value, number) {
                                         var tVal = value.split(" ")[3];
@@ -1122,10 +1367,9 @@
                             // }
                         ]
                     };
-                    
+                    // $(".loading").hide();
                     myChart = echarts.init(document.getElementById('main1'));
                     myChart.setOption(option);
-
                     count = myChart.getOption().series[0].data.length;
                     
                     var marktToolData = [
@@ -1139,23 +1383,23 @@
                     myChart.on('showTip', function (params) {
                         mouseHoverPoint = params.dataIndex;
                         $("#toolContent .dataTime").text(formatDate($this.c_data[mouseHoverPoint],"1"));
-                        $("#toolContent_M").children().first().text(formatDate($this.c_data[mouseHoverPoint],"0"));
+                        // $("#toolContent_M").children().first().text(formatDate($this.c_data[mouseHoverPoint],"0"));
                         if ($this.history_data[mouseHoverPoint]) {
-                            $("#toolContent_M").children().first().text(formatDate(parseFloat($this.c_data[mouseHoverPoint]),"0"));//moment(parseFloat($this.c_data[mouseHoverPoint])).format("YYYY-MM-DD HH:mm"));
+                            // $("#toolContent_M").children().first().text(formatDate(parseFloat($this.c_data[mouseHoverPoint]),"0"));//moment(parseFloat($this.c_data[mouseHoverPoint])).format("YYYY-MM-DD HH:mm"));
                             if($this.history_data[mouseHoverPoint] >= yc){
-                                $("#toolContent_M").children().eq(1).text($this.history_data[mouseHoverPoint]).css("color",colorList[0]);
-                                $("#toolContent_M").children().eq(3).text($this.z_history_data[mouseHoverPoint]).css("color",colorList[0]);
+                                // $("#toolContent_M").children().eq(1).text($this.history_data[mouseHoverPoint]).css("color",colorList[0]);
+                                // $("#toolContent_M").children().eq(3).text($this.z_history_data[mouseHoverPoint]).css("color",colorList[0]);
                                 // 浮窗数据
                                 $(".dataPrice").text($this.history_data[mouseHoverPoint]).css("color",colorList[0]);
                                 $(".change").text($this.z_history_data[mouseHoverPoint]+"%").css("color",colorList[0]);
                             }else{
-                                $("#toolContent_M").children().eq(1).text($this.history_data[mouseHoverPoint]).css("color",colorList[1]);
-                                $("#toolContent_M").children().eq(3).text($this.z_history_data[mouseHoverPoint]).css("color",colorList[1]);
+                                // $("#toolContent_M").children().eq(1).text($this.history_data[mouseHoverPoint]).css("color",colorList[1]);
+                                // $("#toolContent_M").children().eq(3).text($this.z_history_data[mouseHoverPoint]).css("color",colorList[1]);
                                 // 浮窗数据
                                 $(".dataPrice").text($this.history_data[mouseHoverPoint]).css("color",colorList[1]);
                                 $(".change").text($this.z_history_data[mouseHoverPoint]+"%").css("color",colorList[1]);
                             }
-                            $("#toolContent_M").children().eq(2).text( Math.round($this.a_history_data[mouseHoverPoint]/100) );
+                            // $("#toolContent_M").children().eq(2).text( Math.round($this.a_history_data[mouseHoverPoint]/100) );
                             $(".vol i").text($this.a_history_data[mouseHoverPoint]/100);
                             $("#quantityRatio").text($this.a_history_data[mouseHoverPoint]);
                             // if($this.a_history_data[mouseHoverPoint]>100){
@@ -1164,9 +1408,6 @@
                                 // $(".volume").text(parseFloat($this.a_history_data[mouseHoverPoint]).toFixed(2) +"股"); 
                             // }
                         } else {
-                            $("#toolContent_M").children().eq(1).text("-");
-                            $("#toolContent_M").children().eq(2).text("-");
-                            $("#toolContent_M").children().eq(3).text("-");
                             $(".vol i").text("-");
                             $("#quantityRatio").text("-");
                             $(".dataPrice").text("-");
@@ -1208,38 +1449,37 @@
                         } else {
                             $("#toolContent").css("left", continerWidth - toolContent - 60);
                         }
-                        $(".fName").text($this.stockName);
                     }
                 }else{
-                    $("#noData").show();
-                    $("#toolContent_M").hide();
+                    // $("#noData").show();
+                    // $("#toolContent_M").hide();
                     $(".vol").hide();
-                    $(".chartsTab").hide();
+                    // $(".chartsTab").hide();
                     console.log("初始化图表失败");
                     $("#MLine").hide();    
                 }
             }
         }else{
-            $("#noData").show();
-            $("#toolContent_M").hide();
+            // $("#noData").show();
+            // $("#toolContent_M").hide();
             $(".vol").hide();
-            $(".chartsTab").hide();
+            // $(".chartsTab").hide();
             console.log("初始化图表失败");
             $("#MLine").hide();
         }
 
         function set_marketTool(data,$this) {
             if (!isHoverGraph || isHoverGraph && !$this.history_data[mouseHoverPoint] && data) {
-                $("#toolContent_M").children().first().text(data[3]);
-                $("#toolContent_M").children().eq(2).text(data[2]);
+                // $("#toolContent_M").children().first().text(data[3]);
+                // $("#toolContent_M").children().eq(2).text(data[2]);
                 $(".vol i").text(data[2]);
                 $("#quantityRatio").text(data[2]);
                 if( parseFloat(data[0]) >= parseFloat(yc)){
-                    $("#toolContent_M").children().eq(1).text(data[0]).css("color",colorList[0]);
-                    $("#toolContent_M").children().eq(3).text(data[1]).css("color",colorList[0]);
+                    // $("#toolContent_M").children().eq(1).text(data[0]).css("color",colorList[0]);
+                    // $("#toolContent_M").children().eq(3).text(data[1]).css("color",colorList[0]);
                 }else{
-                    $("#toolContent_M").children().eq(1).text(data[0]).css("color",colorList[1]);
-                    $("#toolContent_M").children().eq(3).text(data[1]).css("color",colorList[1]);
+                    // $("#toolContent_M").children().eq(1).text(data[0]).css("color",colorList[1]);
+                    // $("#toolContent_M").children().eq(3).text(data[1]).css("color",colorList[1]);
                 }
             }
         }
@@ -1331,7 +1571,6 @@
             }
         }else {
             var chart = myChart;
-        
             if (type) {
                 if (mouseHoverPoint == 0 && index == -1) {
                     mouseHoverPoint = chart.getOption().series[0].data.length;
@@ -1339,14 +1578,11 @@
                 if (mouseHoverPoint == 0 && index == 1) {
                     // index = 0;
                 }
-        
                 if (mouseHoverPoint + index > chart.getOption().series[0].data.length - 1 && index == 1) {
                     mouseHoverPoint = 0;
                     index = 0;
                 }
-        
                 var name = chart.getOption().series[0].name;
-        
                 chart.dispatchAction({
                     type: 'showTip',
                     seriesIndex: 0,
@@ -1395,16 +1631,16 @@
         $this.z_history_data = []; //涨跌幅历史记录
         $this.a_history_data = []; //成交量记录
         $this.flag_data = []; //成交量颜色记录 1为绿 -1为红
-        $this.v_data = [];
-        $this.c_data = [];
+        // $this.v_data = [];
+        // $this.c_data = [];
         var decimal = $this.decimal;
         if(data){
             if(myChart == undefined) return;
             yc = parseFloat(yc);
             if (yc) {
-                var minY = (yc - yc*0.03).toFixed(decimal);
+                var minY = (yc - yc*0.1).toFixed(decimal);
                 var middleY = yc.toFixed(decimal);
-                var maxY = (yc + yc*0.03).toFixed(decimal);
+                var maxY = (yc + yc*0.1).toFixed(decimal);
                 var dd = ((parseFloat(minY) - parseFloat(yc)) / parseFloat(yc) * 100);
 
                 if(Math.abs(dd) > 1){
@@ -1435,11 +1671,11 @@
                         interval: split1
                     }
                 ],
-                xAxis:[{
-                    data:v_data
-                },{
-                    data:v_data
-                }],
+                // xAxis:[{
+                //     data:v_data
+                // },{
+                //     data:v_data
+                // }],
                 series: [
                     {
                         data: [],
@@ -1462,6 +1698,26 @@
                 ]
             };
             myChart.setOption(option);
+            $('.tb-fn-num').html('<span class="">-</span><span class="">-</span><span class="">-</span>');
+            var strHtml = '<div class="cb-pk"><h2>五档盘口</h2><div class="cb-title">'+
+            '<p>委比：<span class="cbt-wb">-</span></p>'+
+            '<p>委差：<span class="cbt-wc">-</span></p></div>'+
+            '<ul class="cb-txtOffer"><li><span>卖五</span><span>-</span>'+
+            '<span>-</span></li><li><span>卖四</span><span>-</span>'+
+            '<span>-</span></li><li><span>卖三</span><span>-</span>'+
+            '<span>-</span></li><li><span>卖二</span><span>-</span>'+
+            '<span>-</span></li><li><span>卖一</span><span>-</span>'+
+            '<span>-</span></li></ul><ul class="cb-txtBids"><li><span>买一</span>'+
+            '<span>-</span><span>-</span></li><li><span>买二</span>'+
+            '<span>-</span><span>-</span></li><li><span>买三</span>'+
+            '<span>-</span><span>-</span></li><li><span>买四</span>'+
+            '<span>-</span><span>-</span></li><li><span>买五</span>'+
+            '<span>-</span><span>-</span></li></ul>'+
+            '<div class="cb-title cb-title-sub"><p>外盘：<span class="red cbt-wp">-</span></p>'+
+            '<p>内盘：<span class="cbt-np">-</span></p></div></div>';
+            $(".cb-pk").html(strHtml);
+            
+            $(".cb-cj>ul").html('<li><span>-</span><span>-</span><span>-</span><span>-</span></li>');
         }else{
             console.log("清盘有误");
         }
@@ -1485,6 +1741,7 @@
                 
                 b_time1 = moment(finishTime).utc().valueOf();
                 b_time2 = moment(beginTime1).utc().valueOf();
+                stopTime = [finishTime,beginTime1];
             }else{
                 beginTime = todayDate + " " + $this.nowDateTime[0].startTime;
                 finishTime = todayDate + " " + $this.nowDateTime[0].endTime;
@@ -1495,7 +1752,9 @@
                 finishTime = todayDate + " " + $this.nowDateTime[0].endTime;
                 beginTime1 = todayDate + " " + $this.nowDateTime[1].startTime1;
                 finishTime1 = todayDate + " " + $this.nowDateTime[1].endTime1;
-
+                
+                stopTime = [finishTime,beginTime1];
+                
                 // 前半段时间的起始时间和结束时间比较
                 if(moment(beginTime).utc().valueOf() < moment(finishTime).utc().valueOf()){
                     //都是当天时间 
@@ -1564,7 +1823,161 @@
         options = $.extend({},$.fn.initMline.defaults,options || {});
         var $this = $(this);
         // 初始化代码表
-        var xml = new InitXMLIChart(options);
+        xml = new InitXMLIChart(options);
         return xml.initXML();
     };
 })(jQuery);
+/*
+* 详情页面 指数/个股 信息相关函数
+*/
+// 查询十大流通股和公司信息
+function requireCom(reqComOpt,code){
+    var reqUrl = "http://172.17.20.178:8080/DKService/GetService?Service=DataSourceService.Gets&ReturnType=JSON&OBJID=";
+    $.each(reqComOpt, function(i,reqComObj){
+        $.ajax({
+            url:  reqUrl+reqComObj+"&P_NODE_CODE="+code,
+            type: 'GET',
+            dataType: 'json',
+            async:true,
+            cache:false,
+            error: function(data){
+                console.log("请求公司信息出错");
+            },
+            success: function(data){
+                if(data.response.data){
+                    var responseInfo = data.response.data;
+                    switch(reqComObj){
+                        case "23000188":
+                            getSDLTG(responseInfo);
+                            break;
+                        case "23000171":
+                        case "23000138":
+                        case "23000164":
+                            getCompanyInfo(responseInfo[0]);
+                            break;
+                        default:;
+                    }
+                } 
+            }
+        });
+    }); 
+};
+// 获取公司信息数据
+function getCompanyInfo(responseInfo){
+    if(responseInfo.TEL){
+        // 主营产品 23000138
+        $("#com_main_pro").text(responseInfo.MAIN_PROD);
+        // 董秘电话 
+        $("#com_tel").text(responseInfo.TEL);
+    }else{
+        if(responseInfo.TTL_SHR_LF){
+
+            responseInfo.TTL_SHR = responseInfo.TTL_SHR.replace(/,/g,"");
+            responseInfo.TTL_SHR_LF = responseInfo.TTL_SHR_LF.replace(/,/g,"");
+
+            var com_Ltg = setUnit(responseInfo.TTL_SHR);
+            var com_Fltg = setUnit(responseInfo.TTL_SHR_LF);
+            // 流通股（非限售） 23000164
+            $("#com_ttl_shrl").text(com_Ltg+"股");
+            // 总股本 
+            $("#com_ttl_shr").text(com_Fltg+"股");
+
+        }else{
+            // 注册资本 23000171
+            responseInfo.REG_CPTL = responseInfo.REG_CPTL.replace(/,/g,"");
+            var com_Zczb = setUnit(responseInfo.REG_CPTL);
+            
+            // 公司名称
+            $("#com_name").text(responseInfo.COM_NAME);
+            // 董事长
+            $("#com_psn").text(responseInfo.PSN_NAME);
+            // 总经理
+            $("#com_gm").text(responseInfo.GM);
+            // 办公地址
+            $("#com_addr").text(responseInfo.OFS_ADDR);
+            // 办公网址
+            $("#com_website").text(responseInfo.WEB_SITE);
+            // 注册资本
+            $("#com_zc").text(com_Zczb);
+            // 上市日期
+            $("#com_ss").text((responseInfo.LST_DT).split(" ")[0]);
+
+            $("#withoutComData").hide().siblings().show();
+        }
+
+    }
+};
+// 获取十大流通股数据
+function getSDLTG(responseInfo){
+    $("#withoutStcData").hide().siblings().show();
+    // 获取最新的报告期
+    var endDate = getEndDate(responseInfo);
+    // 找到最新报告期的十大流通股东
+    var comList = getComList(responseInfo,endDate);
+    comList.sort(compareTop("SH_SN"));
+    // 取前十
+    var comList = comList.slice(0,10);
+    // 拼接字符串
+    setSDLTGInfo(comList);
+};
+// 对象组成的数组，按照 prop 从小到大排序
+function compareTop(prop){
+    return function(obj1, obj2){
+        var val1 = obj1[prop];
+        var val2 = obj2[prop];
+
+        if (!isNaN(Number(val1)) && !isNaN(Number(val2))) {
+            val1 = Number(val1);
+            val2 = Number(val2);
+        }
+    
+        if(val1 < val2){
+            return -1;
+        }else if(val1 > val2){
+            return 1;
+        }else{
+            return 0;
+        }
+
+    }
+};
+// 获取最新报告期
+function getEndDate(data){
+    var g_endDate = "0000-00-00";
+    $.each(data,function(i,obj){
+        if(obj.END_DT.split(" ")[0]>g_endDate.split(" ")[0]){
+            g_endDate = obj.END_DT;
+        }
+    });
+    return g_endDate;
+};
+// 获取最新报告期的流通股
+function getComList(data,endDate){
+    var comList = [];
+    $.each(data,function(i,obj){
+        if(obj.END_DT==endDate){
+            comList.push(obj);
+        }
+    });
+    return comList;
+};
+// 十大流通拼接整个模块
+function setSDLTGInfo(list){
+    var txt =  $(".bb-info ul").html();
+    $.each(list,function(i,obj){
+        var s_hld_shr = setUnit(obj.HLD_SHR.replace(/,/g,"").trim());
+        if(obj.DIRECT==0){
+            obj.DIRECT = "不变";
+        }
+        var className = obj.DIRECT=="减持"?"green":(obj.DIRECT=="增持"?"red":null);
+        var s_hld_shr_chg = parseInt(obj.HLD_SHR_CHG_LST)!=0?setUnit(obj.HLD_SHR_CHG_LST.replace(/,/g,"").trim()):"";
+        txt += "<li>\
+                    <span>"+obj.SH_NAME+"</span>\
+                    <span>"+floatFixedTwo(obj.TTL_CPTL_RAT)+"%</span>\
+                    <span>"+s_hld_shr+"</span>\
+                    <span class="+className+">"+obj.DIRECT+s_hld_shr_chg+"</span>\
+                </li>";
+        
+    })
+    $(".bb-info ul").html(txt)
+}

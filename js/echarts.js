@@ -49079,12 +49079,14 @@ var CandlestickSeries = SeriesModel.extend({
             normal: {
                 color: '#c23531', // 阳线 positive
                 color0: '#314656', // 阴线 negative     '#c23531', '#314656'
+                // 修改 -Gao --colorD
                 colorD: '#000',
                 borderWidth: 1,
                 // FIXME
                 // ec2中使用的是lineStyle.color 和 lineStyle.color0
                 borderColor: '#c23531',
                 borderColor0: '#314656',
+                // 修改 -Gao --borderColorD
                 borderColorD: '#000'
             },
             emphasis: {
@@ -49175,9 +49177,11 @@ var preprocessor = function (option) {
 
 var positiveBorderColorQuery = ['itemStyle', 'normal', 'borderColor'];
 var negativeBorderColorQuery = ['itemStyle', 'normal', 'borderColor0'];
+// 修改 -Gao -borderColorD
 var defaultBorderColor = ['itemStyle', 'normal', 'borderColorD'];
 var positiveColorQuery = ['itemStyle', 'normal', 'color'];
 var negativeColorQuery = ['itemStyle', 'normal', 'color0'];
+// 修改 -Gao --colorD
 var defaultColor = ['itemStyle', 'normal', 'colorD'];
 
 var candlestickVisual = function (ecModel, api) {

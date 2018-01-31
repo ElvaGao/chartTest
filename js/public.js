@@ -119,18 +119,15 @@ function dateToStamp(date){
  */
 // 取0位小数点
 function floatFixedZero(data) {
-
     return parseFloat(data).toFixed(0);
 };
 // 取两位小数点
 function floatFixedTwo(data) {
-
     return parseFloat(data).toFixed(2);
 };
 // 取n位小数点
 function floatFixedDecimal(data) {
-
-    return parseFloat(data).toFixed(KLineSocket.StockInfo.Decimal);
+    return parseFloat(data).toFixed(xml.options.decimal);
 };
 // Text填写-dom的text和color
 function setTextAndColor(domObj,data,compareData,unit,className){

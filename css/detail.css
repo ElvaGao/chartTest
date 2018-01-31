@@ -170,6 +170,7 @@ i,em{
 }
 .cb-cj ul{
 	border: none;
+	overflow: hidden;
 }
 .cb-cj h2{
 	margin-top: 0;
@@ -371,8 +372,8 @@ ul{
     left: 72px;
     top: 5%;
     width: 180px;
-    height: 310px;
-    padding: 4px 10px;
+    height: 280px;
+    padding: 10px;
     box-sizing: border-box;
     background-color: #fff;
     border: solid 1px #b4b4b4;
@@ -469,7 +470,7 @@ ul{
 	text-align: right;
 	font-size: 14px;
 	text-align: right;
-	color: #999;
+	color: #000;
 }
 .volumeMax,.vmMax{
 	height: 81%;
@@ -913,13 +914,13 @@ ul{
 	box-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
 	border:1px solid #264378;
 	border-radius: 3px;
-	padding: 10px 20px;
+	padding: 5px 10px;
 	display: inline-block;
 	position: absolute;
 	top: 0;
 	left: 0;
 	background-color:#1e2131;
-	/* display: none; */
+	display: none;
 }
 .mline_info>span{
 	font-family: Helvetica,Arial,sans-serif;
@@ -1024,5 +1025,18 @@ ul{
 	display: inline-block;
 	margin-right: 10px;
 }
-
-/* forex-detail 外汇详情页面 */
+.cb-pk .cb-zs-pk span:first-child,
+.cb-pk .cb-zs-pk span:nth-child(2){
+	width: 50%
+}
+.cb-pk .cb-zs-pk{
+	border-bottom: 1px solid #e5e5e5;
+}
+.loading{
+	position: absolute;
+    top: 40px;
+    z-index: 1;
+    left: 0;
+    margin: auto;
+    right: 0;
+}

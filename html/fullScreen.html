@@ -52,51 +52,51 @@
         </div>
         <div class="chart_area">
             <!-- 分时图 -->
-            <div class="mline" id="MLine">
-                <input type="text" class="charts-focus" readonly="readonly" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);color:transparent;">
-                <div id="mline_charts" class="mline_full" style="width:100%;height:730px;">
-                    暂无数据
-                    <!-- 提示框 -->
+            <div id="MLine" class="clearfix">
+                <div class="mline" >
+                    <input type="text" class="charts-focus" readonly="readonly" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);color:transparent;">
+                    <div id="mline_charts" class="mline_full" style="width:100%;height:730px;">
+                        暂无数据
+                    </div>
+                    
+                    <!-- 固定提示框 -->
+                    <div class="mline_tooltip">
+                        <span>
+                            <label>Open</label>
+                            <i id="open">-</i>
+                        </span>
+                        <span>
+                            <label>High</label>
+                            <i id="high">-</i>
+                        </span>
+                        <span>
+                            <label>Low</label>
+                            <i id="low">-</i>
+                        </span>
+                        <span>
+                            <label>Close</label>
+                            <i id="close">-</i>
+                        </span>
+                        <span>
+                            <label>Volume</label>
+                            <i id="volume">-</i>
+                        </span>
+                        <span>
+                            <label>% Change</label>
+                            <i id="change">-</i>
+                        </span>
+                    </div>
+                    <label class="point_label">13.38</label>
                 </div>
-                
-                <div class="mline_tooltip">
+                <!-- 随鼠标走的提示框 -->
+                <div class="mline_info">
+                    <span class="stockDate">-</span>
                     <span>
-                        <label>Open</label>
-                        <i id="open">-</i>
-                    </span>
-                    <span>
-                        <label>High</label>
-                        <i id="high">-</i>
-                    </span>
-                    <span>
-                        <label>Low</label>
-                        <i id="low">-</i>
-                    </span>
-                    <span>
-                        <label>Close</label>
-                        <i id="close">-</i>
-                    </span>
-                    <span>
-                        <label>Volume</label>
-                        <i id="volume">-</i>
-                    </span>
-                    <span>
-                        <label>% Change</label>
-                        <i id="change">-</i>
+                        <label class="stockName">-</label>
+                        <i class="lastPrice">-</i>
                     </span>
                 </div>
-                <label class="point_label">13.38</label>
-                <!-- /* 浮层信息框 */ -->
-                <!-- <div class="mline_info">
-                    <span class="stockDate">06/20/2017</span>
-                    <span>
-                        <label class="stockName">平安银行</label>
-                        <i class="lastPrice">21,1000</i>
-                    </span>
-                    <span class="arrow"></span>
-                </div> -->
             </div>
-
             <!--K线图开始-->
             <div class="canvas kline fl f-kline" id="kline" style="display: none;">
                 <div class="no-data no-data-k" id="withoutData">亲，暂时没有数据哦~~~~ ^_^</div>
@@ -137,7 +137,6 @@
             <!--K线图结束-->
             <!-- 右侧信息框开始 -->
             <div class="fr f-stockInfo">
-                <!-- <div class="no-data no-data-k" id="withoutStockData"></div> -->
                 <div class="f-tb-fieldName">
                     <div class="tb-fn-title f-tbfn-title">-</div>
                     <div class="tb-fn-num f-tbfn-num">
@@ -197,7 +196,7 @@
                             <span>6.04</span>
                             <span class="black">0.00%</span>
                         </li>
-                        <li>
+                        <!-- <li>
                             <span>新华传媒</span>
                             <span>6.04</span>
                             <span class="red">0.00%</span>
@@ -216,7 +215,7 @@
                             <span>新华传媒</span>
                             <span>6.04</span>
                             <span class="black">0.00%</span>
-                        </li>
+                        </li> -->
                     </ul>
                 </div>
             </div>
@@ -230,16 +229,16 @@
                     <i class="b_arrow"></i>0.52%</i>
             </span>
             <span class="b_info">
-                <em>澳元/美元 </em>
-                <i>0.7575</i>
+                <em>美元/港元 </em>
+                <i>0.3244</i>
                 <i>
-                    <i class="b_arrow"></i>0.52%</i>
+                    <i class="b_arrow"></i>0.11%</i>
             </span>
             <span class="b_info">
-                <em>澳元/美元 </em>
-                <i>0.7575</i>
+                <em>英镑/美元 </em>
+                <i>0.1624</i>
                 <i>
-                    <i class="b_arrow"></i>0.52%</i>
+                    <i class="b_arrow"></i>0.32%</i>
             </span>
         </footer>
     </div>
@@ -266,6 +265,9 @@
                     data: [
                         { name: "分时", id: "mline" },
                         { name: "日K", id: "day" },
+                        { name:"周",id:"week" },
+                        { name:"月",id:"month" },
+                        { name:"年",id:"year" },
                         { name:"1分",id:"minute" },
                         { name:"5分",id:"fivem" },
                         { name:"10分",id:"tenm" },

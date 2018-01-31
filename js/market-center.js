@@ -16,7 +16,7 @@ $(function(){
     $("#main1").initMline(
         {
             id:_FirstS[0].code,
-            exchangeID:"2",
+            exchangeID:"1",
             stockName:_FirstS[0].name,
             stockCode:_FirstS[0].code,
         }
@@ -40,6 +40,9 @@ $(function(){
     checkoutBlock();
     // 点击其他地方收回搜索下拉列表
     $("body").on("click",function(e){
+        if($(e.target).attr("id") == "searchInput"){
+            return;
+        }
         $("#searchEnd").slideUp();
     });
 });
@@ -88,9 +91,10 @@ function initTabBlock(jsonB){
         ExchangeID = options.exchangeID;
         var xmlData;
 
+        $("#"+elementId).parents(".market-main-chart").siblings(".market-chart-title").text(options.stockName+"("+options.stockCode+")");
+        $(".market-chart-decs").html("<i>-</i><i>-</i><i>-</i>");
         socket = new WebSocketConnect();
         var ws = socket.createWebSocket();
-
         //第一次打开终端,初始化代码表第一次默认请求
         $.ajax({
             url: stockXMlUrl,
@@ -104,8 +108,7 @@ function initTabBlock(jsonB){
                 console.log("请求代码表出错");
             },
             success: function(data){
-                // var allZSCode =  $(xml).find("EXCHANGE PRODUCT SECURITY");
-                // exponentDateTime = getExponentDateTime(xml,allZSCode);
+                $(".charts").hide();
                 if(data.ReturnCode == 0){
                     xmlData = data.CodeInfo[0];
                     var opt = {
@@ -124,12 +127,14 @@ function initTabBlock(jsonB){
                 }
             }
         }); 
+        
     };
     var InitMlineCharts = function(opt){
         this.myChart = null;
         this.options = {
             oneZSInfo : compareTime(opt.xmlData,ZSId),
             id:opt.id,
+            exchangeID:opt.exchangeID,
             elementId:opt.elementId,
             socket:opt.socket,
             c_data : [],
@@ -209,6 +214,9 @@ function initTabBlock(jsonB){
             switch(MsgType)
             {
                 case "R3011"://订阅历史数据
+                if(data.ErrorCode == 9999){
+                    return;
+                }
                 // 初始化图表
                 initCharts(data,'',_this);
                 break;
@@ -228,7 +236,7 @@ function initTabBlock(jsonB){
                     if(MarketStatus == 1){//收到清盘指令  操作图表
                         redrawChart(data,_this);
                     }
-                case "R646":  //心跳包
+                case "R8050":  //心跳包
                     // console.log(data);
                 default:
                 break;
@@ -421,6 +429,7 @@ function initTabBlock(jsonB){
                 console.log("暂时没有数据");
                 return;
             }
+            $("#"+$this.elementId).show();
             data = data.KLineSeriesInfo;
             var startTime=startTime1=endTime=endTime1=null;//各个指数的交易时间
             if($this.oneZSInfo.length>1){//分段计算时间
@@ -692,7 +701,8 @@ function initTabBlock(jsonB){
                 htmlStr = '<label class="col_3bc"><i style="font-size: 24px;margin-right: 10px;">'+parseFloat($this.history_data[$this.history_data.length-1]).toFixed(decimal)+'</i><i style="margin-right: 10px;">'+$this.z_history_data[$this.history_data.length-1]+'%</i><i>'+size+'</i></label>';
             }
             $("#"+$this.elementId).parents(".market-main-chart").siblings(".market-chart-decs").html(htmlStr);
-            $("#"+$this.elementId).parents(".market-main-chart").siblings(".market-chart-title").text($this.stockName+"("+$this.stockCode+")");
+            $("#"+$this.elementId).parents("a").attr("href","./detail.html?exchangeID="+$this.exchangeID+"&id="+$this.id);
+            // $("#"+$this.elementId).parents(".market-main-chart").siblings(".market-chart-title").text($this.stockName+"("+$this.stockCode+")");
         }
     }
 
@@ -846,15 +856,14 @@ function initTabBlock(jsonB){
     var WebSocketConnect = function() {
         this.ws = null;
         var lockReconnect = false;//避免重复连接 连接锁如果有正在连接的则锁住
-        // var wsUrl = 'ws://103.66.33.37:80'; //生产
         wsUrl = wsUrlDevelop;  //开发
         var timeout = 60000,//60秒
             timeoutObj = null,
             serverTimeoutObj = null;
         var _target = this;
         var XTB = {
-            "MsgType":"C646",
-            "ExchangeID":"2",
+            "MsgType":"Q8050",
+            "ExchangeID":ExchangeID,
             "InstrumentID":ZSId
         };
         //建立socket连接
@@ -909,7 +918,7 @@ function tabLi(index){
         $("#main1").initMline(
             {
                 id:_FirstS[0].code,
-                exchangeID:"2",
+                exchangeID:"1",
                 stockName:_FirstS[0].name,
                 stockCode:_FirstS[0].code,
             }
@@ -961,7 +970,7 @@ function tabLi(index){
         $("#main1").initMline(
             {
                 id:_ThirS[0].code,
-                exchangeID:"2",
+                exchangeID:"1",
                 stockName:_ThirS[0].name,
                 stockCode:_ThirS[0].code,
             }
@@ -1066,86 +1075,14 @@ function tabLi(index){
     }
     
 }
-//从XML表中摘出时间，name,id，小数位,指数类型   公共方法   返回的是数组
-function getExponentDateTime(xmlCode,_codeList){
-        var startTime,endTime,startTime1,endTime1,ids,names,decimalCount,type,json;
-        var exponentDateTime = [];
-        for(var i=0;i<_codeList.length;i++){
-            if(_codeList[i].attributes["ts"]){
-                decimalCount = $($(_codeList[i]).parent("product")[0]).attr("PriceDecimal");
-                type = $($(_codeList[i]).parent("product")[0]).attr("type");
-                ids = _codeList[i].attributes["id"].value;
-                names = _codeList[i].attributes["name"].value;
-                if(_codeList[i].attributes["ts"].value.indexOf(";")>-1){
-                    var st = _codeList[i].attributes["ts"].value.split(";")[0];
-                    var et = _codeList[i].attributes["ts"].value.split(";")[1];
-                    startTime = st.split("-")[0];
-                    endTime = st.split("-")[1];
-                    startTime1 = et.split("-")[0];
-                    endTime1 = et.split("-")[1];
-                    startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
-                }else{
-                    startTime = _codeList[i].attributes["ts"].value.split("-")[0];
-                    endTime = _codeList[i].attributes["ts"].value.split("-")[1];
-                    startTime1 = endTime1 = "";
-                }
-                json = {
-                    id:ids,
-                    name:names,
-                    startTime:startTime,
-                    endTime:endTime,
-                    startTime1:startTime1,
-                    endTime1:endTime1,
-                    decimalCount:parseInt(decimalCount),
-                    type:type
-                };
-                exponentDateTime.push(json);
-            }else{
-                var elValue = $($(_codeList[i]).parent("product")[0]).attr("ts");
-                if(!elValue){
-                    elValue = $($(_codeList[i]).parents("EXCHANGE")).attr("ts");
-                    ids = $(_codeList[i]).attr("id");
-                    names = $(_codeList[i]).attr("name");
-                    type = $($(_codeList[i]).parent()).attr("type");
-                    decimalCount = $($(_codeList[i]).parent()).attr("PriceDecimal");
-                }else{
-                    decimalCount = $($(_codeList[i]).parent("product")[0]).attr("PriceDecimal");
-                    type = $($(_codeList[i]).parent("product")[0]).attr("type");
-                    ids = _codeList[i].attributes["id"].value;
-                    names = _codeList[i].attributes["name"].value;
-                }
-                if(elValue.indexOf(";")>-1){
-                    var st = elValue.split(";")[0];
-                    var et = elValue.split(";")[1];
-                    startTime = st.split("-")[0];
-                    endTime = st.split("-")[1];
-                    startTime1 = et.split("-")[0];
-                    endTime1 = et.split("-")[1];
-                    // if($($(_codeList[i]).parent("product")[0]).attr("name") == "指数"){
-                        startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
-                    // }
-                }else{
-                    startTime = elValue.split("-")[0];
-                    endTime = elValue.split("-")[1];
-                    startTime1 = endTime1 = "";
-                }
-                json = {
-                    id:ids,
-                    name:names,
-                    startTime:startTime,
-                    endTime:endTime,
-                    startTime1:startTime1,
-                    endTime1:endTime1,
-                    decimalCount:parseInt(decimalCount),
-                    type:type
-                };
-                exponentDateTime.push(json);
-            }
-        }
-        return exponentDateTime;
-    }
 // 搜索功能
 $("#searchInput").on("keyup",function(e){
+    var val = $(this).val();
+    if(!val) return;
+    if(e.keyCode==13 || e.keyCode==38 || e.keyCode==40) return;
+    throttle(search,val);
+});
+$("#searchInput").on("focus",function(e){
     var val = $(this).val();
     if(!val) return;
     if(e.keyCode==13 || e.keyCode==38 || e.keyCode==40) return;
@@ -1215,8 +1152,7 @@ $(".search table").delegate(".stocklist","click",function(){
     var instrumentID = $(this).attr("data-instrumentID");
     $("#searchInput").val("");
     $("#searchEnd").slideUp();
-    location.href = './detail.html?exchangeID='+exchangeID+'&id='+ parseInt(instrumentID);
-    // window.open('./detail.html?exchangeID='+exchangeID+'&id='+instrumentID);
+    location.href = './detail.html?exchangeID='+exchangeID+'&id='+ instrumentID;
 })
 // 点击搜索
 $(".search-btn").on("click",function(){
@@ -1256,7 +1192,7 @@ function searchCode(event){
                     $("#searchEnd").slideUp();
                 }else if(data.ReturnCode == 0){
                     if(data.CodeInfo.length==1){
-                        location.href = './detail.html?exchangeID='+exchangeID+'&id='+parseFloat(value);
+                        location.href = './detail.html?exchangeID='+exchangeID+'&id='+value;
                     }else{
                         $("#searchEnd").slideUp();
                         $("#searchEnd").slideDown();
