@@ -42,7 +42,7 @@ $(document).keydown(function(e){
             
 
             // 清空K线图
-            if(KLineSocket.KChart.getOption()){
+            if(KLineSocket.KChart.getOption()&&KLineSocket.KChart.getOption().series.length!=0){
                 KLineSocket.KChart.clear();
             }
 
@@ -437,8 +437,6 @@ function KCharts(dataList, isHistory){
         saveData(dataJsons, isHistory);
         // 画图
         chartPaint(isHistory);
-        // 设置单位的值
-        chartResize();  
         // 初始化并显示数据栏和数据信息框的信息
         initMarketTool();
 
@@ -446,10 +444,6 @@ function KCharts(dataList, isHistory){
          * K线图事件绑定
          */
         // ecahrts图进行缩放
-        $(window).resize(function(){
-
-            chartResize(); 
-        });
         KLineSocket.KChart.on('showTip', function (params) {
             KLineSocket.KLineSet.mouseHoverPoint = params.dataIndex;
             var length = KLineSocket.HistoryData.hCategoryList.length;
@@ -632,6 +626,7 @@ function saveData(data, isHistory){
 };
 // 绘制/画K线图
 function chartPaint(isHistory){
+    console.log(KLineSocket.KChart)
     if(isHistory){
         // 绘制K线图
         KLineSocket.KChart.setOption(option = {
@@ -729,54 +724,48 @@ function chartPaint(isHistory){
                         show: true,
                         interval: function(index,value){
                             var valueList = KLineSocket.HistoryData.hCategoryList;
+                            var timeCurr = valueList[index].split(" ")[2];
+                            var startTime = xml.options.nowDateTime[0].startTime;
+                            var endTime = xml.options.nowDateTime[0].endTime;
+                            var startTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1].startTime1;
+                            var endTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1];
                             switch(KLineSocket.option.lineType){
                                 case "day":
-                                    if(valueList[index-1]&&(valueList[index-1].split("-")[1]!=valueList[index].split("-")[1])){
-                                        return true
-                                    }
+                                    var value = setCategoryPrev(valueList,index,"-",1);
+                                    return value;
                                     break;
                                 case "week":
-                                    var num = 6;
-                                    if(valueList[index-1]&&(valueList[index-1].split("-")[1]!=valueList[index].split("-")[1])){
-                                        if(valueList[index].split("-")[1]%num==0){
-                                            return true
-                                        }
-                                    }
+                                    var value = setCategoryPrev(valueList,index,"-",1,6,1);
+                                    return value;
                                     break;
                                 case "month":
-                                    var num = 2;
-                                    if(valueList[index-1]&&(valueList[index-1].split("-")[0]!=valueList[index].split("-")[0])){
-                                        if(valueList[index].split("-")[0]%num==0){
-                                            return true
-                                        }
-                                    }
+                                    var value = setCategoryPrev(valueList,index,"-",0,2,0);
+                                    return value;
                                     break;
                                 case "year":
-                                    var num = 8;
-                                    if(valueList[index-1]&&(valueList[index-1].split("-")[0]!=valueList[index].split("-")[0])){
-                                        if(valueList[index].split("-")[0]%num==0){
-                                            return true
-                                        }
-                                    }
+                                    var value = setCategoryPrev(valueList,index,"-",0,8,0);
+                                    return value;
                                     break;
                                 case "minute":
+                                    var value = setCategoryMin(timeCurr,startTime1,startTime,1);
+                                    return value;
+                                    break;
                                 case "fivem":
+                                    var value = setCategoryMin(timeCurr,startTime1,startTime,5);
+                                    return value;
+                                    break;
                                 case "tenm":
+                                    var value = setCategoryMin(timeCurr,startTime1,startTime,10);
+                                    return value;
+                                    break;
                                 case "fifm":
-                                    var timePrev = valueList[index-1].split(" ")[2];
-                                    var timeCurr = valueList[index].split(" ")[2];
-                                    if(valueList[index-1]&&(timePrev.split(":")[0]!=timeCurr.split(":")[0])){
-                                        return true
-                                    }
+                                    var value = setCategoryMin(timeCurr,startTime1,startTime,15);
+                                    return value;
                                     break;
                                 case "thim":
                                 case "hour":
-                                    var num = 4;
-                                    if(valueList[index-1]&&(valueList[index-1].split("-")[0]!=valueList[index].split("-")[0])){
-                                        if(valueList[index].split("-")[0]%num==0){
-                                            return true
-                                        }
-                                    }
+                                    var value = setCategoryPrev(valueList,index," ",0);
+                                    return value;
                                     break;
                                 default:;
                             }
@@ -793,56 +782,48 @@ function chartPaint(isHistory){
                         showMinLabel: true,
                         interval: function(index,value){
                             var valueList = KLineSocket.HistoryData.hCategoryList;
+                            var timeCurr = valueList[index].split(" ")[2];
+                            var startTime = xml.options.nowDateTime[0].startTime;
+                            var endTime = xml.options.nowDateTime[0].endTime;
+                            var startTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1].startTime1;
+                            var endTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1];
                             switch(KLineSocket.option.lineType){
                                 case "day":
-                                    if(valueList[index-1]&&(valueList[index-1].split("-")[1]!=valueList[index].split("-")[1])){
-                                        return true
-                                    }
+                                    var value = setCategoryPrev(valueList,index,"-",1);
+                                    return value;
                                     break;
                                 case "week":
-                                    var num = 6;
-                                    if(valueList[index-1]&&(valueList[index-1].split("-")[1]!=valueList[index].split("-")[1])){
-                                        if(valueList[index].split("-")[1]%num==0){
-                                            return true
-                                        }
-                                    }
+                                    var value = setCategoryPrev(valueList,index,"-",1,6,1);
+                                    return value;
                                     break;
                                 case "month":
-                                    var num = 2;
-                                    if(valueList[index-1]&&(valueList[index-1].split("-")[0]!=valueList[index].split("-")[0])){
-                                        if(valueList[index].split("-")[0]%num==0){
-                                            return true
-                                        }
-                                    }
+                                    var value = setCategoryPrev(valueList,index,"-",0,2,0);
+                                    return value;
                                     break;
                                 case "year":
-                                    var num = 8;
-                                    if(valueList[index-1]&&(valueList[index-1].split("-")[0]!=valueList[index].split("-")[0])){
-                                        if(valueList[index].split("-")[0]%num==0){
-                                            return true
-                                        }
-                                    }
+                                    var value = setCategoryPrev(valueList,index,"-",0,8,0);
+                                    return value;
                                     break;
                                 case "minute":
+                                    var value = setCategoryMin(timeCurr,startTime1,startTime,1);
+                                    return value;
+                                    break;
                                 case "fivem":
+                                    var value = setCategoryMin(timeCurr,startTime1,startTime,5);
+                                    return value;
+                                    break;
                                 case "tenm":
+                                    var value = setCategoryMin(timeCurr,startTime1,startTime,10);
+                                    return value;
+                                    break;
                                 case "fifm":
-                                    var timePrev = valueList[index-1].split(" ")[2];
-                                    var timeCurr = valueList[index].split(" ")[2];
-                                    if(valueList[index-1]&&(timePrev.split(":")[0]!=timeCurr.split(":")[0])){
-                                        // if(timeCurr.split(":")[1]=="00"){
-                                            return true
-                                        // }
-                                    }
+                                    var value = setCategoryMin(timeCurr,startTime1,startTime,15);
+                                    return value;
                                     break;
                                 case "thim":
                                 case "hour":
-                                    var num = 4;
-                                    if(valueList[index-1]&&(valueList[index-1].split("-")[0]!=valueList[index].split("-")[0])){
-                                        if(valueList[index].split("-")[0]%num==0){
-                                            return true
-                                        }
-                                    }
+                                    var value = setCategoryPrev(valueList,index," ",0);
+                                    return value;
                                     break;
                                 default:;
                             }
@@ -1045,32 +1026,61 @@ function chartPaint(isHistory){
         });
     }else{
         // 初始化并显示数据栏和数据信息框的信息
-        KLineSocket.KChart.setOption({
-            xAxis:[
-                {
-                    data: KLineSocket.HistoryData.hCategoryList
-                },
-                {
-                    data: KLineSocket.HistoryData.hCategoryList
-                },
-                // {
-                //     data: KLineSocket.HistoryData.hCategoryList
-                // }
-            ],
-            series: [
-                {
-                    data: KLineSocket.HistoryData.hValuesList,
-                },
-                {
-                    data: KLineSocket.HistoryData.hVolumesList
-                },
-                // {
-                //     data: KLineSocket.HistoryData.hVolumesList
-                // }
-            ]
-        }); 
+        if(KLineSocket.KChart.getOption()&&KLineSocket.KChart.getOption().series.length!=0){
+            KLineSocket.KChart.setOption({
+                xAxis:[
+                    {
+                        data: KLineSocket.HistoryData.hCategoryList
+                    },
+                    {
+                        data: KLineSocket.HistoryData.hCategoryList
+                    },
+                    // {
+                    //     data: KLineSocket.HistoryData.hCategoryList
+                    // }
+                ],
+                series: [
+                    {
+                        data: KLineSocket.HistoryData.hValuesList,
+                    },
+                    {
+                        data: KLineSocket.HistoryData.hVolumesList
+                    },
+                    // {
+                    //     data: KLineSocket.HistoryData.hVolumesList
+                    // }
+                ]
+            });
+        }
+         
     }
 };
+// 1，5，10，15分钟判断是否显示标签
+// 参数 当前事件，开盘时间1，开盘时间，间隔数
+function setCategoryMin(timeCurr,startTime1,startTime,minNum){
+    if((timeCurr.split(":")[0]==startTime1.split(":")[0])&&((timeCurr.split(":")[1]/1==startTime1.split(":")[1]/1-1+minNum/1))){
+        return true;
+    }
+    if((timeCurr.split(":")[0]==startTime.split(":")[0])&&((timeCurr.split(":")[1]/1==startTime.split(":")[1]/1+minNum/1))){
+        return true;
+    }
+}
+// 1，5，10，15分钟判断是否显示标签
+// 类目轴数组，当前index，隔断的字符串，所需的数据在数组的索引，间隔数，余数
+function setCategoryPrev(valueList,index,timeSplit,splitNum,num,yu){
+    if(valueList[index-1]&&(valueList[index-1].split(timeSplit)[splitNum]!=valueList[index].split(timeSplit)[splitNum])){
+        if(num){
+            if(valueList[index].split(timeSplit)[splitNum]%num==yu){
+                return true;
+            }else{
+                return false;
+            }
+        }
+        return true
+    }else{
+        return false
+    }
+}
 // 信息框的位置： 左-右
 function toolContentPosition(event) {
     var offsetX = event.offsetX;
@@ -1081,50 +1091,6 @@ function toolContentPosition(event) {
     } else {
         $("#kline_tooltip").css({"left":"auto","right":83/830*continerWidth});
     }
-};
-// 根据窗口变化，调整柱状图单位的位置
-function chartResize() {
-    var h_w = Math.round(538/830*1000)/1000,
-        top_h = Math.round(286/538*1000)/1000,
-        name_width = Math.round(76/830*1000)/1000,
-        k_height,
-        k_width;
-    var width = $(".kline").width();
-
-    k_width = width;
-    k_height = width*h_w;
-
-    KLineSocket.KChart.resize({
-        width: k_width,
-        height: k_height
-    })
-
-    $(".kline-charts").height(k_height).width(k_width);
-    // 计算div宽度
-    if(width>1000){
-        $(".deal-title").css({"width": name_width*k_width+"px"});
-        $(".macd-title").css({"width": name_width*k_width+15+6+"px"});
-
-        $(".volumn,.volMacd").css({"width": name_width*k_width+5+"px"});
-
-        $(".kline-buttons").css({"paddingLeft": name_width*k_width+1+"px"});
-    }else if(width<450){
-        $(".deal-title").css({"width": name_width*k_width-10+"px"});
-        $(".macd-title").css({"width": name_width*k_width+5+6+"px"});
-
-        $(".volumn,.volMacd").css({"width": name_width*k_width-5+"px"});
-
-        $(".kline-buttons").css({"paddingLeft": name_width*k_width+1+"px"});
-    }else if(width>300){
-        $(".deal-title").css({"width": name_width*k_width-5+"px"});
-        $(".macd-title").css({"width": name_width*k_width+5+6+"px"});
-
-        $(".volumn,.volMacd").css({"width": name_width*k_width+"px"});
-
-        $(".kline-buttons").css({"paddingLeft": name_width*k_width+1+"px"});
-    }
-
-    $(".bar-tools").css({"top": k_height*top_h+"px","height": 200/538*k_height});
 };
 // 设置成交量的单位变化状况
 function setyAsixName(value) {
