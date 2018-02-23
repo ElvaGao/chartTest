@@ -225,7 +225,7 @@ var yc=0,xml,decimal=2;
             startTime = (data.time.split(";")[0]).split("-")[0];
             endTime = (data.time.split(";")[0]).split("-")[1];
             startTime1 = (data.time.split(";")[1]).split("-")[0];
-            endTime1 = (data.time.split(";")[1]).split("-")[1];
+            endTime1 = formatTimeMin((data.time.split(";")[1]).split("-")[1]);
             startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
         }else{//无分段时间
             startTime = data.time.split("-")[0];
@@ -516,7 +516,7 @@ var yc=0,xml,decimal=2;
             $(".cb-pk").html(html);
         }
         var bids = data.Bids,       // 买
-            offer = data.Offer,     // 卖
+            offer = data.Asks,     // 卖
             obj_titalB = setUnit(data.TotalBidVolume/100,true),      // 买盘(外盘)总量
             obj_titalO = setUnit(data.TotalOfferVolume/100,true),    // 卖盘(内盘)总量
             txtOffer = "",
@@ -601,7 +601,7 @@ var yc=0,xml,decimal=2;
         $(".cb-cj ul").html(html);
 
         // 列表中保留最多能显示的几条，移除多余的-从下而上为更新顺序
-        var minHeight = $(".cb-right")[0].offsetHeight-$(".cb-pk")[0].offsetHeight-40*3-24;
+        var minHeight = $(".cb-right")[0].offsetHeight-$(".cb-pk")[0].offsetHeight-40*3-16;
         var length = Math.floor(minHeight/30);
 
         if($(".cb-cj li").length>length){
@@ -960,7 +960,7 @@ var yc=0,xml,decimal=2;
 
                                     },
                                     formatter: function (value, number) {
-                                        var tVal = value.split(" ")[3];
+                                        var tVal = value.split(" ")[2];
                                         return tVal;
                                     },
                                     textStyle: {
@@ -1732,7 +1732,6 @@ var yc=0,xml,decimal=2;
         var dateArr = new Array();
         var dateArrStamp = new Array();
         if(sub > -1){ //未跨天的时间计算  1-中间有断开  2-中间未断开
-            // todayDate = formatDate(data[0].Date + sub);
             if($this.nowDateTime.length > 1){
                 beginTime = todayDate + " " + $this.nowDateTime[0].startTime;
                 finishTime = todayDate + " " + $this.nowDateTime[0].endTime;

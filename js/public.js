@@ -61,7 +61,7 @@ function formatDate(dateTime,type){
             default:
             break;
         }
-        dateStr = year + "-" + month + "-" + date + "  " + (type == 0?"":dayStr) + " " + hour + ":" + minute;
+        dateStr = year + "-" + month + "-" + date + " " + (type == "0"?"":dayStr+ " ") + hour + ":" + minute;
     }
     return dateStr;
 }
@@ -98,7 +98,7 @@ function formatTimeSec(time) {
     var s = time.substring(4, 6)
     time = H + ":" + m + ":" + s;
     return time;
-};
+}
 //日期时间20170908 2017-09-08
 function formatDateSplit(date) {
     date = date.toString();
@@ -106,7 +106,7 @@ function formatDateSplit(date) {
     var M = date.substring(4, 6);
     var D = date.substring(6, 8);
     return Y + "-" + M + "-" + D;
-};
+}
 // 将"2017-01-01 02:03" 转换为时间戳 1483207380(整数)
 function dateToStamp(date){
     if(date.indexOf("-")>-1){
@@ -120,15 +120,15 @@ function dateToStamp(date){
 // 取0位小数点
 function floatFixedZero(data) {
     return parseFloat(data).toFixed(0);
-};
+}
 // 取两位小数点
 function floatFixedTwo(data) {
     return parseFloat(data).toFixed(2);
-};
+}
 // 取n位小数点
 function floatFixedDecimal(data) {
     return parseFloat(data).toFixed(xml.options.decimal);
-};
+}
 // Text填写-dom的text和color
 function setTextAndColor(domObj,data,compareData,unit,className){
     var unit = unit?unit:"";
@@ -139,12 +139,12 @@ function setTextAndColor(domObj,data,compareData,unit,className){
     }else{
         domObj.text(data+unit);
     } 
-};
+}
 // 获取color
 function getColorName(data, compareData){
     var className = (data-compareData)>0?"red":((data-compareData)==0?"black":"green");
     return className;
-};
+}
 // 数据单位统一
 function setUnit(data,type,lang){
     var fh = data>0?"":"-";
@@ -176,8 +176,15 @@ function setUnit(data,type,lang){
             return "0";
         }
     }
-};
-
+}
+//10:0转为10:00
+function formatTimeMin(time){
+    if(!time) return;
+    if(time.length == 4){
+        time = time.split(":")[0] + ":" + time.split(":")[1]+"0";
+    }
+    return time;
+}
 
 /*
  * li切换的插件
@@ -194,10 +201,12 @@ function setUnit(data,type,lang){
         $this.prepend(opt);
         var index = 0;
         $("ul.clearfix li").on("click",function(event){
+            if($(this).hasClass("active")){
+                return;
+            }
             $("ul.clearfix li").removeClass("active");
             $(this).addClass("active");
             index = $(this).index();
-
             // 不同地方调用  执行的函数内容不同
             tabLi(index);
         });

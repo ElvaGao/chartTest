@@ -81,9 +81,13 @@ function initTabBlock(jsonB){
         }
     );
 }
+var socket = null;
 ;(function($,window,document,undefined){
     $.fn.initMline = function(options,params){
-        var socket = null;
+        // console.log(socket)
+        // if(socket){
+        //     socket.closeWebSocket();
+        // }
         options = $.extend({},options,$.fn.initMline.defaults);
         $this = $(this);
         elementId = $this.attr("id");
@@ -329,8 +333,8 @@ function initTabBlock(jsonB){
         var yc = parseFloat($this.yc);//昨收
         var decimal = $this.oneZSInfo[0].decimal;//保留的小数位数
         var sub = $this.oneZSInfo[0].sub;//是否跨天交易  -1为跨天 0未跨天
-        var limitUp = (yc + yc*0.1).toFixed($this.decimal);
-        var limitDown = (yc - yc*0.1).toFixed($this.decimal);
+        var limitUp = Number((yc + yc*0.1).toFixed($this.decimal));
+        var limitDown = Number((yc - yc*0.1).toFixed($this.decimal));
 
         if(type == "add"){
             if(!$this.myChart){
@@ -454,14 +458,14 @@ function initTabBlock(jsonB){
                     var dateStamp = dateToStamp(formatDate(data[j].Date) +" "+formatTime(data[j].Time));
                     if($this.c_data[i] == dateStamp){
                         var fvalue = parseFloat(data[j].Price);//价格
-                        if(data[j].Price >= limitUp){
+                        if(fvalue >= limitUp){
                             price[i] = limitUp;
                             zdfData[i] = 0.10;
-                        }else if(data[j].Price <= limitDown){
+                        }else if(fvalue <= limitDown){
                             price[i] = limitDown;
                             zdfData[i] = 0.10;
                         }else{
-                            price[i] = data[j].Price;
+                            price[i] = fvalue;
                             zdfData[i] = (((fvalue-yc)/yc)* 100).toFixed(2);
                         }
                         
@@ -578,7 +582,7 @@ function initTabBlock(jsonB){
                             }
                         },
                         formatter: function (value, number) {
-                            var tVal = value.split(" ")[3];
+                            var tVal = value.split(" ")[2];
                             if(startTime1 && value.indexOf(endTime)>-1){
                                 if(startTime1 == "13:01"){
                                     tVal = tVal+"/"+"13:00";
@@ -712,7 +716,6 @@ function initTabBlock(jsonB){
         //2、判断是开始时间是否大于结束时间，大于的话就要取前一天，小于的话按照正常的来 
         var b_time1,b_time2;  // 停盘时间
         var todayDate = formatDate(todayDateStr);
-        // console.log($this.oneZSInfo);
         if($this.oneZSInfo[0].sub > -1){ //未跨天的时间计算  1-中间有断开  2-中间未断开
             if($this.oneZSInfo.length > 1){
                 beginTime = todayDate + " " + $this.oneZSInfo[0].startTime;
@@ -801,7 +804,7 @@ function initTabBlock(jsonB){
             startTime = (dataXML.time.split(";")[0]).split("-")[0];
             endTime = (dataXML.time.split(";")[0]).split("-")[1];
             startTime1 = (dataXML.time.split(";")[1]).split("-")[0];
-            endTime1 = (dataXML.time.split(";")[1]).split("-")[1];
+            endTime1 = formatTimeMin(dataXML.time.split(";")[1].split("-")[1]);
             startTime1  = startTime1.split(":")[0] +":"+ parseInt(startTime1.split(":")[1])+1;
         }else{//无分段时间
             startTime = dataXML.time.split("-")[0];
@@ -875,6 +878,10 @@ function initTabBlock(jsonB){
                 this.reconnect(wsUrl); //如果失败重连
             }
         };
+        // 关闭连接
+        WebSocketConnect.prototype.closeWebSocket = function(){
+            this.ws.onclose();
+        }
         //socket重连
         WebSocketConnect.prototype.reconnect = function () {
             if (lockReconnect) return;
@@ -913,6 +920,19 @@ function initTabBlock(jsonB){
 // 点击切换处理
 function tabLi(index){
     var el = $(".mc-tab-li ul li").eq(index);
+    // $.ajax({
+    //     url:"http://103.66.33.58:443/GetStock?",
+    //     data:{"SectionID":$(el).data("sectionid")},
+    //     type:"GET",
+    //     dataType:'json',
+    //     async:false,
+    //     success:function(data){
+    //         console.log(data)
+    //     },
+    //     error:function(data){
+    //         console.log("未能查出板块数据");
+    //     }
+    // });
     switch($(el).data("sectionid")){
         case 1:
         $("#main1").initMline(
@@ -1073,7 +1093,6 @@ function tabLi(index){
         default:
         break;
     }
-    
 }
 // 搜索功能
 $("#searchInput").on("keyup",function(e){

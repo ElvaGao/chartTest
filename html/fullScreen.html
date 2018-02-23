@@ -248,6 +248,7 @@
     <script src="../js/echarts.js"></script>
     <script src="../js/moment.min.js"></script>
     <script src="../js/public.js"></script>
+    <script src="../js/jquery.nicescroll.min.js"></script>
     <!-- 公共方法 -->
 
     <!-- 分时图  -->
@@ -290,18 +291,7 @@
                 exchangeID = "101";
             }
             var stockXMlUrl = "http://103.66.33.58:443/GetCalcData?ExchangeID="+exchangeID+"&Codes="+id;
-            var wsUrl;
-            switch (exchangeID) {
-                case "2":
-                    // 深交所接口
-                    wsUrl = "ws://103.66.33.67:80";
-                    break;
-                    case "101": ;
-                    default:
-                    // 上证指数接口
-                    wsUrl = "ws://172.17.20.203:7681";
-                    break;
-                }
+            var wsUrl = "ws://103.66.33.67:80";
 
             // 初始化K线图
             $.queryKLine({
@@ -328,6 +318,13 @@
 
         });
 
+
+
+        //美化滚动条
+    $(document).ready(function () {
+            $("#url_list").niceScroll({cursorborder: "", cursorcolor: "#6c707d", boxzoom: false, cursorwidth: "5px"}); // First scrollable DIV
+            $("html").niceScroll({cursorborder: "", cursorcolor: "#6c707d", boxzoom: false, cursorwidth: "5px"}); // First scrollable DIV
+    })
     </script>
 </body>
 

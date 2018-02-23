@@ -39,7 +39,6 @@
             <div class="box fl echarts">
                 <div class="container">
                     <div class="canvas" id="MLine">
-                        
                         <!-- <div class="no-data" id="noData">亲，暂时没有数据哦~~~~ ^_^</div> -->
                         <input type="text" class="charts-focus" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;width:0;height:0;color:transparent;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);">
                         <!-- <label class="canvasTitle" id="toolContent_M" style="display:none;"><i>2017-10-10 10:00</i>价<i>-</i>量<i>-</i>幅<i>-</i></label> -->
@@ -112,7 +111,7 @@
                                     <span>DMI</span>
                                 </div> -->
                             <!-- </div> -->
-
+                            
                         </div>
                         <!-- echarts图结束 -->
                     </div>
@@ -132,7 +131,6 @@
         <!-- 中部结束 -->
         <!-- 企业资料开始 -->
         <div class="bottom-bar">
-
             <div class="box fl bb-info">
                 <div class="no-data  no-data-k" id="withoutStcData">亲，暂时没有数据哦~~~~ ^_^</div>
                 <h2>企业基本信息</h2>
@@ -194,7 +192,6 @@
         <!-- 企业资料结束 -->
     </div>
     <!-- 页面结束 -->
-
     <script type="text/javascript" src="../js/jquery.js"></script>
     <script type="text/javascript" src="../js/echarts.js"></script>
     <script type="text/javascript" src="../js/moment.min.js"></script>
@@ -240,19 +237,19 @@
                 exchangeID = "101";
             }
             var stockXMlUrl = "http://103.66.33.58:443/GetCalcData?ExchangeID="+exchangeID+"&Codes="+id;
-            var wsUrl;
-            switch (exchangeID) {
-                case "2":
-                    // 深交所接口
-                    wsUrl = "ws://103.66.33.67:80";
-                    // stockXMlUrl = "http://103.66.33.125/2:80";
-                    break;
-                case "101": ;
-                default:
-                    // 上证指数接口
-                    wsUrl = "ws://172.17.20.203:7681";
-                    // stockXMlUrl = "http://103.66.33.125/101:80";
-            }
+            var wsUrl = "ws://103.66.33.67:80";;
+            // switch (exchangeID) {
+            //     case "2":
+            //         // 深交所接口
+            //         wsUrl = "ws://103.66.33.67:80";
+            //         // stockXMlUrl = "http://103.66.33.125/2:80";
+            //         break;
+            //     case "101": ;
+            //     default:
+            //         // 上证指数接口
+            //         wsUrl = "ws://103.66.33.67/";
+            //         // stockXMlUrl = "http://103.66.33.125/101:80";
+            // }
             
             // 初始化分时图
             $("#MLine").initMline({
