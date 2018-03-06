@@ -2,7 +2,7 @@ var wsUrlDevelop = 'ws://103.66.33.67:80';
 var stockXMlUrl = "http://103.66.33.58:443/GetCalcData";
 var requestOffer = "ws://103.66.33.67:443";
 var stockList = [];//解析XML后得到的数组 所有指数的时间、类型、id、小数位数等
-var elementId,secId;
+var elementId;
 var ZSId,ExchangeID;
 var LSData = ZCData = DYData = QPDATA = null;
 var _FirstS = [{name:"上证综指",sectionid:1,exchangeID:"1",code:"000001"},{name:"深证成指",sectionid:1,exchangeID:"2",code:"399001"},{name:"沪深300",sectionid:1,exchangeID:"2",code:"399007"}];
@@ -23,7 +23,7 @@ $(function(){
         $("#searchEnd").slideUp();
     }); 
     
-    secId = $("#tab li").eq(0).data("sectionid");//当前选中板块id
+    var secId = $("#tab li").eq(0).data("sectionid");//当前选中板块id
     $(".zdf-list>h1").html( $("#tab li").eq(0).text());
     // 填充列表
     initBlockInfo(secId);
@@ -53,27 +53,6 @@ $(function(){
         }
     );
     initChartInfo();
-
-    $(".M-box").pagination({
-        prevContent:"上一页",
-        nextContent:"下一页",
-        totalData:50,
-        showData:10,
-        pageCount:5,
-        mode: 'fixed',
-        callback: function (api) {
-            console.log(api.getCurrent())
-            var offerHeader = {
-                "msgtype":"Q3301",
-                "sectionId": secId,
-                "startIndex": api.getCurrent() * 10 - 9,
-                "count": 10,
-                "field": 0,
-                "orderType": 0
-            };
-            oWs.request(offerHeader);
-        }
-    });
 });
 ;(function($,window,document,undefined){
     $.fn.initMline = function(options,params){
@@ -212,7 +191,7 @@ function tabLi(index){
     var el = $(".mc-tab-li ul li").eq(index);
     $(".zdf-list>h1").html($(el).text());
     
-    secId = $(el).data("sectionid");
+    var secId = $(el).data("sectionid");
     var offerHeader={
         "msgtype":"Q3301",
         "sectionId": secId,
@@ -222,26 +201,6 @@ function tabLi(index){
         "orderType": 0
     };
     oWs.request(offerHeader);
-
-    $(".M-box").pagination({
-        prevContent:"上一页",
-        nextContent:"下一页",
-        totalData:50,
-        showData:10,
-        pageCount:5,
-        mode: 'fixed',
-        callback: function (api) {
-            var data = {
-                "msgtype":"Q3301",
-                "sectionId": secId,
-                "startIndex": api.getCurrent() * 10 - 9,
-                "count": 10,
-                "field": 0,
-                "orderType": 0
-            };
-            oWs.request(data);
-        }
-    });
 
     switch($(el).data("sectionid")){
         case 1:
@@ -563,34 +522,6 @@ function initChartInfo(){
         //心跳检测重置
         socket.reset().start(); //都第一次建立连接则启动心跳包
         // 获取历史数据
-        // LSData=[{
-        // "MsgType": "Q3011",
-        // "ExchangeID": stockList[0].exchangeID,
-        // "InstrumentID": stockList[0].id,
-        // "StartIndex": "0",
-        // "StartDate": "-1",
-        // "StartTime": "0", 
-        // "Count": "0"
-        // },{
-        // "MsgType": "Q3011",
-        // "ExchangeID": stockList[1].exchangeID,
-        // "InstrumentID": stockList[1].id,
-        // "StartIndex": "0",
-        // "StartDate": "-1",
-        // "StartTime": "0", 
-        // "Count": "0"
-        // },{
-        // "MsgType": "Q3011",
-        // "ExchangeID": stockList[2].exchangeID,
-        // "InstrumentID": stockList[2].id,
-        // "StartIndex": "0",
-        // "StartDate": "-1",
-        // "StartTime": "0", 
-        // "Count": "0"
-        // }];
-        // var ss = eval('('+LSData+')');
-        // console.log(ss);
-        // socket.request( LSData );
         for(var i=0;i<stockList.length;i++){
             LSData={
                 "MsgType": "Q3011",
@@ -620,7 +551,7 @@ function initChartInfo(){
                 "PructType":"0"
             };
             // 获取历史数据
-            socket.request( LSData );
+            socket.request(LSData);
             // 获取昨收值
             socket.request(ZCData);
             // 实时订阅
@@ -641,9 +572,7 @@ function initChartInfo(){
                 }
                 // 初始化图表
                 for(var i=0;i<stockList.length;i++){
-                    if(data.InstrumentID == parseInt(stockList[i].stockCode) && data.ExchangeID == parseInt(stockList[i].exchangeID)){
-                        initCharts(data,'',stockList[i]);
-                    }
+                    initCharts(data,'',stockList[i]);
                 }
             break;
             case "P0001"://订阅快照
@@ -877,8 +806,7 @@ function initCharts(data,type,stockOne){
             startTime = oneZSInfo[0].startTime;
             endTime = oneZSInfo[0].endTime;
         }
-        var v_data = getxAxis(data[0].Date,oneZSInfo);
-        stockOne.v_data = v_data;
+        var v_data = stockOne.v_data = getxAxis(data[0].Date,oneZSInfo);
         var lastDate = dateToStamp(formatDate(data[data.length-1].Date) +" "+formatTime(data[data.length-1].Time)),
             price = [],//价格
             volume = [],//成交量
@@ -1137,7 +1065,7 @@ function initCharts(data,type,stockOne){
 function fillOfferForm(data){
     var strHtml = '';
     for(var i=0;i<data.QueryRes.length;i++){
-        strHtml += '<li class="zdf-list-one zdf-list-detail"><a href="../html/detail.html?exchangeID='+data.QueryRes[i].ExchangeID+'&id='+data.QueryRes[i].InstrumentID+'"><ul class="clearfix">'+
+        strHtml += '<li class="zdf-list-one zdf-list-detail"><ul class="clearfix">'+
                     '<li>'+(i+1)+'</li><li>'+data.QueryRes[i].InstrumentID+'</li>'+
                     '<li>'+data.QueryRes[i].InstrumentName+'</li>'+
                     '<li>'+data.QueryRes[i].Value+'<i></i></li>'+
@@ -1152,7 +1080,7 @@ function fillOfferForm(data){
                     '<li>0<i></i></li>'+
                     '<li>'+data.QueryRes[i].Volume+'<i></i></li>'+
                     '<li>'+data.QueryRes[i].TradeNum+'<i></i></li>'+
-                    '</ul></a></li>';
+                    '</ul></li>';
     }
     $("#offerForm").html(strHtml);
 }

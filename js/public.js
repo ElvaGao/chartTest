@@ -146,36 +146,24 @@ function getColorName(data, compareData){
     return className;
 }
 // 数据单位统一
+// data 传入的数据
+// type 数值和单位是否分开返回
+// lang 是否是英文
 function setUnit(data,type,lang){
-    var fh = data>0?"":"-";
     var data = Math.abs(data);
-    if(lang=="En"){
-        if(data!=0&&data!="0"){
-            return (data/1000000>1?fh+floatFixedTwo(data/1000000)+"m"
-                        :(data/1000>1?fh+floatFixedTwo(data/1000)+"k"
-                            :fh+data));
-        }else{
-            return "0";
-        }
-    }else{
-        if(data!=0&&data!="0"){
-            if(type){
-                var obj={};
-                var unit,value;
-                    (data/100000000>=1?((unit="亿")&&(value=data/100000000)):
-                        (data/10000>=1?((unit="万")&&(value=data/10000)):
-                            ((unit="量")&&(value=data))
-                            ));
-                obj.unit = unit;
-                obj.value = fh+floatFixedTwo(value);
-                return obj;
-            }else{
-                return (data/100000000>1?fh+floatFixedTwo(data/100000000)+"亿":(data/10000>1?fh+floatFixedTwo(data/10000)+"万":fh+data));
-            }
-        }else{
-            return "0";
-        }
-    }
+    var unit="", // 单位
+        value=0, // 值
+        fh = data>0?"":"-", // 符号：正负
+        obj = {};   // 返回值
+
+    lang  ? (data/1000000>1 ? (unit="m")&&(value=data/1000000) : 
+                (data/1000>1 ? (unit="k")&&(value=data/1000) : fh+data))
+          : data/100000000>=1 ? (unit="亿")&&(value=data/100000000) : 
+                (data/10000>=1 ? (unit="万")&&(value=data/10000) : 
+                    (type ? (unit="量")&&(value=data) : value=data));
+    
+    type ? (obj.unit = unit)&&(obj.value = fh+floatFixedTwo(value)) : obj = fh+floatFixedTwo(value)+unit;
+    return obj;
 }
 //10:0转为10:00
 function formatTimeMin(time){

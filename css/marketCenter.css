@@ -27,6 +27,11 @@ li{
 h1,h2{
     font-weight: normal;
 }
+img{
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
 .fl{
     float: left;
 }
@@ -230,7 +235,7 @@ body{
 .zdf-list-one{
     width: 100%;
 }
-.zdf-list-one>ul{
+.zdf-list-one>ul,.zdf-list-detail>a>ul{
     display: flex;
     text-align: center;
     text-overflow: ellipsis;
@@ -239,6 +244,7 @@ body{
 }
 .zdf-list-title{
     line-height: 40px;
+    background-color: #f2f2f2;
 }
 .zdf-list-title>li{
     flex: 1;
@@ -256,15 +262,16 @@ body{
     border-right: 4px solid transparent;
     border-left: 4px solid transparent;
 }
-.zdf-list-detail>ul>li{
+.zdf-list-detail>a>ul>li{
     flex: 1;
     line-height: 50px;
+    color: #555;
 }
-.zdf-list-detail>ul{
-    background-color: #f2f2f2;
-}
-.zdf-list-detail>ul:hover,.zdf-list-detail>ul:focus,.zdf-list-detail>ul:active{
+.zdf-list-detail>a>ul:hover,.zdf-list-detail>a>ul:focus,.zdf-list-detail>a>ul:active{
     background-color: #e5e5e5;
+}
+.zdf-list-detail:nth-of-type(even){
+    background-color: #f2f2f2;
 }
 /* 页码 */
 .M-box{

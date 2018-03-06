@@ -4,6 +4,10 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
+        <META HTTP-EQUIV="pragma" CONTENT="no-cache"> 
+        <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
+        <META HTTP-EQUIV="expires" CONTENT="0">
         <title>行情中心</title>
         <link rel="stylesheet" type="text/css" href="../css/marketCenter.css" />
     </head>
@@ -63,67 +67,29 @@
         <div class="wrap">
             <div class="zdf-list">
                 <h1>沪深A涨跌幅</h1>
-                <ul class="clearfix">
-                    <li class="zdf-list-one">
-                        <ul class="clearfix zdf-list-title">
-                            <li>序号</li>
-                            <li>代码</li>
-                            <li>名称</li>
-                            <li><a href="javascript:void(0);">现价<i></i></a></li>
-                            <li><a href="javascript:void(0);">涨跌<i></i></a></li>
-                            <li><a href="javascript:void(0);">涨幅<i></i></a></li>
-                            <li><a href="javascript:void(0);">今开<i></i></a></li>
-                            <li><a href="javascript:void(0);">最高<i></i></a></li>
-                            <li><a href="javascript:void(0);">最低<i></i></a></li>
-                            <li><a href="javascript:void(0);">昨收<i></i></a></li>
-                            <li><a href="javascript:void(0);">换手<i></i></a></li>
-                            <li><a href="javascript:void(0);">量比<i></i></a></li>
-                            <li><a href="javascript:void(0);">振幅<i></i></a></li>
-                            <li><a href="javascript:void(0);">成交量<i></i></a></li>
-                            <li><a href="javascript:void(0);">成交额<i></i></a></li>
-                        </ul>
-                    </li>
-                    <!-- <li class="zdf-list-one zdf-list-detail">
-                        <ul class="clearfix">
-                            <li>1</li>
-                            <li>603602</li>
-                            <li>N纵横</li>
-                            <li>21.52<i></i></li>
-                            <li>6.68%<i></i></li>
-                            <li>44.01%<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                        </ul>
-                    </li>
-                    <li class="zdf-list-one zdf-list-detail">
-                        <ul class="clearfix">
-                            <li>2</li>
-                            <li>1000</li>
-                            <li>创业</li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                            <li>21.86<i></i></li>
-                        </ul>
-                    </li> -->
+                <div class="zdf-list-one">
+                    <ul class="clearfix zdf-list-title">
+                        <li>序号</li>
+                        <li>代码</li>
+                        <li>名称</li>
+                        <li><a href="javascript:void(0);">现价<i></i></a></li>
+                        <li><a href="javascript:void(0);">涨跌<i></i></a></li>
+                        <li><a href="javascript:void(0);">涨幅<i></i></a></li>
+                        <li><a href="javascript:void(0);">今开<i></i></a></li>
+                        <li><a href="javascript:void(0);">最高<i></i></a></li>
+                        <li><a href="javascript:void(0);">最低<i></i></a></li>
+                        <li><a href="javascript:void(0);">昨收<i></i></a></li>
+                        <li><a href="javascript:void(0);">换手<i></i></a></li>
+                        <li><a href="javascript:void(0);">量比<i></i></a></li>
+                        <li><a href="javascript:void(0);">振幅<i></i></a></li>
+                        <li><a href="javascript:void(0);">成交量<i></i></a></li>
+                        <li><a href="javascript:void(0);">成交额<i></i></a></li>
+                    </ul>
+                </div>
+                <ul class="clearfix" id="offerForm">
                 </ul>
             </div>
-            <!-- <div class="M-box"></div> -->
+            <div class="M-box"></div>
         </div>
     </body>
     <script type="text/javascript" src="../js/jquery.js"></script>
@@ -137,9 +103,20 @@
             // $(".M-box").pagination({
             //     prevContent:"上一页",
             //     nextContent:"下一页",
-            //     totalData:100,
-            //     showData:5,
-            //     keepShowPN:true
+            //     totalData:50,
+            //     showData:10,
+            //     pageCount:5,
+            //     mode: 'fixed',
+            //     callback: function (api) {
+            //         var data = {
+            //             "msgtype":"Q3301",
+            //             "sectionId": secId,
+            //             "startIndex": api.page * 10 + 1,
+            //             "count": 10,
+            //             "field": 0,
+            //             "orderType": 0
+            //         }
+            //     }
             // });
             //jump为0表示不跳转，为1是跳转
             // $(".zdf-list").showList({
@@ -162,7 +139,6 @@
             //         {liTilt:"成交额",jump:1},
             //     ],
             //     data:[]
-                
             // });
         });
     </script>
