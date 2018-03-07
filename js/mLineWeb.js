@@ -421,79 +421,38 @@ var stockType = '';
             zd = price - preClose;
             zdf = preClose==0?floatFixedTwo(0):floatFixedTwo((zd/preClose)*100);
 
-            $.each($(".tb-fielList li"),function(index,obj){
-                var spanObj = $(obj).children("span"),
-                    compareData = preClose,
-                    data,
-                    unit;
-                switch(index){
-                    case 0:
-                        data = floatFixedDecimal(high);
-                        break;
-                    case 1:
-                        data = floatFixedDecimal(open);
-                        break;
-                    case 2:
-                        data = setUnit(floatFixedDecimal(dealVal));
-                        compareData = false;
-                        unit = "元";
-                        break;
-                    case 3:
-                        return;
-                    case 4:
-                        return;
-                    case 5:
-                        data = floatFixedDecimal(low);
-                        break;
-                    case 6:
-                        data = floatFixedDecimal(preClose);
-                        compareData = false;
-                        break;
-                    case 7:
-                        if(dealVol>=100){
-                            data = setUnit(dealVol/100);
-                            unit = "手";
-                        }else{
-                            data = dealVol;
-                            unit = "股";
-                        }
-                        compareData = false;
-                        break;
-                    case 8:
-                        return;
-                    case 9:
-                        data = zf+"%";
-                        compareData = false;
-                        break;
-                    default:;
-                }
-                setTextAndColor(spanObj, data, compareData, unit);
-                compareData = preClose;
-            });
+            var html = "";
+            //指数[0~8],股票[16~31]
+            if(stockType=="Field"){
+                html = "<li><p>最高：</p><span class="+getColorName(high,preClose)+">"+floatFixedDecimal(high)+"</span></li>"
+                        +"<li><p>最低：</p><span class="+getColorName(low,preClose)+">"+floatFixedDecimal(low)+"</span></li>"
+                        +"<li><p>成交额：</p><span>"+setUnit(floatFixedDecimal(dealVal))+"元</span></li>"
+                        +"<li><p>成交量：</p><span>"+(dealVol>=100?setUnit(dealVol/100)+"手":dealVol+"股")+"</span></li>"
+                        +"<li><p>今开：</p><span class="+getColorName(open,preClose)+">"+floatFixedDecimal(open)+"</span></li>"
+                        +"<li><p>昨收：</p><span>"+floatFixedDecimal(preClose)+"</span></li>"
 
-            $.each($(".tb-fn-num span"),function(index,obj){
-                var spanObj = $(obj),
-                    compareData = preClose,
-                    data,
-                    unit;
-                switch(index){
-                    case 0:
-                        data = floatFixedDecimal(price);
-                        break;
-                    case 1:
-                        data = floatFixedDecimal(zd);
-                        compareData = "0";
-                        break;
-                    case 2:
-                        data = zdf;
-                        compareData = "0";
-                        unit = "%";
-                        break;
-                    default:;
-                }
-                setTextAndColor(spanObj, data, compareData, unit);
-                compareData = preClose;
-            });
+                        +"<li><p>振&nbsp;&nbsp;&nbsp;&nbsp;幅：</p><span>"+zf+"%</span></li>";
+                $(".tb-fielList").addClass("tb-fielList-field");
+            }else{
+                html = "<li><p>最高：</p><span class="+getColorName(high,preClose)+">"+floatFixedDecimal(high)+"</span></li>"
+                        +"<li><p>今开：</p><span class="+getColorName(open,preClose)+">"+floatFixedDecimal(open)+"</span></li>"
+                        +"<li><p>成交额：</p><span>"+setUnit(floatFixedDecimal(dealVal))+"元</span></li>"
+                        +"<li><p>市盈率：</p><span>-</span></li>"
+                        +"<li><p>换手率：</p><span>-</span></li>"
+                        +"<li><p>最低：</p><span class="+getColorName(low,preClose)+">"+floatFixedDecimal(low)+"</span></li>"
+                        +"<li><p>昨收：</p><span>"+floatFixedDecimal(preClose)+"</span></li>"
+                        +"<li><p>成交量：</p><span>"+(dealVol>=100?setUnit(dealVol/100)+"手":dealVol+"股")+"</span></li>"
+                        +"<li><p>市&nbsp;&nbsp;&nbsp;&nbsp;值：</p><span>-</span></li>"
+                        +"<li><p>振&nbsp;&nbsp;&nbsp;&nbsp;幅：</p><span>"+zf+"%</span></li>";
+            }
+
+            
+
+            var html2 = "<span class="+getColorName(price,preClose)+">"+floatFixedDecimal(price)+"</span>"
+                        +"<span class="+getColorName(zd,"0")+">"+floatFixedDecimal(zd)+"</span>"
+                        +"<span class="+getColorName(zdf,"0")+">"+zdf+"%</span>";
+            $(".tb-fn-num").html(html2);
+            $(".tb-fielList").html(html);
         }
     };
     // 五档盘口-五档盘口数据，没有委比委差
@@ -1784,6 +1743,10 @@ var stockType = '';
 // 查询十大流通股和公司信息
 function requireCom(reqComOpt,code){
     var reqUrl = "http://172.17.20.178:8080/DKService/GetService?Service=DataSourceService.Gets&ReturnType=JSON&OBJID=";
+    // 1=》000001
+    if(code.length<6){
+        code = new Array(6-code.length+1).join("0") + code;
+    }
     $.each(reqComOpt, function(i,reqComObj){
         $.ajax({
             url:  reqUrl+reqComObj+"&P_NODE_CODE="+code,

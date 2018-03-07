@@ -130,16 +130,16 @@ function floatFixedDecimal(data) {
     return parseFloat(data).toFixed(xml.options.decimal);
 }
 // Text填写-dom的text和color
-function setTextAndColor(domObj,data,compareData,unit,className){
-    var unit = unit?unit:"";
-    var className = className?className:"";
-    var classStr = className +" "+getColorName(data, compareData);
-    if(compareData){
-        domObj.text(data+unit).attr("class",classStr);
-    }else{
-        domObj.text(data+unit);
-    } 
-}
+// function setTextAndColor(domObj,data,compareData,unit,className){
+//     var unit = unit?unit:"";
+//     var className = className?className:"";
+//     var classStr = className +" "+getColorName(data, compareData);
+//     if(compareData){
+//         domObj.text(data+unit).attr("class",classStr);
+//     }else{
+//         domObj.text(data+unit);
+//     } 
+// }
 // 获取color
 function getColorName(data, compareData){
     var className = (data-compareData)>0?"red":((data-compareData)==0?"black":"green");

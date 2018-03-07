@@ -83,21 +83,20 @@ i,em{
 	font-size: 16px;
 	line-height: 27px;
 }
-.tb-fielList li:nth-child(5n+1){
-	width: 19%;
-}
-.tb-fielList li:nth-child(5n+2){
+.tb-fielList li:nth-child(n){
 	width: 19%;
 }
 .tb-fielList li:nth-child(5n+3){
 	width: 25%;
 }
-.tb-fielList li:nth-child(5n+4){
-	width: 19%;
-}
 .tb-fielList li:nth-child(5n+5){
 	width: 17%;
 }
+/*指数*/
+.tb-fielList-field li:nth-child(n){
+	width: 25%;
+}
+
 .tb-fielList p{
 	display: inline-block;
 	text-align: justify;

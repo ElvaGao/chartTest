@@ -544,10 +544,10 @@ var initSocketEvent = function(socket){
                                 case "P0014":        // 15分钟K线订阅分钟线应答
                                 case "P0015":        // 30分钟K线订阅分钟线应答
                                 case "P0016":        // 60分钟K线订阅分钟线应答
-                                    var msgTypeNow = getQueryType(KLineSocket.option.lineType);
-                                    if( MsgType.slice(1) != msgTypeNow.MsgType.slice(1)||dataList[0].Date==0){
-                                        return;
-                                    }
+                                    // var msgTypeNow = getQueryType(KLineSocket.option.lineType);
+                                    // if( MsgType.slice(1) != msgTypeNow.MsgType.slice(1)||dataList[0].Date==0){
+                                    //     return;
+                                    // }
                                     KCharts(dataList);
                                     break;
                                 case "R3011":        // 1分钟K线历史数据查询
