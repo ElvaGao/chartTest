@@ -19,7 +19,7 @@ $(document).keydown(function(e){
                                  
         // 点击查询周期K线
         $("#tab li").on("click",function(){
-
+            $("#withoutData").html("<img src='../img/loading.gif' class='loading'/>");
             // 点击的K线类型
             var klineType = $(this).attr("id");
 
@@ -312,7 +312,8 @@ var WebSocketConnect = function(options){
         mouseHoverPoint: 0,         // 当前现实的数据索引
         isHoverGraph: false,        // 是否正在被hover
         zoom: 10,
-        start: 0
+        start: 0,
+        dataZoomTimer: null,
     };
     // 数据查询参数
     this.option = {
@@ -485,15 +486,27 @@ var initSocketEvent = function(socket){
                                 console.log(e);
                                 return;
                             }
-                            
+                            if(!KLineSocket.option.KWatch){
+                                return
+                            }
                             var dataList = data.KLineSeriesInfo?data.KLineSeriesInfo:new Array(data);
                             var MsgType =  data["MsgType"] || data[0]["MsgType"]; //暂时用他来区分推送还是历史数据 如果存在是历史数据,否则推送行情
+                            var MsgInstrumentID = data["InstrumentID"] || data[0]["InstrumentID"];
+                            var MsgExchangeID = data["ExchangeID"] || data[0]["ExchangeID"];
                             var ErrorCode = data["ErrorCode"]?data["ErrorCode"]:null;
                             
+                            var exchangeID = Number(KLineSocket.option.KWatch.ExchangeID);
+                            var instrumentID = Number(KLineSocket.option.KWatch.InstrumentID);
+                            if(!(exchangeID==MsgExchangeID&&instrumentID==MsgInstrumentID)){
+                                return;
+                            }
+
+
                              // 开始查询历史数据
                             if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
                                 if(ErrorCode){
                                     console.info(data["Content"]);
+                                    $("#withoutData").html("抱歉，暂时没有数据，请稍后再试……")
                                     return;
                                 }
                             }else{
@@ -507,7 +520,6 @@ var initSocketEvent = function(socket){
                                             var arr = KLineSocket.HistoryData.hCategoryList.slice(0,4);
                                             
                                             $.each(arr,function(i,o){
-                                                console.log(o.split(" ")[0])
                                                 if(o.split(" ")[0]==str){
                                                     KLineSocket.HistoryData.CountNum++;
                                                 }
@@ -516,13 +528,20 @@ var initSocketEvent = function(socket){
                                         console.info("今天还没有开盘。");
                                         KLineSocket.HistoryData.queryTimes++;
                                         KLineSocket.getHistoryKQFirstMinPrev();
+                                        return;
+                                        
+                                    }
+                                    // 如果上交易日
+                                    if(KLineSocket.HistoryData.queryTimes==1&&KLineSocket.HistoryData.dataLengthToday!=0){
+                                        chartPaint(isHistory);
+                                        return;
                                     }
                                     console.info(data["Content"]);
+                                    $("#withoutData").html("抱歉，暂时没有数据，请稍后再试……");
                                     return;
                                 }
                             }
 
-                            
 
                             /*
                              * 个股/指数 实时数据，通过快照接口
@@ -533,7 +552,7 @@ var initSocketEvent = function(socket){
                                 case "P0001":       // 订阅日K线
                                     // K线接口
                                     var msgTypeNow = getQueryType(KLineSocket.option.lineType);
-                                    if( MsgType.slice(1) != msgTypeNow.MsgType.slice(1)||dataList[0].Date==0){
+                                    if( !msgTypeNow.MsgType||MsgType.slice(1) != msgTypeNow.MsgType.slice(1)||dataList[0].Date==0){
                                         return;
                                     }
                                     KCharts(dataList);
@@ -544,10 +563,13 @@ var initSocketEvent = function(socket){
                                 case "P0014":        // 15分钟K线订阅分钟线应答
                                 case "P0015":        // 30分钟K线订阅分钟线应答
                                 case "P0016":        // 60分钟K线订阅分钟线应答
-                                    // var msgTypeNow = getQueryType(KLineSocket.option.lineType);
-                                    // if( MsgType.slice(1) != msgTypeNow.MsgType.slice(1)||dataList[0].Date==0){
-                                    //     return;
-                                    // }
+                                    var msgTypeNow = getQueryType(KLineSocket.option.lineType);
+                                    if( Number(msgTypeNow.Instrumenttype) != Number(MsgType.slice(1))||dataList[0].Date==0){
+                                        return;
+                                    }
+                                    if(dataList[0].Date==0){
+                                        return;
+                                    }
                                     KCharts(dataList);
                                     break;
                                 case "R3011":        // 1分钟K线历史数据查询
@@ -563,7 +585,7 @@ var initSocketEvent = function(socket){
                                 case "R3022":        // 周K线历史数据查询
                                 case "R3023":        // 月K线历史数据查询
                                 case "R3025":        // 年K线历史数据查询
-                                // console.log(data.KLineCount)
+                                    // 周期K线查询和结果中只是对应的标识不一样 P和R开头
                                     var msgTypeNow = getQueryType(KLineSocket.option.lineType);
                                     if( msgTypeNow.MsgType&&(MsgType.slice(1) != msgTypeNow.MsgType.slice(1))){
                                         return;
@@ -623,11 +645,8 @@ function KCharts(dataList, isHistory){
     if(dataList){
         // 解析数据
         var dataJsons = splitData(dataList, isHistory); 
-        
         // 存储数据
         saveData(dataJsons, isHistory);
-
-        // $.each(KLineSocket.HistoryData.hCategoryList[0].split(" ")[1])
         // 画图
         chartPaint(isHistory);
         // 初始化并显示数据栏和数据信息框的信息
@@ -642,6 +661,7 @@ function KCharts(dataList, isHistory){
             var length = KLineSocket.HistoryData.hCategoryList.length;
             setToolInfo(length, 'showTip');
         });
+        
         // 鼠标滑过，出现信息框
         $("#kline_charts").bind("mouseenter", function (event) {
             toolContentPosition(event);
@@ -692,7 +712,8 @@ function splitData(data, isHistory) {
 
         if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
             KLineSocket.HistoryData.hTime = formatTime((object.Time/100000>=1)?object.Time:("0"+object.Time));
-            k_categoryData.push(e_date);
+            e_time = e_date + " " + e_day;
+            k_categoryData.push(e_time);
         }else{
             e_time = e_date + " " + e_day + " " + formatTime((object.Time/100000>=1)?object.Time:("0"+object.Time));
             k_categoryData.push(e_time);
@@ -768,8 +789,6 @@ function splitData(data, isHistory) {
 // 保存获取的数据到相对应的数据中，存入数据对象
 function saveData(data, isHistory){
     if(isHistory){
-        // 所有数据总长度
-        var categoryLength = KLineSocket.HistoryData.hCategoryList.length;
         // 查询到的数据总长度
         var dataLength = data.categoryData.length;
 
@@ -778,21 +797,21 @@ function saveData(data, isHistory){
         // 第二次以后减去每次200条，和第一次的199条即可
         if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
             if(KLineSocket.HistoryData.queryTimes==0){
-                var index = categoryLength - dataLength;
+                var index = KLineSocket.HistoryData.hCategoryList.length - dataLength;
             }else{
-                var index = categoryLength -199 - KLineSocket.HistoryData.watchDataCount - 200*(KLineSocket.HistoryData.queryTimes - 1 ) - dataLength;
+                var index = KLineSocket.HistoryData.hCategoryList.length -199 - KLineSocket.HistoryData.watchDataCount - 200*(KLineSocket.HistoryData.queryTimes - 1 ) - dataLength;
             }
         }else{
             // 分钟周期K线，第一次查询当日数据，直接计算长度，总长度-数据长度=第一条历史数据索引值
             // 第二次才开始查询历史数据-199条
             // 所以，在第三次以后，以后减去每次200条，和第二次的199条即可
             if(KLineSocket.HistoryData.queryTimes==0){
-                var index = categoryLength -  dataLength;
+                var index = KLineSocket.HistoryData.hCategoryList.length -  dataLength;
                 KLineSocket.HistoryData.dataLengthToday = dataLength;
             }else if(KLineSocket.HistoryData.queryTimes==1){
-                var index = categoryLength - KLineSocket.HistoryData.dataLengthToday - dataLength - KLineSocket.HistoryData.watchDataCount;
+                var index = KLineSocket.HistoryData.hCategoryList.length - KLineSocket.HistoryData.dataLengthToday - dataLength - KLineSocket.HistoryData.watchDataCount;
             }else{
-                var index = categoryLength - KLineSocket.HistoryData.dataLengthToday -199 - KLineSocket.HistoryData.watchDataCount - 200*(KLineSocket.HistoryData.queryTimes - 2 ) - dataLength;
+                var index = KLineSocket.HistoryData.hCategoryList.length - KLineSocket.HistoryData.dataLengthToday -199 - KLineSocket.HistoryData.watchDataCount - 200*(KLineSocket.HistoryData.queryTimes - 2 ) - dataLength;
             }
         }
 
@@ -856,7 +875,6 @@ function saveData(data, isHistory){
 function chartPaint(isHistory){
 
     if(isHistory){
-        
 
         // 第一次请求时，非分钟周期K线不进行绘制，第二次请求才开始绘制
         var dayFirstTime = KLineSocket.HistoryData.queryTimes==0&&(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year");
@@ -888,12 +906,12 @@ function chartPaint(isHistory){
             $("#withoutData").hide().siblings().show();
             // zoom起始的位置
             var startZoom = (60/KLineSocket.HistoryData.dataLength>=1)?0:Math.ceil(100-80/(KLineSocket.HistoryData.dataLength+10)*100);
-            var maxValueSpan=100;
-            var minValueSpan=10;
+            var maxValueSpan=300;
+            var minValueSpan=20;
             // 绘制K线图
             KLineSocket.KChart.setOption({
                 backgroundColor: "#fff",
-                animation: false,
+                animation: true,
                 tooltip: {
                     trigger: 'axis',
                     showContent: false
@@ -987,203 +1005,8 @@ function chartPaint(isHistory){
                         boundaryGap: false,
                         axisTick:{ show:false },
                         axisLine: { show:false },
-                        splitLine: {
-                            show: true,
-                            interval: function(index,value){
-                                var valueList = KLineSocket.HistoryData.hCategoryList;
-                                var timeCurr = valueList[index].split(" ")[2];
-                                var startTime = xml.options.nowDateTime[0].startTime;
-                                var endTime = xml.options.nowDateTime[0].endTime;
-                                var startTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1].startTime1;
-                                var endTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1].endTime1;
-                                switch(KLineSocket.option.lineType){
-                                    case "day":
-                                        var value = setCategoryPrev(false,null,null,true,index,7,1);
-                                        return value;
-                                        break;
-                                    case "week":
-                                        var value = setCategoryPrev(false,null,null,true,index,7,1);
-                                        return value;
-                                        break;
-                                    case "month":
-                                        var value = setCategoryPrev(false,null,null,true,index,7,1);
-                                        return value;
-                                        break;
-                                    case "year":
-                                        var value = setCategoryPrev(false,null,null,true,index,3,1);
-                                        return value;
-                                        break;
-                                    case "minute":
-                                        // 有意义的时间间隔
-                                        // time当前时间
-                                        // lineTypeNum当前时间类型对应的开盘时间增数
-                                        // matchSharpTime匹配整点 9：00
-                                        // matchHalfTime匹配半点9：30
-                                        // hideEndTime隐藏收盘时间
-                                        // endTime 收盘时间
-                                        // hideEndTime1隐藏收盘时间1
-                                        // endTime1 收盘时间1
-                                        // showStartTime 显示开盘时间
-                                        // startTime 开盘时间
-                                        // showStartTime1 显示开盘时间1
-                                        // startTime1 开盘时间1
-                                        var value = setCategoryMin(timeCurr,0,true,true,false,null,true,(endTime1!=undefined)?endTime1:endTime);
-                                        return value;
-                                        break;
-                                    case "fivem":
-                                        var value = setCategoryMin(timeCurr,5,false,false,false,null,false,null,true,startTime,true,startTime1);
-                                        return value;
-                                        break;
-                                    case "tenm":
-                                        var value = setCategoryMin(timeCurr,10,false,false,false,null,false,null,true,startTime,true,startTime1);
-                                        return value;
-                                        break;
-                                    case "fifm":
-                                        var value = setCategoryMin(timeCurr,15,false,false,true,null,false,(endTime1!=undefined)?endTime1:endTime);
-                                        return value;
-                                        break;
-                                    case "thim":
-                                        // 年月日判断是否显示标签
-                                        // splitByDate是否按照日期不同间隔
-                                        // categaryList类目轴数组，
-                                        // splitByDMIndex按照日期还是月份区分当前和前一个是否一样，
-                                        // splitByIndex是否按照索引间隔
-                                        // index当前索引，
-                                        // splitNum间隔数
-                                        // yu余数
-                                        // splitByWeek 是否按照星期间隔
-                                        var value = setCategoryPrev(true,valueList,2,false,index);
-                                        return value;
-                                        break;
-                                    case "hour": 
-                                        var value = setCategoryPrev(true,valueList,2,false,index,10,KLineSocket.HistoryData.CountNum,true);
-                                        return value;
-                                        break;
-                                    default:;
-                                }
-                            },
-                            lineStyle: {
-                                color: '#efefef'
-                            }
-                        },
-                        axisLabel: {
-                            show: true,
-                            color: '#666',
-                            fontSize: 12,
-                            showMaxLabel: true,
-                            showMinLabel: true,
-                            interval: function(index,value){
-                                var valueList = KLineSocket.HistoryData.hCategoryList;
-                                var timeCurr = valueList[index].split(" ")[2];
-                                var startTime = xml.options.nowDateTime[0].startTime;
-                                var endTime = xml.options.nowDateTime[0].endTime;
-                                var startTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1].startTime1;
-                                var endTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1].endTime1;
-                                switch(KLineSocket.option.lineType){
-                                    case "day":
-                                        var value = setCategoryPrev(false,null,null,true,index,7,1);
-                                        return value;
-                                        break;
-                                    case "week":
-                                        var value = setCategoryPrev(false,null,null,true,index,7,1);
-                                        return value;
-                                        break;
-                                    case "month":
-                                        var value = setCategoryPrev(false,null,null,true,index,7,1);
-                                        return value;
-                                        break;
-                                    case "year":
-                                        var value = setCategoryPrev(false,null,null,true,index,3,1);
-                                        return value;
-                                        break;
-                                    case "minute":
-                                        // 有意义的时间间隔
-                                        // time当前时间
-                                        // lineTypeNum当前时间类型对应的开盘时间增数
-                                        // matchSharpTime匹配整点 9：00
-                                        // matchHalfTime匹配半点9：30
-                                        // hideEndTime隐藏收盘时间
-                                        // endTime 收盘时间
-                                        // hideEndTime1隐藏收盘时间1
-                                        // endTime1 收盘时间1
-                                        // showStartTime 显示开盘时间
-                                        // startTime 开盘时间
-                                        // showStartTime1 显示开盘时间1
-                                        // startTime1 开盘时间1
-                                        var value = setCategoryMin(timeCurr,0,true,true,false,null,true,(endTime1!=undefined)?endTime1:endTime);
-                                        return value;
-                                        break;
-                                    case "fivem":
-                                        var value = setCategoryMin(timeCurr,5,false,false,false,null,false,null,true,startTime,true,startTime1);
-                                        return value;
-                                        break;
-                                    case "tenm":
-                                        var value = setCategoryMin(timeCurr,10,false,false,false,null,false,null,true,startTime,true,startTime1);
-                                        return value;
-                                        break;
-                                    case "fifm":
-                                        var value = setCategoryMin(timeCurr,15,false,false,true,null,false,(endTime1!=undefined)?endTime1:endTime);
-                                        return value;
-                                        break;
-                                    case "thim":
-                                        // 年月日判断是否显示标签
-                                        // splitByDate是否按照日期不同间隔
-                                        // categaryList类目轴数组，
-                                        // splitByDMIndex按照日期还是月份区分当前和前一个是否一样，
-                                        // splitByIndex是否按照索引间隔
-                                        // index当前索引，
-                                        // splitNum间隔数
-                                        // yu余数
-                                        // splitByWeek 是否按照星期间隔
-                                        var value = setCategoryPrev(true,valueList,2,false,index);
-                                        return value;
-                                        break;
-                                    case "hour": 
-                                        var value = setCategoryPrev(true,valueList,2,false,index,10,KLineSocket.HistoryData.CountNum,true);
-                                        return value;
-                                        break;
-                                    default:;
-                                }
-                            },
-                            formatter : function(value, index){
-                                // 年-周-月-日 都是日期格式
-                                var year,month,day,time;
-                                var startTime = xml.options.nowDateTime[0].startTime;
-                                switch(KLineSocket.option.lineType){
-                                    case "day":
-                                    case "week":
-                                        month = Number(value.split("-")[1]);
-                                        day = Number(value.split("-")[2]);
-                                        return month+"/"+day;
-                                        break;
-                                    case "month":
-                                        year = value.split("-")[0];
-                                        month = Number(value.split("-")[1]);
-                                        day = Number(value.split("-")[2]);
-                                        return year+"/"+month;
-                                        break;
-                                    case "year":
-                                        year = value.split("-")[0];
-                                        return year;
-                                        break;
-                                    case "minute":
-                                    case "fivem":
-                                    case "tenm":
-                                    case "fifm":
-                                        time = value.split(" ")[2];
-                                        return Number(time.split(":")[0])+":"+time.split(":")[1];
-                                        break;
-                                    case "thim":
-                                    case "hour":
-                                        year = value.split("-")[0];
-                                        month = Number(value.split("-")[1]);
-                                        day = Number(value.split(" ")[0].split("-")[2]);
-                                        return month+"/"+day;
-                                        break;
-                                    default:;
-                                }
-                            }
-                        },
+                        splitLine: { show: false },
+                        axisLabel: { show: false },
                         axisPointer: {
                             show:true,
                             label: {
@@ -1350,7 +1173,6 @@ function chartPaint(isHistory){
                     }
                 ]
             });
-
             /* 
              * 日期周期K线在进行查询时就已经是查询历史数据了，所以对应正常的查询次数queryTimes，queryTimes自增后更新            
              * 分钟周期K线的查询，第一次是当天的数据，而历史数据是从前一个交易日开始算的，在queryTimes查询数据次数更新前更新查询参数
@@ -1370,6 +1192,198 @@ function chartPaint(isHistory){
             }
 
 
+            KLineSocket.KChart.on('dataZoom', function (params) {
+
+                clearTimeout(KLineSocket.KLineSet.dataZoomTimer);
+                // 放大缩小后的图表中的数目
+                var paramsZoom = params.batch?params.batch[0]:params;
+                var length = Math.round(( paramsZoom.end - paramsZoom.start )/100 * KLineSocket.HistoryData.hCategoryList.length);
+
+                KLineSocket.KLineSet.dataZoomTimer = setTimeout(function(){
+                    KLineSocket.KChart.setOption({
+                        xAxis: [
+                            {
+                                splitLine: {
+                                    show: true,
+                                    interval: function(index,value){
+                                        var myval = setXAxisInterval(index,value,length);
+                                        return myval; 
+                                    },
+                                    lineStyle: {
+                                        color: '#efefef'
+                                    }
+                                },
+                                axisLabel: {
+                                    show: true,
+                                    color: '#666',
+                                    fontSize: 12,
+                                    showMaxLabel: true,
+                                    showMinLabel: true,
+                                    interval: function(index,value){
+                                        var myval = setXAxisInterval(index,value,length);
+                                        return myval; 
+                                    },
+                                    formatter : function(value, index){
+                                        // 年-周-月-日 都是日期格式
+                                        var valueList = KLineSocket.HistoryData.hCategoryList;
+                                        var year,month,day,time;
+                                        var startTime = xml.options.nowDateTime[0].startTime;
+                                        switch(KLineSocket.option.lineType){
+                                            case "day":
+                                                year = Number(value.split("-")[0]);
+                                                month = Number(value.split("-")[1]);
+                                                day = Number(value.split("-")[2].split(" ")[0]);
+                                                if(length<30){
+                                                    // 显示周一
+                                                    return month+"/"+day;
+                                                }
+                                                if(length>=30&&length<300){
+                                                    
+                                                    // 按照月份显示
+                                                    return year+"/"+month;
+                                                }
+                                                if(length>=300){
+                                                    // 按照年显示
+                                                    return year;
+                                                }
+                                            case "week":
+                                                year = Number(value.split("-")[0]);
+                                                month = Number(value.split("-")[1]);
+                                                day = Number(value.split("-")[2].split(" ")[0]);
+                                                if(length<30){
+                                                    // 显示周一
+                                                    return month+"/"+day;
+                                                }
+                                                if(length>=30&&length<300){
+                                                    
+                                                    // 按照月份显示
+                                                    return year+"/"+month;
+                                                }
+                                                if(length>=300){
+                                                    // 按照年显示
+                                                    return year;
+                                                }
+                                                break;
+                                            case "month":
+                                                year = value.split("-")[0];
+                                                month = Number(value.split("-")[1]);
+                                                day = Number(value.split("-")[2]);
+                                                if(length<30){
+                                                    return year+"/"+month;
+                                                }
+                                                if(length>=30){
+                                                    return year;
+                                                }
+                                                
+                                                break;
+                                            case "year":
+                                                year = value.split("-")[0];
+                                                return year;
+                                                break;
+                                            case "minute":
+                                                year = Number(value.split("-")[0]);
+                                                month = Number(value.split("-")[1]);
+                                                day = Number(value.split("-")[2].split(" ")[0]);
+                                                time = value.split(" ")[2];
+                                                if(length<500){
+                                                    return Number(time.split(":")[0])+":"+time.split(":")[1];
+                                                }
+                                                if(length>=500){
+                                                    return month+"/"+day;
+                                                }
+                                                break;
+                                            case "fivem":
+                                                year = Number(value.split("-")[0]);
+                                                month = Number(value.split("-")[1]);
+                                                day = Number(value.split("-")[2].split(" ")[0]);
+                                                time = value.split(" ")[2];
+                                                if(length<500){
+                                                    return Number(time.split(":")[0])+":"+time.split(":")[1];
+                                                }
+                                                if(length>=500){
+                                                    return month+"/"+day;
+                                                }
+                                                break;
+                                            case "tenm":
+                                                year = Number(value.split("-")[0]);
+                                                month = Number(value.split("-")[1]);
+                                                day = Number(value.split("-")[2].split(" ")[0]);
+                                                time = value.split(" ")[2];
+                                                if(length<300){
+                                                    return Number(time.split(":")[0])+":"+time.split(":")[1];
+                                                }
+                                                if(length>=300){
+                                                    return month+"/"+day;
+                                                }
+                                                break;
+                                            case "fifm":
+                                                year = Number(value.split("-")[0]);
+                                                month = Number(value.split("-")[1]);
+                                                day = Number(value.split("-")[2].split(" ")[0]);
+                                                time = value.split(" ")[2];
+                                                if(length<100){
+                                                    return Number(time.split(":")[0])+":"+time.split(":")[1];
+                                                }
+                                                if(length>=100){
+                                                    return month+"/"+day;
+                                                }
+                                                break;
+                                            case "thim":
+                                                year = Number(value.split("-")[0]);
+                                                month = Number(value.split("-")[1]);
+                                                day = Number(value.split("-")[2].split(" ")[0]);
+                                                time = value.split(" ")[2];
+                                                if(length<50){
+                                                    return Number(time.split(":")[0])+":"+time.split(":")[1];
+                                                }
+                                                if(length>=50){
+                                                    return month+"/"+day;
+                                                }
+                                                break;
+                                            case "hour":
+                                                year = Number(value.split("-")[0]);
+                                                month = Number(value.split("-")[1]);
+                                                day = Number(value.split("-")[2].split(" ")[0]);
+                                                time = value.split(" ")[2];
+                                                if(length<50){
+                                                    return Number(time.split(":")[0])+":"+time.split(":")[1];
+                                                }
+                                                if(length>=50){
+                                                    return year+"/"+month+"/"+day;
+                                                }
+                                                break;
+                                            default:;
+                                        }
+                                    }
+                                }
+
+                            },
+                            {
+                                // type: 'category',
+                                // gridIndex: 1,
+                                data: KLineSocket.HistoryData.hCategoryList,
+                            }
+                        ],
+                        series: [
+                            {
+                                data: KLineSocket.HistoryData.hValuesList
+                            },
+                            {
+                                data: KLineSocket.HistoryData.hVolumesList
+                            }
+                        ]
+                    });
+                },300)
+                
+
+            });
+            KLineSocket.KChart.dispatchAction({
+                type: 'dataZoom',
+                // 开始位置的百分比，0 - 100
+                start: 80,
+                // 结束位置的百分比，0 - 100
+                end: 100
+            });
         }else{
            // 绘制K线图
             KLineSocket.KChart.setOption({
@@ -1389,7 +1403,7 @@ function chartPaint(isHistory){
                         data: KLineSocket.HistoryData.hVolumesList
                     }
                 ]
-            },false,true); 
+            }); 
 
             var isLastQuery;
             var beforeLastQuery;
@@ -1467,61 +1481,349 @@ function chartPaint(isHistory){
                         data: KLineSocket.HistoryData.hVolumesList
                     }
                 ]
-            },false,true);
+            });
         }
          
     }
 };
-// 有意义的时间间隔
-// time当前时间
-// matchSharpTime匹配整点 9：00
-// matchHalfTime匹配半点9：30
-// hideEndTime隐藏收盘时间
-// endTime 收盘时间
-// hideEndTime1隐藏收盘时间1
-// endTime1 收盘时间1
-// showStartTime 显示开盘时间
-// startTime 开盘时间
-// startTime1 开盘时间1
-function setCategoryMin(time, lineTypeNum, matchSharpTime, matchHalfTime, hideEndTime, endTime, hideEndTime1, endTime1, showStartTime, startTime, showStartTime1, startTime1){
-    var value = false;
-    
-    matchSharpTime&&(time.split(":")[1]=="00")&&(value = true);
-    matchHalfTime&&(time.split(":")[1]=="30")&&(value = true);
-
-    hideEndTime&&(time==endTime)&&(value = false);
-    hideEndTime1&&(time==endTime1)&&(value = false);
-
-    (!hideEndTime)&&(time==endTime)&&(value = true);
-    (!hideEndTime1)&&(time==endTime1)&&(value = true);
-
-    showStartTime&&(time.split(":")[0]==startTime.split(":")[0])&&(time.split(":")[1]/1==startTime.split(":")[1]/1+lineTypeNum)&&(value = true);
-    showStartTime1&&(time.split(":")[0]==startTime1.split(":")[0])&&(time.split(":")[1]/1==startTime1.split(":")[1]/1+lineTypeNum-1)&&(value = true);
-
-    return value;
-
-}
-// 年月日判断是否显示标签
-// splitByDate是否按照日期不同间隔
-// categaryList类目轴数组，
-// splitByDMIndex按照日期还是月份区分当前和前一个是否一样，
-// splitByIndex是否按照索引间隔
-// index当前索引，
-// splitNum间隔数木
-// yu余数
-// 所需的数据在数组的索引，间隔数，余数
-// splitByWeek 是否按照星期间隔
-function setCategoryPrev(splitByDate,categaryList, splitByDMIndex,splitByIndex, index, splitNum, yu, splitByWeek){
-    var value = true;
-    // var date = categaryList[index].split(" ")[0];
-    // 判断前一个数据和当前数据不一样,如果一样，就不显示
-    splitByDate&&categaryList[index-1]&&(categaryList[index-1].split(" ")[0].split("-")[splitByDMIndex]==categaryList[index].split(" ")[0].split("-")[splitByDMIndex])&&(value=false);
-    // splitByWeek&&!(categaryList[index].split(" ")[1]=="一"||categaryList[index].split(" ")[1]=="三")&&(value=false);
-    splitByWeek&&!(index%8==yu)&&(value=false);
-    // 是否按照索引排序
-    splitByIndex&&!(index%splitNum==yu)&&(value=false);
-
-    return value;
+// 设置x轴动态更换分隔
+function setXAxisInterval(index,value,length){
+    var valueList = KLineSocket.HistoryData.hCategoryList;
+    var timeCurr = valueList[index].split(" ")[2];
+    var startTime = xml.options.nowDateTime[0].startTime;
+    var endTime = xml.options.nowDateTime[0].endTime;
+    var startTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1].startTime1;
+    var endTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1].endTime1;
+    var returnValue = false;
+    switch(KLineSocket.option.lineType){
+        case "day":
+            // 每周第1根显示
+            if(length<30&&valueList[index].split(" ")[1]=="一"){
+                returnValue = true;
+            }
+            if(length>=30&&length<200){
+                // 每月第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[1]!==valueList[index-1].split("-")[1]){
+                    returnValue = true;
+                }
+            }
+            if(length>=200&&length<300){
+                // 每隔2个月第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[1]!==valueList[index-1].split("-")[1]){
+                    if(valueList[index].split("-")[1]%2==0) {
+                        returnValue = true;
+                    }
+                }
+            }
+            if(length>=300){
+                // 每年第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[0]!==valueList[index-1].split("-")[0]){
+                    returnValue = true;
+                }
+            }
+            break;
+        case "week":
+            if(length<30){
+                if(valueList[index-1]&&valueList[index].split("-")[1]!==valueList[index-1].split("-")[1]){
+                    // 每月第1根显示
+                    returnValue = true;
+                }
+            }
+            if(length>=30&&length<200){
+                if(valueList[index-1]&&valueList[index].split("-")[1]!==valueList[index-1].split("-")[1]){
+                    // 每隔4个月第1根显示
+                    if(valueList[index].split("-")[1]%4==0) {
+                        returnValue = true;
+                    }
+                }
+            }
+            if(length>=200&&length<300){
+                if(valueList[index-1]&&valueList[index].split("-")[1]!==valueList[index-1].split("-")[1]){
+                    // 每隔6个月第1根显示
+                    if(valueList[index].split("-")[1]%6==0) {
+                        returnValue = true;
+                    }
+                }
+            }
+            if(length>=300){
+                if(valueList[index-1]&&valueList[index].split("-")[0]!==valueList[index-1].split("-")[0]){
+                    // 每年第1根显示
+                    returnValue = true;
+                }
+            }
+            break;
+        case "month":
+            if(length<30){
+                // 每隔6个月显示
+                if(valueList[index].split("-")[1]%2==1) {
+                    returnValue = true;
+                }
+            }
+            if(length>=30&&length<200){
+                // 每隔2年显示
+                if(valueList[index].split("-")[0]%2==0) {
+                    returnValue = true;
+                }
+            }
+            if(length>=200){
+                // 每隔6年显示
+                if(valueList[index].split("-")[0]%6==0) {
+                    returnValue = true;
+                }
+            }
+            break;
+        case "year":
+            if(length<30){
+                // 每隔2年显示
+                if(valueList[index].split("-")[0]%2==1) {
+                    returnValue = true;
+                }
+            }
+            if(length>=30&&length<60){
+                // 每隔4年显示
+                if(valueList[index].split("-")[0]%4==0) {
+                    returnValue = true;
+                }
+            }
+            if(length>=60){
+                // 每隔6年显示
+                if(valueList[index].split("-")[0]%6==0) {
+                    returnValue = true;
+                }
+            }
+            break;
+        case "minute":
+            if(length<30){
+                // 间隔5分钟显示
+                if(timeCurr.split(":")[1]%5==0){
+                    returnValue = true;
+                }
+            }
+            if(length>=30&&length<200){
+                // 整点、半点显示
+                if(timeCurr.split(":")[1]=="00"||timeCurr.split(":")[1]=="30"){
+                    returnValue = true;
+                }
+                // 每天第1根显示
+                if(startTime&&timeCurr==startTime){
+                    returnValue = true;
+                }
+                // 第二段第1根显示
+                if(startTime1&&timeCurr==startTime1){
+                    returnValue = true;
+                }
+                // 第1个时间段最后一根不显示
+                if(endTime&&timeCurr==endTime){
+                    returnValue = false;
+                }
+                // 每天最后一根不显示 
+                if(endTime1&&timeCurr==endTime1){
+                    returnValue = false;
+                }
+            }
+            if(length>200&&length<500){
+                // 整点显示
+                if(timeCurr.split(":")[1]=="00"){
+                    returnValue = true;
+                }
+                // 第2个时间段第1根显示
+                if(startTime1&&timeCurr==startTime1){
+                    returnValue = true;
+                }
+            }
+            if(length>=500){
+                // 每天第一根显示
+                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+                    returnValue = true;
+                }
+            }
+            break;
+        case "fivem":
+            if(length<30){
+                // 整点、半点显示
+                if(timeCurr.split(":")[1]=="00"||timeCurr.split(":")[1]=="30"){
+                    returnValue = true;
+                }
+            }
+            if(length>=30&&length<150){
+                // 整点显示
+                if(timeCurr.split(":")[1]=="00"){
+                    returnValue = true;
+                }
+                // 第1个整点不显示
+                if(startTime&&timeCurr.split(":")[0]==startTime.split(":")[0]/1+1){
+                    returnValue = false;
+                }
+            }
+            if(length>=150&&length<300){
+                // 第2段第一根显示
+                if(startTime1&&timeCurr.split(":")[0]==startTime1.split(":")[0]&&timeCurr.split(":")[1]==startTime1.split(":")[1]-1+5){
+                    returnValue = true;
+                }
+                // 每天最后一根显示 
+                if(!endTime1&&timeCurr==endTime){
+                    returnValue = true;
+                }
+                if(endTime1&&timeCurr==endTime1){
+                    returnValue = true;
+                }
+            }
+            if(length>=300&&length<500){
+                // 每天第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+                    returnValue = true;
+                }
+            }
+            if(length>=500){
+                // 每周第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+                    if(valueList[index].split(" ")[1]=="一"){
+                        returnValue = true; 
+                    }
+                }
+                
+            }
+            break;
+        case "tenm":
+            if(length<100){
+                // 整点显示
+                if(timeCurr.split(":")[1]=="00"){
+                    returnValue = true;
+                }
+                // 第1个整点不显示
+                if(startTime&&timeCurr.split(":")[0]==startTime.split(":")[0]/1+1){
+                    returnValue = false;
+                }
+            }
+            if(length>=100&&length<200){
+                // 第2段第一根显示
+                if(startTime1&&timeCurr.split(":")[0]==startTime1.split(":")[0]&&timeCurr.split(":")[1]==startTime1.split(":")[1]-1+5){
+                    returnValue = true;
+                }
+                // 每天最后一根显示 
+                if(!endTime1&&timeCurr==endTime){
+                    returnValue = true;
+                }
+                if(endTime1&&timeCurr==endTime1){
+                    returnValue = true;
+                }
+            }
+            if(length>=200&&length<300){
+                // 每天第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+                    returnValue = true;
+                }
+            }
+            if(length>=300){
+                // 每周一第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+                    if(valueList[index].split(" ")[1]=="一"){
+                        returnValue = true; 
+                    }
+                }
+                
+            }
+            break;
+        case "fifm":
+            if(length<100){
+                // 按照整点显示
+                if(timeCurr.split(":")[1]=="00"){
+                    returnValue = true;
+                }
+                // 第1个整点不显示
+                if(startTime&&timeCurr.split(":")[0]==startTime.split(":")[0]/1+1){
+                    returnValue = false;
+                }
+            }
+            if(length>=100&&length<150){
+                // 每天第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+                    returnValue = true;
+                }
+            }
+            if(length>=150){
+                // 每周一第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+                    if(valueList[index].split(" ")[1]=="一"){
+                        returnValue = true; 
+                    }
+                }
+                
+            }
+            break;
+        case "thim":
+            if(length<40){
+                // 按照整点显示
+                if(timeCurr.split(":")[1]=="00"){
+                    returnValue = true;
+                }
+                // 第1个整点不显示
+                if(startTime&&timeCurr.split(":")[0]==startTime.split(":")[0]/1+1){
+                    returnValue = false;
+                }
+            }
+            if(length>=40&&length<50){
+                // 每天最后1根显示
+                if(!endTime1&&timeCurr==endTime){
+                    returnValue = true;
+                }
+                if(endTime1&&timeCurr==endTime1){
+                    returnValue = true;
+                }
+            }
+            if(length>=50&&length<100){
+                //每天第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+                    returnValue = true; 
+                }
+                
+            }
+            if(length>=100){
+                // 每周第一根显示
+                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+                    if(valueList[index].split(" ")[1]=="一"){
+                        returnValue = true; 
+                    }
+                }
+                
+            }
+            break;
+        case "hour": 
+            if(length<50){
+                // 每天最后一根显示 
+                if(!endTime1&&timeCurr==endTime){
+                    returnValue = true;
+                }
+                if(endTime1&&timeCurr==endTime1){
+                    returnValue = true;
+                }
+            }
+            if(length>=50&&length<100){
+                // 每周第一根显示
+                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+                    if(valueList[index].split(" ")[1]=="一"){
+                        returnValue = true;
+                    }
+                }
+            }
+            if(length>=100&&length<200){
+                // 每月第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[1]!==valueList[index-1].split("-")[1]){
+                    returnValue = true; 
+                }
+            }
+            if(length>=200){
+                // 奇数月第1根显示
+                if(valueList[index-1]&&valueList[index].split("-")[1]!==valueList[index-1].split("-")[1]){
+                    if(valueList[index].split("-")[1]%2==1){
+                        returnValue = true; 
+                    }
+                    
+                }
+            }
+            break;
+    }
+    return returnValue;
 }
 // 信息框的位置： 左-右
 function toolContentPosition(event) {

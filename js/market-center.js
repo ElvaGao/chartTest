@@ -174,13 +174,20 @@ function initBlockInfo(secId){
             "count": 10,
             "field": 0,
             "orderType": 0
+        },
+        takeOffer:{
+            "msgtype":"S3301",
+            "sectionId": secId,
+            "startIndex": 0,
+            "count": 10,
+            "field": 0,
+            "orderType": 0
         }
     };
     connectEvent(options);
 }
 // 连接报价表处理事件
 function connectEvent(opt){
-    var offerHeader = opt.offerHeader;
     offerWs.onclose = function () {
         oWs.reconnect(); //终端重连
     };
@@ -190,7 +197,8 @@ function connectEvent(opt){
     offerWs.onopen = function () {
         //心跳检测重置
         // oWs.reset().start(); //都第一次建立连接则启动心跳包
-        oWs.request(offerHeader);
+        oWs.request(opt.offerHeader);
+        oWs.request(opt.takeOffer);
     };
     offerWs.onmessage = function (evt) {
         var data  = evt.data.split("|")[0];  //每个json包结束都带有一个| 所以分割最后一个为空
@@ -201,6 +209,9 @@ function connectEvent(opt){
         {
             case "R3301":
                 fillOfferForm(data);
+                break;
+            case "P3301":
+                fillNewOfferForm(data);
                 break;
             default:
             break;
@@ -548,6 +559,20 @@ function compareTime(dataXML){
     }
     return ZSInfo;
 }
+function getHistoryData(i){
+    setTimeout(function(){
+        LSData={
+            "MsgType": "Q3011",
+            "ExchangeID": stockList[i].exchangeID,
+            "InstrumentID": stockList[i].id,
+            "StartIndex": "0",
+            "StartDate": "-1",
+            "StartTime": "0", 
+            "Count": "0"
+        };
+        socket.request( LSData );
+    },1000 * i);
+}
 function initChartInfo(){
     // 建立查询图表的连接
     socket = new WebSocketConnect({wsUrl:wsUrlDevelop});
@@ -562,57 +587,13 @@ function initChartInfo(){
     echartsWS.onopen = function () {
         //心跳检测重置
         socket.reset().start(); //都第一次建立连接则启动心跳包
-        // 获取历史数据
-        // LSData=[{
-        // "MsgType": "Q3011",
-        // "ExchangeID": stockList[0].exchangeID,
-        // "InstrumentID": stockList[0].id,
-        // "StartIndex": "0",
-        // "StartDate": "-1",
-        // "StartTime": "0", 
-        // "Count": "0"
-        // },{
-        // "MsgType": "Q3011",
-        // "ExchangeID": stockList[1].exchangeID,
-        // "InstrumentID": stockList[1].id,
-        // "StartIndex": "0",
-        // "StartDate": "-1",
-        // "StartTime": "0", 
-        // "Count": "0"
-        // },{
-        // "MsgType": "Q3011",
-        // "ExchangeID": stockList[2].exchangeID,
-        // "InstrumentID": stockList[2].id,
-        // "StartIndex": "0",
-        // "StartDate": "-1",
-        // "StartTime": "0", 
-        // "Count": "0"
-        // }];
-        // var ss = eval('('+LSData+')');
-        // console.log(ss);
-        // socket.request( LSData );
         for(var i=0;i<stockList.length;i++){
-            LSData={
-                "MsgType": "Q3011",
-                "ExchangeID": stockList[i].exchangeID,
-                "InstrumentID": stockList[i].id,
-                "StartIndex": "0",
-                "StartDate": "-1",
-                "StartTime": "0", 
-                "Count": "0"
-            };
             ZCData={
                 "MsgType":"S1010",
                 "ExchangeID":stockList[i].exchangeID,
                 "InstrumentID":stockList[i].id,
                 "Instrumenttype":"1,11"
             };
-            // DYData={
-            //     "MsgType":"S1010",
-            //     "ExchangeID":stockList[i].exchangeID,
-            //     "InstrumentID":stockList[i].id,
-            //     "Instrumenttype":"11"
-            // };
             QPData={
                 "MsgType":"Q8002",
                 "ExchangeID":stockList[i].exchangeID,
@@ -620,7 +601,7 @@ function initChartInfo(){
                 "PructType":"0"
             };
             // 获取历史数据
-            socket.request( LSData );
+            getHistoryData(i);
             // 获取昨收值
             socket.request(ZCData);
             // 实时订阅
@@ -756,7 +737,6 @@ function redrawChart(data,stockOne){
         console.log("清盘有误");
     }
 }
-// var oneZSInfo;
 function initCharts(data,type,stockOne){
     if(!data){
         console.log("没有数据");
@@ -978,8 +958,11 @@ function initCharts(data,type,stockOne){
             },
             xAxis:{
                 splitLine:{
+                    show:true,
+                    interval:120,
                     lineStyle:{
-                        color:"#e5e5e5"
+                        color:"#e5e5e5",
+                        opacity:1
                     }
                 },
                 axisLine:{
@@ -1132,7 +1115,30 @@ function initCharts(data,type,stockOne){
         $("#"+stockOne.elementId).parents("a").attr("href","./detail.html?exchangeID="+stockOne.exchangeID+"&id="+stockOne.id);
     }
 }
-
+// 填充订阅的报价表表单
+function fillNewOfferForm(data){
+    // console.log(data);
+    var strHtml = '';
+    for(var i=0;i<data.QueryRes.length;i++){
+        strHtml += '<li class="zdf-list-one zdf-list-detail"><a href="../html/detail.html?exchangeID='+data.QueryRes[i].ExchangeID+'&id='+data.QueryRes[i].InstrumentID+'"><ul class="clearfix">'+
+                    '<li>'+(i+1)+'</li><li>'+data.QueryRes[i].InstrumentID+'</li>'+
+                    '<li>'+data.QueryRes[i].InstrumentName+'</li>'+
+                    '<li>'+data.QueryRes[i].Value+'<i></i></li>'+
+                    '<li>0<i></i></li>'+
+                    '<li>0<i></i></li>'+
+                    '<li>'+parseFloat(data.QueryRes[i].OpenPx).toFixed(2)+'<i></i></li>'+
+                    '<li>'+parseFloat(data.QueryRes[i].HighPx).toFixed(2)+'<i></i></li>'+
+                    '<li>'+parseFloat(data.QueryRes[i].LowPx).toFixed(2)+'<i></i></li>'+
+                    '<li>0<i></i></li>'+
+                    '<li>0<i></i></li>'+
+                    '<li>0<i></i></li>'+
+                    '<li>0<i></i></li>'+
+                    '<li>'+data.QueryRes[i].Volume+'<i></i></li>'+
+                    '<li>'+data.QueryRes[i].TradeNum+'<i></i></li>'+
+                    '</ul></a></li>';
+    }
+    $("#offerForm").html(strHtml);
+}
 // 填充表单
 function fillOfferForm(data){
     var strHtml = '';
