@@ -337,10 +337,10 @@ ul{
 	text-align: left;
 	position: absolute;
 	left: 9.9%;
-	top: 5.3%;
+	top: 1.5%;
 	font-size: 0;
 	z-index: 2;
-	padding-top: 10px
+	padding-top: 10px;
 	cursor: pointer;
 }
 .kline-MAs span{
@@ -364,14 +364,14 @@ ul{
 }
 .kline-charts{
     width: 830px;
-    height: 538px;
+    height: 588px;
 }
 .kline-tooltip{
     position: absolute;
     left: 72px;
-    top: 5%;
+    top: 8%;
     width: 180px;
-    height: 280px;
+    height: 260px;
     padding: 10px;
     box-sizing: border-box;
     background-color: #fff;
@@ -380,16 +380,16 @@ ul{
     z-index: 999;
 }
 .kline-tooltip li{
-    line-height: 26px;
+    line-height: 23px;
     overflow: hidden;
-    font-size: 14px;
+    font-size: 13px;
     display: inline-block;
     width: 100%;
     text-align: left;
 }
 
 .text-justify span{
-    float: left;
+    /* float: left; */
     display: inline-block;
     margin-right: 13px;
 }
@@ -407,12 +407,13 @@ ul{
 }
 .macd,.deal,.volumn,.volMacd,.kline-buttons{
 	position: absolute;
-	/*cursor: pointer;*/
-	/*z-index: 2;*/
+	cursor: pointer;
+	z-index: 2;
 }
 .deal{
-	/*top: 53.7%;*/
-	top: 73.4%;
+	top: 57.1%;
+	left: 3%;
+	/* top: 73.4%; */
 }
 .deal span,
 .macd span{
@@ -437,7 +438,8 @@ ul{
 	color: #2c81ff;
 }
 .macd{
-	top: 71.3%;
+	top: 71.6%;
+	left: 3%;
 }
 .macd-Dif{
 	color: #20bfeb;
@@ -449,8 +451,8 @@ ul{
 	color: #ff6adb;
 }
 .volumn{
-	top: 57.5%;
-	top: 77%;
+	top: 60.5%;
+	/* top: 77%; */
 	width: 68px;
 	height: 9%;
 	z-index: 999;
@@ -462,6 +464,7 @@ ul{
 .volMacd{
 	top: 75%;
 	height: 9%;
+	left: 6%;
 }
 .volumn div,
 .volMacd div{
@@ -480,7 +483,10 @@ ul{
 }
 .kline-buttons{
 	font-size: 0;
-	top: 87.3%;
+	top: 87.5%;
+	position: absolute;
+	z-index: 999;
+	left: 10.3%;
 }
 .kline-buttons span{
 	display: inline-block;
@@ -493,7 +499,8 @@ ul{
 	cursor: pointer;
 	color: #555;
 }
-.kline-buttons span.active{
+.kline-buttons span.active,
+.kline-buttons span:hover{
 	color: #2b99ff;
 }
 #kline_charts{
@@ -862,7 +869,6 @@ ul{
 }
 .f-kline-info span{
 	display: inline-block;
-	float: right;
 	color: #fff;
 }
 
