@@ -148,21 +148,48 @@ function getColorName(data, compareData){
 // 数据单位统一
 // data 传入的数据
 // type 数值和单位是否分开返回
-// lang 是否是英文
-function setUnit(data,type,lang){
+// integer 不超过10000的是否为整数
+// withUnit 不超过10000的是否带单位
+// floatTwo 不超过10000的是否保留两位
+function setUnit(data,integer,type,withUnit,floatTwo,lang){
     var data = Math.abs(data);
     var unit="", // 单位
         value=0, // 值
-        fh = data>0?"":"-", // 符号：正负
+        fh = data>=0?"":"-", // 符号：正负
         obj = {};   // 返回值
-
-    lang  ? (data/1000000>1 ? (unit="m")&&(value=data/1000000) : 
-                (data/1000>1 ? (unit="k")&&(value=data/1000) : fh+data))
-          : data/100000000>=1 ? (unit="亿")&&(value=data/100000000) : 
-                (data/10000>=1 ? (unit="万")&&(value=data/10000) : 
-                    (type ? (unit="量")&&(value=data) : value=data));
+    // if(lang){
+    //     (data/1000000>1 ? (unit="m")&&(value=data/1000000) : 
+    //         (data/1000>1 ? (unit="k")&&(value=data/1000) : fh+data))
+    // }else{
+        data/100000000>=1 ? (unit="亿")&&(value=floatFixedTwo(data/100000000)) : 
+            (data/10000>=1 ? (unit="万")&&(value=floatFixedTwo(data/10000)) : 
+                (integer?value=floatFixedZero(data):value=data)&&(unit="")
+            );
+    // }
+    // 不超过10000的保留两位
+    if(floatTwo&&unit==""){
+        value=floatFixedTwo(value)
+    }
+    // 不超过10000的带单位
+    if(withUnit&&unit==""){
+        unit="量";
+    }
+    if(type){
+        obj.value = fh+value;
+        obj.unit = unit;
+    }else{
+        obj = fh+value+unit
+    }
     
-    type ? (obj.unit = unit)&&(obj.value = fh+floatFixedTwo(value)) : obj = fh+floatFixedTwo(value)+unit;
+    return obj;
+}
+function setUnitWan(data){
+    var value = null;
+    var unit = null;
+    var obj = null;
+    (data/10000>=1 ? (unit="万")&&(value=floatFixedTwo(data/10000)) : 
+        (value=floatFixedTwo(data))&&(unit=""));
+    obj = value+unit;
     return obj;
 }
 //10:0转为10:00

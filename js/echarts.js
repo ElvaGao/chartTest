@@ -49177,12 +49177,15 @@ var preprocessor = function (option) {
 
 var positiveBorderColorQuery = ['itemStyle', 'normal', 'borderColor'];
 var negativeBorderColorQuery = ['itemStyle', 'normal', 'borderColor0'];
-// 修改 -Gao -borderColorD
-var defaultBorderColor = ['itemStyle', 'normal', 'borderColorD'];
+
+var defaultBorderColor = ['itemStyle', 'normal'];
 var positiveColorQuery = ['itemStyle', 'normal', 'color'];
 var negativeColorQuery = ['itemStyle', 'normal', 'color0'];
+// 修改 -Gao -borderColorD
+var defaultMyBorderColor = ['itemStyle', 'normal', 'colorD'];
+var defaultColor = ['itemStyle', 'normal'];
 // 修改 -Gao --colorD
-var defaultColor = ['itemStyle', 'normal', 'colorD'];
+var defaultMyColor = ['itemStyle', 'normal', 'colorD'];
 
 var candlestickVisual = function (ecModel, api) {
 
@@ -49196,6 +49199,7 @@ var candlestickVisual = function (ecModel, api) {
 
         // Only visible series has each data be visual encoded
         if (!ecModel.isSeriesFiltered(seriesModel)) {
+            
             data.each(function (idx) {
                 var itemModel = data.getItemModel(idx);
                 var sign = data.getItemLayout(idx).sign;
@@ -49204,11 +49208,18 @@ var candlestickVisual = function (ecModel, api) {
                 data.setItemVisual(
                     idx,
                     {
+                        // color: itemModel.get(
+                        //     (open==close) ? defaultColor : ( sign > 0 ? positiveColorQuery : negativeColorQuery)
+                        // ),
+                        // borderColor: itemModel.get(
+                        //     (open==close) ? defaultBorderColor : ( sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery)
+                        // )
+                        // 修改 -Gao --colorD
                         color: itemModel.get(
-                            (open==close) ? defaultColor : ( sign > 0 ? positiveColorQuery : negativeColorQuery)
+                            (sign==0) ? defaultMyColor : ( sign > 0 ? positiveColorQuery : negativeColorQuery)
                         ),
                         borderColor: itemModel.get(
-                            (open==close) ? defaultBorderColor : ( sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery)
+                            (sign==0) ? defaultMyBorderColor : ( sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery)
                         )
                     }
                 );
@@ -49294,10 +49305,17 @@ var candlestickLayout = function (ecModel) {
             else {
                 // If close === open, compare with close of last record
                 if (dataIndex > 0) {
-                    sign = data.getItemModel(dataIndex - 1).get()[2]
-                        <= closeVal
-                            ? 1
-                            : -1;
+                    if(data.getItemModel(dataIndex - 1).get()[2]< closeVal){
+                        sign = 1;
+                    }else if(data.getItemModel(dataIndex - 1).get()[2]> closeVal){
+                        sign = -1;
+                    }else{
+                        sign = 0;
+                    }
+                    // sign = data.getItemModel(dataIndex - 1).get()[2]
+                    //     <= closeVal
+                    //         ? 1
+                    //         : -1;
                 }
                 else {
                     // No record of previous, set to be positive

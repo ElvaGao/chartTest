@@ -1,12 +1,35 @@
 var KLineSocket;
 var _this;
 var clickTimer = null;
+var KColorList = {
+    MA:['#97bdde','#c4a926','#d182aa'],
+    MAVOL:['#97bdde','#c4a926','#d182aa'],
+    MACD:['#6c88bb','#c4a926','#e1322f','#5acf5e'],
+    MTM:['#6c88bb','#c4a926'],
+    RSI:['#6c88bb','#c4a926','#d182aa'],
+    KDJ:['#6c88bb','#c4a926','#d182aa']
+}
+var chartTypes = {
+    MA:['line','line','line'],
+    MAVOL:['line','line','line'],
+    MACD:['line','line','bar'],
+    MTM:['line','line'],
+    RSI:['line','line','line'],
+    KDJ:['line','line','line']
+}
+var Names = {
+    MACD: ['DIFF','DEA','MACD'],
+    MTM:['MTM','MAMTM'],
+    RSI:['RSI$1','RSI$2','RSI$3'],
+    KDJ:['K','D','J']
+}
 $(document).keydown(function(e){
     if(_this!=undefined&&($(_this).attr("id")=="MLine"||$(_this).attr("id")=="kline")){
         $(_this).children(".charts-focus").focus();
         return;
     }
 });
+
 ;(function($){
     // websocket通道-查询K线
     $.queryKLine = function(option) {
@@ -38,15 +61,12 @@ $(document).keydown(function(e){
             var KLrequireObj = new KLineRequire(option, klineType);
             // 把请求参数赋值给已经开启的websocket参数
             KLineSocket.option = $.extend({},KLineSocket.option,KLrequireObj.options);
-            
+            KLineSocket.getTechIndexFuncs();
             // 显示没有数据
             $("#withoutData").show().siblings().hide();
             
             clearTimeout(clickTimer);
             clickTimer = setTimeout(function(){
-                
-                
-
                 // 清空K线图
                 if(KLineSocket.KChart.getOption()&&KLineSocket.KChart.getOption().series.length!=0){
                     KLineSocket.KChart.dispose();
@@ -79,6 +99,9 @@ $(document).keydown(function(e){
                     return;
                 } 
                 KLineSocket.HistoryData.queryTimes = 0;
+                $.each(KLineSocket.TechIndexHistoryData,function(i,o){
+                    o.queryTimes = 0;
+                })
 
                 // KLineSocket.ws.onopen();
                 /*
@@ -90,7 +113,15 @@ $(document).keydown(function(e){
                     case "week":
                     case "month":
                     case "year":
-                    KLineSocket.getHistoryKQFirstDayPrev();
+                        KLineSocket.getHistoryKQFirstDayPrev();
+                        // 指标
+                        // 查询当天数据
+                        // KLineSocket.getTechIndexKQFirstDayPrevMA();
+                        // 查询历史数据
+                        // setTimeout(function(){
+                        //     // 查询MA MAVOL
+                            // KLineSocket.getTechIndexKQFirstDayPrevMAVOL();
+                        // },500)
                         break;
                     case "minute":
                     case "fivem":
@@ -98,7 +129,31 @@ $(document).keydown(function(e){
                     case "fifm":
                     case "thim":
                     case "hour":
-                    KLineSocket.getHistoryKQAllMinToday();
+                        if(MarketStatus==2||MarketStatus==4){
+                            KLineSocket.getHistoryKQAllMinToday();
+                            // 指标
+                            // 查询当天数据
+                            KLineSocket.getTechIndexKQAllMinTodayMA();
+                            // 查询历史数据
+                            setTimeout(function(){
+                                // 查询MAVOL
+                                KLineSocket.getTechIndexKQAllMinTodayMAVOL();
+                            },500);
+                        }else{
+                            KLineSocket.getHistoryKQFirstMinPrev();
+                            KLineSocket.HistoryData.queryTimes = 1;
+                            // 指标
+                            // 查询当天数据
+                            KLineSocket.getTechIndexKQFirstMinPrevMA();
+                            KLineSocket.TechIndexHistoryData.MA.queryTimes = 1;
+                            // 查询历史数据
+                            setTimeout(function(){
+                                // 查询MAVOL
+                                KLineSocket.getTechIndexKQFirstMinPrevMAVOL();
+                                KLineSocket.TechIndexHistoryData.MAVOL.queryTimes = 1;
+                            },500);
+                        }
+                        
                         break;
                     default:;
                 }
@@ -137,6 +192,8 @@ var KLineRequire = function(option, klineType){
     this.options = {
         lineType: klineType?klineType:null,
         lastClose: 0,
+        // 市场状态查询
+
         // 查询历史数据
         // 日、周、月、年-最后199条-为了索引为整百的数据
         HistoryKQFirstDayPrev: {         
@@ -208,7 +265,80 @@ var KLineRequire = function(option, klineType){
             ExchangeID: ExchangeID,
             MsgType:"N1010",
             Instrumenttype:""
-        }
+        },
+        // 指标查询历史数据
+        // IndexID    MA-3;MAVOL-4;MACD-5;MTM-6;RSI-10;KDJ-11
+        // Period     10-1分钟；11-5分钟；12-10分钟；13-15分钟；14-30分钟；15-60分钟；30-日线；31-周线；32-月线；33-季线；34-年线
+        // 日、周、月、年指标查询-最后199条-为了索引为整百的数据
+        TechIndexKQFirstDayPrev:{
+            MsgType: "Q3051", 
+            IndexID:"",
+            Period:"",
+            info:"指标测试",
+            InstrumentID: InstrumentID,
+            ExchangeID: ExchangeID,
+            StartIndex: "-1", 
+            StartDate: "0", 
+            StartTime: "0",
+            Count: "199",
+            
+        },
+        // 日、周、月、年指标查询-从第二次开始每次请求200条,StartIndex为整百，
+        TechIndexKQAllDayPrev:{
+            MsgType: "Q3051", 
+            IndexID:"",
+            Period:"",
+            info:"指标测试",
+            InstrumentID: InstrumentID,
+            ExchangeID: ExchangeID,
+            StartIndex: "", 
+            StartDate: "0", 
+            StartTime: "0",
+            Count: "200",
+            
+        },
+        // 分钟周期K线，当前这一天的指标查询
+        TechIndexKQAllMinToday:{
+            MsgType: "Q3051", 
+            IndexID:"",
+            Period:"",
+            info:"指标测试",
+            InstrumentID: InstrumentID,
+            ExchangeID: ExchangeID,
+            StartIndex: "0", 
+            StartDate: "-1", 
+            StartTime: "0",
+            Count: "242",
+            
+        },
+        // 分钟周期K线，第一次指标查询199条
+        TechIndexKQFirstMinPrev:{
+            MsgType: "Q3051", 
+            IndexID:"",
+            Period:"",
+            info:"指标测试",
+            InstrumentID: InstrumentID,
+            ExchangeID: ExchangeID,
+            StartIndex: "-1", 
+            StartDate: "0", 
+            StartTime: "0",
+            Count: "199",
+            
+        },
+        // 从第二次开始每次请求200条,StartIndex为整百，
+        TechIndexKQAllMinPrev:{
+            MsgType: "Q3051", 
+            IndexID:"",
+            Period:"",
+            info:"指标测试",
+            InstrumentID: InstrumentID,
+            ExchangeID: ExchangeID,
+            StartIndex: "", 
+            StartDate: "0", 
+            StartTime: "0",
+            Count: "200"
+        },
+        TechIndexOption:{}
     };
 
     var objKWatch = getQueryType(klineType);
@@ -224,6 +354,16 @@ var KLineRequire = function(option, klineType){
     this.options.HistoryKQFirstMinPrev = $.extend({}, this.options.HistoryKQFirstMinPrev, { MsgType: objKWatch.MsgType }); 
     this.options.HistoryKQAllMinPrev = $.extend({}, this.options.HistoryKQAllMinPrev, { MsgType: objKWatch.MsgType});
 
+    // 更新技术指标参数
+    // IndexID    MA-3;MAVOL-4;MACD-5;MTM-6;RSI-10;KDJ-11
+    var arrLines = ["MA","MAVOL","MACD","MTM","RSI","KDJ"];
+    for(var i=0;i<arrLines.length;i++){
+        this.options.TechIndexOption["TechIndexKQFirstDayPrev"+arrLines[i]] = $.extend({}, this.options.TechIndexKQFirstDayPrev, getQueryTechIndexMsg(klineType,arrLines[i])); 
+        this.options.TechIndexOption["TechIndexKQAllDayPrev"+arrLines[i]] = $.extend({}, this.options.TechIndexKQAllDayPrev, getQueryTechIndexMsg(klineType,arrLines[i]));
+        this.options.TechIndexOption["TechIndexKQAllMinToday"+arrLines[i]] = $.extend({}, this.options.TechIndexKQAllMinToday, getQueryTechIndexMsg(klineType,arrLines[i])); 
+        this.options.TechIndexOption["TechIndexKQFirstMinPrev"+arrLines[i]] = $.extend({}, this.options.TechIndexKQFirstMinPrev, getQueryTechIndexMsg(klineType,arrLines[i])); 
+        this.options.TechIndexOption["TechIndexKQAllMinPrev"+arrLines[i]] = $.extend({}, this.options.TechIndexKQAllMinPrev, getQueryTechIndexMsg(klineType,arrLines[i])); 
+    }
     // 上一次查询的K线类型-用于取消订阅
     if(KLineSocket.HistoryData.preLineType!=undefined){
         var objKWatchCC = getQueryType(KLineSocket.HistoryData.preLineType);
@@ -233,72 +373,155 @@ var KLineRequire = function(option, klineType){
 function getQueryType(klineType){
     var typeObj = {
         MsgType: null,
-        Instrumenttype: null
+        Instrumenttype: null,
+        // 10-1分钟；11-5分钟；12-10分钟；13-15分钟；14-30分钟；15-60分钟；30-日线；31-周线；32-月线；33-季线；34-年线
+        Period:null
     }
     switch(klineType){
         case "day":
             typeObj = {         // 日K线：Q3021
                 MsgType: "Q3021",
-                Instrumenttype: "1"
+                Instrumenttype: "1",
+                Period:"30",
             }
             break;
         case "week":
             typeObj = {         // 周K线：Q3022
                 MsgType: "Q3022",
-                // Instrumenttype: "11"
+                Instrumenttype: "1",
+                Period:"31",
             }
             break;
         case "month":
             typeObj = {         // 月K线：Q3023
                 MsgType: "Q3023",
-                // Instrumenttype: "11"
+                Instrumenttype: "1",
+                Period:"32",
             }
             break;
         case "year":
             typeObj = {         // 年K线：Q3025
                 MsgType: "Q3025",
-                // Instrumenttype: "11"
+                Instrumenttype: "1",
+                Period:"34",
             }
             break;
         case "minute":
             typeObj = {         // 1分钟K线：Q3011
                 MsgType: "Q3011",
-                Instrumenttype: "11"
+                Instrumenttype: "11",
+                Period:"10",
             }
             break;
         case "fivem":
             typeObj = {         // 5分钟K线：Q3012
                 MsgType: "Q3012",
-                Instrumenttype: "12"
+                Instrumenttype: "12",
+                Period:"11",
             }
             break;
         case "tenm":          
             typeObj = {         // 10分钟K线：Q3013
                 MsgType: "Q3013",
-                Instrumenttype: "13"
+                Instrumenttype: "13",
+                Period:"12",
             }
             break;
         case "fifm":
             typeObj = {         // 15分钟K线：Q3014
                 MsgType: "Q3014",
-                Instrumenttype: "14"
+                Instrumenttype: "14",
+                Period:"13",
             }
             break;
         case "thim":
             typeObj = {         // 30分钟K线：Q3015
                 MsgType: "Q3015",
-                Instrumenttype: "15"
+                Instrumenttype: "15",
+                Period:"14",
             }
             break;
         case "hour":       
             typeObj = {         // 60分钟K线：Q3016
                 MsgType: "Q3016",
-                Instrumenttype: "16"
+                Instrumenttype: "16",
+                Period:"15",
             }
             break;
         default:;
     };
+
     return typeObj;
+}
+// 技术指标请求参数查询-根据名字得到对应数值
+function getQueryTechIndexMsg(klineType,lineName){
+    var LineMsg = {
+        Period: null,
+        IndexID:null
+    };
+    LineMsg.Period = getQueryType(klineType).Period;
+    // IndexID    MA-3;MAVOL-4;MACD-5;MTM-6;RSI-10;KDJ-11
+    if(lineName){
+        switch(lineName){
+            case "MA":    
+                LineMsg.IndexID = "3";  // MA
+                break;
+            case "MAVOL":
+                LineMsg.IndexID = "4";  // MAVOL
+                break;
+            case "MACD":    
+                LineMsg.IndexID = "5";  // MACD
+                break;
+            case "MTM":     
+                LineMsg.IndexID = "6";  // MTM
+                break;
+            case "RSI":     
+                LineMsg.IndexID = "10";  // RSI
+                break;
+            case "KDJ":
+                LineMsg.IndexID = "11";  // KDJ
+                break;
+            default:;
+        };
+    }
+    return LineMsg;
+}
+// 获取技术指标请求参数-根据数值得到名字和存储名字
+function getQueryTechIndexName(lineNum){
+    var LineMsg = {
+        msgName:null,
+        dataName:null
+    };
+    if(lineNum){
+        switch(lineNum){
+            case "3":    
+                LineMsg.msgName = "MA";  // MA
+                LineMsg.dataName = "MA";  // MA
+                break;
+            case "4":
+                LineMsg.msgName = "MAVOL";  // MAVOL
+                LineMsg.dataName = "MAVOL";  // MA
+                break;
+            case "5":    
+                LineMsg.msgName = "MACD";  // MACD
+                LineMsg.dataName = "Others";  // MA
+                break;
+            case "6":     
+                LineMsg.msgName = "MTM";  // MTM
+                LineMsg.dataName = "Others";  // MA
+                break;
+            case "10":     
+                LineMsg.msgName = "RSI";  // RSI
+                LineMsg.dataName = "Others";  // MA
+                break;
+            case "11":
+                LineMsg.msgName = "KDJ";  // KDJ
+                LineMsg.dataName = "Others";  // MA
+                break;
+            default:;
+        };
+    }
+    return LineMsg;
 }
 // websocket实例化相关参数以及数据存储参数
 var WebSocketConnect = function(options){
@@ -319,8 +542,8 @@ var WebSocketConnect = function(options){
         MsgType: "Q8050"
     };
     this.HistoryData = {
-        hDate: [],                  // 日期
-        hDay: [],                   // 星期
+        // hDate: [],                  // 日期
+        // hDay: [],                   // 星期
         hTime: 0,                   // 如果为日K线，存储最后一条时间
         hCategoryList: [],          // 横轴
         hValuesList: [],            // 值-开收低高
@@ -337,8 +560,62 @@ var WebSocketConnect = function(options){
         stopQuery: null,            // 是否已经停止查询历史数据
         watchDataCount:0,           // 目前已经累计的订阅数量
         CountNum: 0,                // hour类型需要，计算前几根相同的根数，然后通过index判断计算出坐标轴日期的间隔
-        hasHistory: null            // 是否有历史数据
+        hasHistory: null,           // 是否有历史数据
     };
+    this.TechIndexHistoryData = {
+        dataLength:0,
+        // 以下是技术指标
+        MA:{
+            queryTimes:0,
+            data:[],
+            dataLengthToday:0,
+            stopQuery: null,            // 是否已经停止查询历史数据
+            watchDataCount:0,
+        },
+        MAVOL:{
+            queryTimes:0,
+            data:[],
+            dataLengthToday:0,
+            stopQuery: null,            // 是否已经停止查询历史数据
+            watchDataCount:0,
+        },
+        Others:{
+            name: null,
+            queryTimes:0,
+            data:[],
+            dataLengthToday:0,
+            stopQuery: null,            // 是否已经停止查询历史数据
+            watchDataCount:0,
+        },
+        // MACD:{
+        //     queryTimes:0,
+        //     data:[],
+        //     dataLengthToday:0,
+        //     stopQuery: null,            // 是否已经停止查询历史数据
+        //     watchDataCount:0,
+        // },
+        // MTM:{
+        //     queryTimes:0,
+        //     data:[],
+        //     dataLengthToday:0,
+        //     stopQuery: null,            // 是否已经停止查询历史数据
+        //     watchDataCount:0,
+        // },
+        // RSI:{
+        //     queryTimes:0,
+        //     data:[],
+        //     dataLengthToday:0,
+        //     stopQuery: null,            // 是否已经停止查询历史数据
+        //     watchDataCount:0,
+        // },
+        // KDJ:{
+        //     queryTimes:0,
+        //     data:[],
+        //     dataLengthToday:0,
+        //     stopQuery: null,            // 是否已经停止查询历史数据
+        //     watchDataCount:0,
+        // }
+    }
 
     this.KLineSet = {
         mouseHoverPoint: 0,         // 当前现实的数据索引
@@ -386,7 +663,14 @@ WebSocketConnect.prototype = {
                             KLineSocket.HistoryData[i] = 0;
                         }
                     });
+                    $.each(KLineSocket.TechIndexHistoryData,function(index,object){
+                        object.queryTimes = 0;
+                        if(object instanceof Array){
+                            KLineSocket.TechIndexHistoryData[index].data = [];
+                        }
+                    });
                     KLineSocket.HistoryData.queryTimes = 0;
+                    
                     KLineSocket.option.HistoryKQAllDayPrev = $.extend({},KLineSocket.option.HistoryKQAllDayPrev,{Count: "200"});
                     KLineSocket.option.HistoryKQAllMinPrev = $.extend({},KLineSocket.option.HistoryKQAllMinPrev,{Count: "200"});
                     //没连接上会一直重连，设置延迟避免请求过多
@@ -438,29 +722,37 @@ WebSocketConnect.prototype.__proto__ = {
     getHistoryKQAllMinToday: function(){
                             this.request(this.option.HistoryKQAllMinToday);
                         },
-    // 分钟K线历史记录查询，从昨天开始的交易数据，
-    // 从第二次开始每次请求200条,StartIndex为整百，
-    // 在每次查询到历史数据的时候进行扩展后再次进行查询
+    // 分钟K线历史记录查询，从昨天开始的交易数据
     getHistoryKQFirstMinPrev: function(){
                             this.request(this.option.HistoryKQFirstMinPrev);
                         },
-    // 分钟K线历史记录查询，从昨天开始的交易数据，
-    // 从第二次开始每次请求200条,StartIndex为整百，
     // 在每次查询到历史数据的时候进行扩展后再次进行查询
     getHistoryKQAllMinPrev: function(){
-                        this.request(this.option.HistoryKQAllMinPrev);
-                    },
+                            this.request(this.option.HistoryKQAllMinPrev);
+                        },
     // 订阅K线
-    getKWatch:       function(){
+    getKWatch:          function(){
                             this.request(this.option.KWatch);
                         },
     // 取消订阅K线
-    getKWatchCC:     function(){
+    getKWatchCC:        function(){
                             this.request(this.option.KWatchCC);
                         },
     getHeartSend:       function(){
                             this.request(this.HeartSend);
                         },
+    // 请求指标的参数历史数据查询
+    getTechIndexFuncs:      function(){
+                            for(var TechIndexName in this.option.TechIndexOption){
+                                (function(TechIndexName){
+                                    // 分钟周期K线，当前这一天的指标查询
+                                    var funcName = "get"+TechIndexName;
+                                    WebSocketConnect.prototype.__proto__[funcName] = function(){
+                                        this.request(this.option.TechIndexOption[TechIndexName]);
+                                    };
+                                })(TechIndexName);
+                            }
+                        }
 };
 // websocket请求
 var initSocketEvent = function(socket){
@@ -495,7 +787,7 @@ var initSocketEvent = function(socket){
                             try{
                                 var data = eval("(" + o + ")");
                             }catch(e){
-                                console.log(e);
+                                console.warn(e,"返回数据格式错误");
                                 return;
                             }
                             if(!KLineSocket.option.KWatch){
@@ -563,10 +855,10 @@ var initSocketEvent = function(socket){
                             switch(MsgType){
                                 case "P0001":       // 订阅日K线
                                     // K线接口
-                                    var msgTypeNow = getQueryType(KLineSocket.option.lineType);
-                                    if( !msgTypeNow.MsgType||MsgType.slice(1) != msgTypeNow.MsgType.slice(1)||dataList[0].Date==0){
-                                        return;
-                                    }
+                                    // var msgTypeNow = getQueryType(KLineSocket.option.lineType);
+                                    // if( !msgTypeNow.MsgType||MsgType.slice(1) != msgTypeNow.MsgType.slice(1)||dataList[0].Date==0){
+                                    //     return;
+                                    // }
                                     KCharts(dataList);
                                     break;
                                 case "P0011":        // 1分钟K线订阅分钟线应答
@@ -602,6 +894,29 @@ var initSocketEvent = function(socket){
                                     if( msgTypeNow.MsgType&&(MsgType.slice(1) != msgTypeNow.MsgType.slice(1))){
                                         return;
                                     }
+                                    // 处理日周月年多返回一条当天的数据的错误
+                                    if(KLineSocket.option.lineType=="day"){
+                                        if(KLineSocket.HistoryData.queryTimes==0){
+                                            if(data.KLineCount<=199){
+                                                if(data.KLineCount!=data.KLineSeriesInfo.length){
+                                                    data.KLineCount = data.KLineSeriesInfo.length; 
+                                                }
+                                            }else{
+                                                data.KLineCount = data.KLineCount - 199 + data.KLineSeriesInfo.length;
+                                            }
+                                        }
+                                    }
+                                    if(KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
+                                        if(KLineSocket.HistoryData.queryTimes==0){
+                                            if(data.KLineCount<=199){
+                                                if(data.KLineCount!=data.KLineSeriesInfo.length){
+                                                    data.KLineSeriesInfo.length = data.KLineCount; 
+                                                }
+                                            }else{
+                                                data.KLineSeriesInfo.length = 199;
+                                            }
+                                        }
+                                    }
                                     var notDay = !(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year");
                                     if(notDay&&KLineSocket.HistoryData.dataLengthToday==0&&KLineSocket.HistoryData.queryTimes==1||KLineSocket.HistoryData.queryTimes==0){
                                         $.each(KLineSocket.HistoryData,function(i,obj){
@@ -614,7 +929,7 @@ var initSocketEvent = function(socket){
 
                                                 if(i == "hCategoryList"){
                                                     $.each(KLineSocket.HistoryData.hCategoryList,function(i,o){
-                                                        KLineSocket.HistoryData.hCategoryList[i] = "1997-01-01 一 13:00";          // 横轴
+                                                        KLineSocket.HistoryData.hCategoryList[i] = "1997-1-1 一 9:30";          // 横轴
                                                     });
                                                 }
                                                 if(i == "hValuesList"){
@@ -631,13 +946,30 @@ var initSocketEvent = function(socket){
                                                 }
                                             }
                                         });
+                                        $.each(KLineSocket.TechIndexHistoryData,function(index,object){
+                                            object.queryTimes = 0;
+                                            if(object.data instanceof Array){
+                                                KLineSocket.TechIndexHistoryData[index].data = [];
+                                            }
+                                        });
 
-                                        socket.getKWatch();      // 订阅当前日期K线=分钟K线
+                                        if(!(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year")){
+                                            socket.getKWatch();      // 订阅当前日期K线=分钟K线
+                                        }
+                                        
                                     }
+                                    
                                     KCharts(dataList, "history");
                                     break;    
                                 case "R8050":  //心跳包
                                     // console.log(data);
+                                    break;
+                                case 'R3051': // 技术指标
+                                    if(KLineSocket.TechIndexHistoryData.Others.queryTimes==0){
+                                        KLineSocket.TechIndexHistoryData.Others.data = [];
+                                    }
+                                    TechIndexLines(dataList, "history");
+                                    break;
                                 default:
                             }
                         }
@@ -697,13 +1029,14 @@ function KCharts(dataList, isHistory){
             $(_this).children(".charts-focus").blur();
             _this = window;
         });
+        
+        // $(".kline-buttons span").click();
+        
     }
 };
 // 解析获取到的数据
 function splitData(data, isHistory) {
-    let k_date = [],                        // 日期
-        k_day = [],                         // 星期
-        k_time = [],                        // 时间
+    let k_time = [],                        // 时间
         k_categoryData = [],                // x轴分割线坐标数组
         k_values = [],                      // 二维数组：开收低高-四个数值的数组-蜡烛图
         k_valuesPercent = [],               // 二维数组：开收低高-四个百分比值-相对昨收
@@ -734,10 +1067,16 @@ function splitData(data, isHistory) {
         if(!KLineSocket.option.lastClose){
             KLineSocket.option.lastClose = object.Open;                          // 上一根柱子的收盘价
         }
+
         // 如果是最后一条数据的更新，lastClose就是前一根柱子的收盘价
-        if(k_categoryData[0].toString() == KLineSocket.HistoryData.hCategoryList[KLineSocket.HistoryData.hCategoryList.length-1]){
-            KLineSocket.option.lastClose = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][1];
+        if(!isHistory){
+            if(k_categoryData[0].toString() == KLineSocket.HistoryData.hCategoryList[KLineSocket.HistoryData.hCategoryList.length-1]){
+                KLineSocket.option.lastClose = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-2][1];
+            }else{
+                KLineSocket.option.lastClose = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][1];
+            }
         }
+        
 
         let e_open = (object.Open),          // 开
             e_highest = (object.High),       // 高
@@ -755,23 +1094,49 @@ function splitData(data, isHistory) {
                 ((e_lowest-KLineSocket.option.lastClose)*100/KLineSocket.option.lastClose),
                 ((e_highest-KLineSocket.option.lastClose)*100/KLineSocket.option.lastClose)
             ],
-            e_volumnData = object.Volume/100,                              // 成交量---单位：股
+            e_volumnData = object.Volume/100,                              // 成交量---单位：手
             e_zValues = KLineSocket.option.lastClose?(e_price-KLineSocket.option.lastClose):0,               // 涨幅-相对昨收      
             e_zValuesPercent = (e_zValues*100/KLineSocket.option.lastClose),              // 涨幅百分比
             e_amplitude = (e_highest - e_lowest),                      // 振幅
             e_amplPercent = (100*e_amplitude/KLineSocket.option.lastClose);               // 振幅百分比
 
         if(isHistory){
-            e_volume = (e_price-e_open)>=0?[i,e_volumnData,-1]:[i,e_volumnData,1];   // 成交量-数组，存储索引，值，颜色对应的值                         
+            if(e_price-e_open>0){
+                e_volume = [i,e_volumnData,1];
+            }else if(e_price-e_open<0){
+                e_volume = [i,e_volumnData,-1];
+            }else{
+                if(e_price>KLineSocket.option.lastClose){
+                    e_volume = [i,e_volumnData,1];
+                }else if(e_price<KLineSocket.option.lastClose){
+                    e_volume = [i,e_volumnData,-1];
+                }else{
+                    e_volume = [i,e_volumnData,0];
+                }
+            }
+            // e_volume = (e_price-e_open)>0?[i,e_volumnData,-1]:((e_price-e_open)==0?[i,e_volumnData,0]:[i,e_volumnData,1]);   // 成交量-数组，存储索引，值，颜色对应的值                         
         }else{
-            e_volume = (e_price-e_open)>=0?[KLineSocket.HistoryData.hVolumesList.length,e_volumnData,-1]:[KLineSocket.HistoryData.hVolumesList.length,e_volumnData,1];  
+            if(e_price-e_open>0){
+                e_volume = [KLineSocket.HistoryData.hVolumesList.length,e_volumnData,1];
+            }else if(e_price-e_open<0){
+                e_volume = [KLineSocket.HistoryData.hVolumesList.length,e_volumnData,-1];
+            }else{
+                if(e_price>KLineSocket.option.lastClose){
+                    e_volume = [KLineSocket.HistoryData.hVolumesList.length,e_volumnData,1];
+                }else if(e_price<KLineSocket.option.lastClose){
+                    e_volume = [KLineSocket.HistoryData.hVolumesList.lengthi,e_volumnData,-1];
+                }else{
+                    e_volume = [KLineSocket.HistoryData.hVolumesList.length,e_volumnData,0];
+                }
+            }
+            // e_volume = (e_price-e_open)>=0?[KLineSocket.HistoryData.hVolumesList.length,e_volumnData,-1]:[KLineSocket.HistoryData.hVolumesList.length,e_volumnData,1];  
         }
 
         KLineSocket.option.lastClose = e_price;
 
         // 每条数据存入数组中
-        k_date.push(e_date);                
-        k_day.push(e_day);   
+        // k_date.push(e_date);                
+        // k_day.push(e_day);   
         k_time.push(e_time);        
             
         k_values.push(e_value);             
@@ -785,8 +1150,8 @@ function splitData(data, isHistory) {
 
     // 返回K线图所需数据对象
     return {
-        date: k_date,                       
-        day: k_day,                        
+        // date: k_date,                       
+        // day: k_day,                        
         categoryData: k_categoryData,       
         values: k_values,     
         valuesPercent: k_valuesPercent,              
@@ -797,7 +1162,6 @@ function splitData(data, isHistory) {
         amplPercent: k_amplPercent
     }
 };
-
 // 保存获取的数据到相对应的数据中，存入数据对象
 function saveData(data, isHistory){
     if(isHistory){
@@ -824,9 +1188,6 @@ function saveData(data, isHistory){
                 var index = KLineSocket.HistoryData.hCategoryList.length - KLineSocket.HistoryData.dataLengthToday - dataLength - KLineSocket.HistoryData.watchDataCount;
             }else{
                 var index = KLineSocket.HistoryData.hCategoryList.length - KLineSocket.HistoryData.dataLengthToday -199 - KLineSocket.HistoryData.watchDataCount - 200*(KLineSocket.HistoryData.queryTimes - 2 ) - dataLength;
-                if(index<0){
-                    console.log(111);
-                }
             }
         }
 
@@ -836,8 +1197,8 @@ function saveData(data, isHistory){
         })
         
         // 将模拟的假数据进行拼接，重新赋值给历史数组
-        KLineSocket.HistoryData.hDate = KLineSocket.HistoryData.hDate.slice(0,index).concat(data.date,KLineSocket.HistoryData.hDate.slice(index+dataLength));
-        KLineSocket.HistoryData.hDay = KLineSocket.HistoryData.hDay.slice(0,index).concat(data.day,KLineSocket.HistoryData.hDay.slice(index+dataLength));
+        // KLineSocket.HistoryData.hDate = KLineSocket.HistoryData.hDate.slice(0,index).concat(data.date,KLineSocket.HistoryData.hDate.slice(index+dataLength));
+        // KLineSocket.HistoryData.hDay = KLineSocket.HistoryData.hDay.slice(0,index).concat(data.day,KLineSocket.HistoryData.hDay.slice(index+dataLength));
         KLineSocket.HistoryData.hCategoryList = KLineSocket.HistoryData.hCategoryList.slice(0,index).concat(data.categoryData,KLineSocket.HistoryData.hCategoryList.slice(index+dataLength));
         KLineSocket.HistoryData.hValuesList = KLineSocket.HistoryData.hValuesList.slice(0,index).concat(data.values,KLineSocket.HistoryData.hValuesList.slice(index+dataLength));
         KLineSocket.HistoryData.hValuesPercentList = KLineSocket.HistoryData.hValuesPercentList.slice(0,index).concat(data.valuesPercent,KLineSocket.HistoryData.hValuesPercentList.slice(index+dataLength));
@@ -848,8 +1209,6 @@ function saveData(data, isHistory){
         KLineSocket.HistoryData.hZfList = KLineSocket.HistoryData.hZfList.slice(0,index).concat(data.amplPercent,KLineSocket.HistoryData.hZfList.slice(index+dataLength));
         KLineSocket.HistoryData.hasHistory = "has data";
     }else{
-        var n_date = data.date[0];
-        var n_day = data.day[0];
         var n_category = data.categoryData[0];  // 最后一分钟的时间
         var n_values = data.values[0];          // 要存储的values
         var n_zValues = data.zValues[0];        // 涨跌
@@ -859,17 +1218,22 @@ function saveData(data, isHistory){
         var n_zf = data.amplitude[0];
         var n_zfList = data.amplPercent[0];
         var lastTime = KLineSocket.HistoryData.hCategoryList[KLineSocket.HistoryData.hCategoryList.length-1];
-
+        var last_open = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][0];
+        var last_openPercent = KLineSocket.HistoryData.hValuesPercentList[KLineSocket.HistoryData.hValuesPercentList.length-1][0];
         // 最新一条是历史category数据中的最后一条，则更新最后一条数据,否则push到数组里面
         if(n_category.toString() == lastTime){
 
             n_volumes[0] = n_volumes[0]-1;
 
             KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1] = n_values;
+            KLineSocket.HistoryData.hValuesPercentList[KLineSocket.HistoryData.hValuesPercentList.length-1] = n_valuesPercent;
+            if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
+                KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][0] = last_open;
+                KLineSocket.HistoryData.hValuesPercentList[KLineSocket.HistoryData.hValuesPercentList.length-1][0] = last_openPercent;
+            }
             KLineSocket.HistoryData.hVolumesList[KLineSocket.HistoryData.hVolumesList.length-1] = n_volumes;
             KLineSocket.HistoryData.hZValuesList[KLineSocket.HistoryData.hZValuesList.length-1] = n_zValues;
             KLineSocket.HistoryData.hZValuesListPercent[KLineSocket.HistoryData.hZValuesListPercent.length-1] = n_zValuePercent;
-            KLineSocket.HistoryData.hValuesPercentList[KLineSocket.HistoryData.hValuesPercentList.length-1] = n_valuesPercent;
             KLineSocket.HistoryData.hZf[KLineSocket.HistoryData.hZf.length-1] = n_zf;
             KLineSocket.HistoryData.hZfList[KLineSocket.HistoryData.hZfList.length-1] = n_zfList;
         }else{
@@ -877,8 +1241,6 @@ function saveData(data, isHistory){
                 return;
             }
             KLineSocket.HistoryData.watchDataCount++;
-            KLineSocket.HistoryData.hDate.push(n_date);
-            KLineSocket.HistoryData.hDay.push(n_day);
             KLineSocket.HistoryData.hCategoryList.push(n_category);
             KLineSocket.HistoryData.hValuesList.push(n_values);
             KLineSocket.HistoryData.hVolumesList.push(n_volumes); 
@@ -1010,20 +1372,6 @@ function chartPaint(isHistory){
                         minValueSpan: minValueSpan
                     },
                 ],
-                visualMap: {
-                    show: false,
-                    seriesIndex: 1,
-                    dimension: 2,
-                    pieces: [
-                        {   value: 1, 
-                            color: '#3bc25b'
-                        },
-                        {
-                            value: -1,
-                            color: "#e22f2a"
-                        }
-                    ]
-                },
                 xAxis: [
                     {
                         type: 'category',
@@ -1048,12 +1396,11 @@ function chartPaint(isHistory){
                     {
                         type: 'category',
                         gridIndex: 1,
-
                         data: KLineSocket.HistoryData.hCategoryList,
                         scale: true,
                         axisTick: { show:false },
                         boundaryGap: false,
-                        axisLine: { show: false },
+                        axisLine: { show: false},
                         axisLabel: { show: false },
                         splitLine: { show: false },
                         axisPointer: {
@@ -1070,7 +1417,12 @@ function chartPaint(isHistory){
                         boundaryGap: false,
                         axisTick: { show:false },
                         // boundaryGap: true,
-                        axisLine: { show: false },
+                        axisLine: { 
+                            show: true,
+                            lineStyle: {
+                                color: '#efefef'
+                            }
+                         },
                         axisLabel: { show: false },
                         splitLine: { show: false },
                         axisPointer: {
@@ -1112,18 +1464,18 @@ function chartPaint(isHistory){
                         }
                     },
                     {
-                        type:'value',
                         scale: true,
                         gridIndex: 1,
-                        min: 0,
+                        // min: 0,
                         axisTick:{ show:false },
                         axisLabel: {
                             show: true,
                             color: '#000',
                             fontSize: 14,
                             formatter: function (value, index) {
-                                setyAsixName(value);
-                                return;
+                                var data = setUnit(value,null,true,true);
+                                $(".volumeMax").text(floatFixedZero(data.value));
+                                $(".vol-unit").text(data.unit);
                             }
                         },
                         axisLine: { 
@@ -1142,34 +1494,37 @@ function chartPaint(isHistory){
                         }
                     },
                     {
-                        type:'value',
                         scale: true,
                         gridIndex: 2,
-                        min: 0,
                         axisTick:{ show:false },
                         axisLabel: {
-                            show: true,
-                            color: '#999',
-                            fontSize: 14,
-                            formatter: function (value, index) {
-                                setyAsixName(value);
-                                return;
-                            }
+                            show: false,
+                            color: '#333',
+                            fontSize: 12
                         },
                         axisLine: { 
                             show: true,
-                            inZero: true,
+                            inZero: false,
                             lineStyle: {
                                 color: '#e5e5e5'
                             }
                         },
-                        splitNumber: 2,
-                        splitLine: {
-                            show: true,
-                            lineStyle: {
-                                color: '#e5e5e5'
+                        min: function(value) {
+                            if(value.max!=-Infinity){
+                                var min = value.min-Math.abs(value.min)*2;
+                                var max = value.max+Math.abs(value.max)*2;
+                                if(Math.abs(max)>=Math.abs(min)){
+                                    min = -max;
+                                }else{
+                                    max = -min;
+                                }
+                                $(".vmMin").html(floatFixedDecimal(min));
+                                $(".vmMax").html(floatFixedDecimal(max));
+                                // return min;
                             }
-                        }
+                        },
+                        splitLine: { show: false },
+                        
                     }
                 ],
                 series: [
@@ -1177,15 +1532,24 @@ function chartPaint(isHistory){
                         name: 'K',
                         type: 'candlestick',
                         showSymbol: false,
-                        hoverAnimation: false,
                         itemStyle: {
                             normal: {
                                 color: '#e22f2a',
                                 color0: '#3bc25b',
-                                borderColor: '#e22f2a',
-                                borderColor0: '#3bc25b'
-                            }
+                                borderColor: null,
+                                borderColor0: null,
+                                colorD:"#666",
+                                borderColorD: null,
+                            },
+                            emphasis:{
+                                    borderColor: null,
+                                    borderColor0: null,
+                                    borderWidth: 1,
+                                    shadowBlur: 0,
+                                    opacity:0
+                            },
                         },
+                        
                         barMaxWidth: 20,
                         data: KLineSocket.HistoryData.hValuesList,
                         markPoint: {
@@ -1229,7 +1593,53 @@ function chartPaint(isHistory){
                                 }
                             ]
                         },
+                        z: 1,
 
+                    },
+                    {
+                        name: 'MA5', // MA5
+                        type: 'line',
+                        data: KLineSocket.TechIndexHistoryData.MA.data[0], 
+                        smooth: false,
+                        lineStyle: {
+                            normal:{
+                                width:'1.5',
+                                color: KColorList.MA[0]
+                            }
+                        },
+                        symbol: 'none',
+                        z:2,
+                        connectNulls: false,
+                    },
+                    {
+                        name: 'MA10', // MA10
+                        type: 'line',
+                        data: KLineSocket.TechIndexHistoryData.MA.data[1], 
+                        smooth: false,
+                        lineStyle: {
+                            normal:{
+                                width:'1.5',
+                                color: KColorList.MA[1]
+                            }
+                        },
+                        symbol: 'none',
+                        z:2,
+                        connectNulls: false,
+                    },
+                    {
+                        name: 'MA20', // MA20
+                        type: 'line',
+                        data: KLineSocket.TechIndexHistoryData.MA.data[2], 
+                        smooth: false,
+                        lineStyle: {
+                            normal:{
+                                width:'1.5',
+                                color: KColorList.MA[2]
+                            }
+                        },
+                        symbol: 'none',
+                        z:2,
+                        connectNulls: false,
                     },
                     {
                         name: 'Volume',
@@ -1239,39 +1649,210 @@ function chartPaint(isHistory){
                         data: KLineSocket.HistoryData.hVolumesList,
                         itemStyle: {
                             normal: {
-                                color: '#e22f2a',
-                                color0: '#3bc25b'
-                            }
+                                borderWidth: 0.5,
+                                color:  function(param){
+                                            switch(param.data[2]){
+                                                case 0:
+                                                    return "#fff";
+                                                    break;
+                                                case 1:
+                                                    return "#e22f2a";
+                                                    break;
+                                                case -1:
+                                                    return "#3bc25b";
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+                                        },
+                                borderColor: "#666"
+                            },
+                            
                         },
-                        barMaxWidth: 20
+                        barMaxWidth: 20,
+                        z:1
                     },
                     {
-                        name: 'MACD',
+                        name: 'MAVOL5', // MAVOL5
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: KLineSocket.TechIndexHistoryData.MAVOL.data[0], 
+                        smooth: false,
+                        lineStyle: {
+                            normal:{
+                                width:'1.5',
+                                color: KColorList.MAVOL[0]
+                            }
+                        },
+                        symbol: 'none',
+                        z:2,
+                        connectNulls: false,
+                    },
+                    {
+                        name: 'MAVOL10', // MAVOL10
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: KLineSocket.TechIndexHistoryData.MAVOL.data[1], 
+                        smooth: false,
+                        lineStyle: {
+                            normal:{
+                                width:'1.5',
+                                color: KColorList.MAVOL[1]
+                            }
+                        },
+                        symbol: 'none',
+                        z:2,
+                        connectNulls: false,
+                    },
+                    {
+                        name: 'MAVOL20', // MAVOL20
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: KLineSocket.TechIndexHistoryData.MAVOL.data[2], 
+                        smooth: false,
+                        lineStyle: {
+                            normal:{
+                                width:'1.5',
+                                color: KColorList.MAVOL[2]
+                            }
+                        },
+                        symbol: 'none',
+                        z:2,
+                        connectNulls: false,
+                    },
+                    {
+                        name: 'Others0', // Others0
                         type: 'line',
                         xAxisIndex: 2,
                         yAxisIndex: 2,
-                        data: KLineSocket.HistoryData.hCategoryList,
-                        itemStyle: {
-                            normal: {
-                                color: '#e22f2a',
-                                color0: '#3bc25b'
+                        data: null, 
+                        smooth: false,
+                        lineStyle: {
+                            normal:{
+                                width:'1.5',
                             }
                         },
+                        symbol: 'none',
+                        connectNulls: false,
                     },
                     {
-                        name: 'MACD2',
+                        name: 'Others1', // Others1
                         type: 'line',
                         xAxisIndex: 2,
                         yAxisIndex: 2,
-                        data: KLineSocket.HistoryData.hVolumesList,
-                        itemStyle: {
-                            normal: {
-                                color: '#000',
-                                color0: '#000'
+                        data: null, 
+                        smooth: false,
+                        lineStyle: {
+                            normal:{
+                                width:'1.5'
                             }
                         },
+                        symbol: 'none',
+                        connectNulls: false,
+                    },
+                    {
+                        name: 'Others2', // Others2
+                        type: 'line',
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: null, 
+                        smooth: false,
+                        lineStyle: {
+                            normal:{
+                                width:'1.5',
+                            }
+                        },
+                        symbol: 'none',
+                        connectNulls: false,
                     }
                 ]
+            });
+            // 量比等指标的点击
+            $(".kline-buttons").on('click','span',function(){
+                KLineSocket.TechIndexHistoryData.Others.name = $(this).text();
+                KLineSocket.TechIndexHistoryData.Others.queryTimes = 0;
+                // 高亮按钮
+                $(this).addClass("active").end();
+                $(this).siblings().removeClass("active");
+                //无-按钮
+                if($(this).index()==0){
+                    // 绘制K线图
+                    KLineSocket.KChart.setOption({
+                        grid: [
+                            {
+                                top: "7%",
+                                height: '60%'
+                            },
+                            {
+                                top: '76.7%',
+                                height: '9.2%'
+                            },
+                            {
+                                top: '200%',
+                                height: '0'
+                            }
+                        ],
+                        series: [
+                            {
+                                data: KLineSocket.HistoryData.hValuesList,
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.MA.data[0], // MA5
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.MA.data[1], // MA10
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.MA.data[2], // MA20
+                            },
+                            {
+                                data: KLineSocket.HistoryData.hVolumesList,
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.MAVOL.data[0], // MAVOL5
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.MAVOL.data[1], // MAVOL10
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.MAVOL.data[2], // MAVOL20
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.Others.data[0]?KLineSocket.TechIndexHistoryData.Others.data[0]:null,
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.Others.data[1]?KLineSocket.TechIndexHistoryData.Others.data[1]:null,
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.Others.data[2]?KLineSocket.TechIndexHistoryData.Others.data[2]:null,
+                            }
+                        ]
+                    });
+                    $(".techIndex,.volMacd").hide();
+                    $(".deal").css("top","72%");
+                    $(".volumnKline").css("top","76%");
+                }else{
+                    var Name = $(this).text();
+                    $(".techIndex-name").html(Name);
+                    if(Names[Name]){
+                        $(".techIndex_0").html(Names[Name][0]?Names[Name][0]+": --":"");
+                        $(".techIndex_1").html(Names[Name][1]?Names[Name][1]+": --":"");
+                        $(".techIndex_2").html(Names[Name][2]?Names[Name][2]+": --":"");
+                    }
+                    
+                    $(".vmMax").html("");
+                    $(".vmMin").html("");
+                    try{
+                        KLineSocket['getTechIndexKQAllMinToday'+Name]();
+                    }catch(e){
+                        console.warn(e,"还没有此项数据")
+                    }
+                    
+                }
+                
             });
             /* 
              * 日期周期K线在进行查询时就已经是查询历史数据了，所以对应正常的查询次数queryTimes，queryTimes自增后更新            
@@ -1293,12 +1874,11 @@ function chartPaint(isHistory){
 
 
             KLineSocket.KChart.on('dataZoom', function (params) {
-
                 clearTimeout(KLineSocket.KLineSet.dataZoomTimer);
                 // 放大缩小后的图表中的数目
                 var paramsZoom = params.batch?params.batch[0]:params;
                 var length = Math.round(( paramsZoom.end - paramsZoom.start )/100 * KLineSocket.HistoryData.hCategoryList.length);
-
+                
                 KLineSocket.KLineSet.dataZoomTimer = setTimeout(function(){
                     KLineSocket.KChart.setOption({
                         xAxis: [
@@ -1462,24 +2042,56 @@ function chartPaint(isHistory){
                                 // type: 'category',
                                 // gridIndex: 1,
                                 data: KLineSocket.HistoryData.hCategoryList,
+                            },
+                            {
+                                data: KLineSocket.HistoryData.hCategoryList,
                             }
+                        ],
+                        yAxis:[
+                            {},
+                            {},
+                            // {
+                            //     min:techMin,
+                            //     max:techMax,
+                            // }
                         ],
                         series: [
                             {
                                 data: KLineSocket.HistoryData.hValuesList
                             },
                             {
+                                data: KLineSocket.TechIndexHistoryData.MA.data[0], // MA5
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.MA.data[1], // MA10
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.MA.data[2], // MA20
+                            },
+                            {
                                 data: KLineSocket.HistoryData.hVolumesList
                             },
                             {
-                                data: KLineSocket.HistoryData.hCategoryList
+                                data: KLineSocket.TechIndexHistoryData.MAVOL.data[0], // MAVOL5
                             },
                             {
-                                data: KLineSocket.HistoryData.hVolumesList
+                                data: KLineSocket.TechIndexHistoryData.MAVOL.data[1], // MAVOL10
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.MAVOL.data[2], // MAVOL20
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.Others.data[0]?KLineSocket.TechIndexHistoryData.Others.data[0]:null,
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.Others.data[1]?KLineSocket.TechIndexHistoryData.Others.data[1]:null,
+                            },
+                            {
+                                data: KLineSocket.TechIndexHistoryData.Others.data[2]?KLineSocket.TechIndexHistoryData.Others.data[2]:null,
                             }
                         ]
                     });
-                },300)
+                },300);
             });
             KLineSocket.KChart.dispatchAction({
                 type: 'dataZoom',
@@ -1488,111 +2100,10 @@ function chartPaint(isHistory){
                 // 结束位置的百分比，0 - 100
                 end: 100
             });
-             // 量比等指标的点击
-        $(".kline-buttons span").click(function(){
-            // 高亮按钮
-            $(this).addClass("active").end();
-            $(this).siblings().removeClass("active");
-            //无-按钮
-            if($(this).index()==0){
-                // 绘制K线图
-                KLineSocket.KChart.setOption({
-                    grid: [
-                        {
-                            top: "7%",
-                            height: '60%'
-                        },
-                        {
-                            top: '76.7%',
-                            height: '9.2%'
-                        },
-                        {
-                            top: '200%',
-                            height: '0'
-                        }
-                    ],
-                    series: [
-                        {
-                            data: KLineSocket.HistoryData.hValuesList,
-                        },
-                        {
-                            data: KLineSocket.HistoryData.hVolumesList,
-                        },{
-                            data: null,
-                        },{
-                            data: null,
-                        }
-                    ]
-                });
-                $(".macd,.volMacd").hide();
-                $(".deal").css("top","72%");
-                $(".volumn").css("top","76%");
-            }else{
-                
-                // 其他按钮
-                $(".macd,.volMacd").show();
-                KLineSocket.KChart.setOption({
-                    grid: [
-                        {
-                            top: "7%",
-                            height: '45.8%'
-                        },
-                        {
-                            top: '61.7%',
-                            height: '9.2%'
-                        },
-                        {
-                            top:'75.4%',
-                            height:'9.2%',
-                        }
-                    ],
-                    series: [
-                        {
-                            data: KLineSocket.HistoryData.hValuesList,
-                        },
-                        {
-                            data: KLineSocket.HistoryData.hVolumesList,
-                        },
-                        {
-                            data: KLineSocket.HistoryData.hValuesList,
-                        },
-                        {
-                            data: KLineSocket.HistoryData.hVolumesList,
-                        }
-                    ]
-                });
-                $(".deal").css("top","57.1%");
-                $(".volumn").css("top","60.5%")
-            }
-            
-        });
-        $(".kline-buttons span:eq(0)").click();
+            $(".kline-buttons span:eq(0)").click();
         }else{
-           // 绘制K线图
-            KLineSocket.KChart.setOption({
-                xAxis: [
-                    {
-                        data: KLineSocket.HistoryData.hCategoryList,
-                    },
-                    {
-                        data: KLineSocket.HistoryData.hCategoryList,
-                    }
-                ],
-                series: [
-                    {
-                        data: KLineSocket.HistoryData.hValuesList
-                    },
-                    {
-                        data: KLineSocket.HistoryData.hVolumesList
-                    },
-                    {
-                        data: KLineSocket.HistoryData.hCategoryList
-                    },
-                    {
-                        data: KLineSocket.HistoryData.hVolumesList
-                    }
-                ]
-            }); 
+            // 绘制K线图
+            setChartData(); // 更新图表数据
 
             var isLastQuery;
             var beforeLastQuery;
@@ -1649,17 +2160,37 @@ function chartPaint(isHistory){
             }
             
         }
-
+        // K线前一根柱子的收盘价
+        KLineSocket.option.lastClose = 0; 
     }else{
         // 初始化并显示数据栏和数据信息框的信息
         if(KLineSocket.KChart.getOption()&&KLineSocket.KChart.getOption().series.length!=0){
+            setChartData(); // 更新图表数据
+        }
+         
+    }
+};
+// 技术指标
+function TechIndexLines(dataList, isHistory){
+    if(dataList){
+        // 解析并存储数据
+        var msgInfoObj = saveTechIndex(dataList, isHistory); 
+        // 继续下一步查询指标
+        getTechIndexMore(msgInfoObj.msgName,msgInfoObj.dataName);
+        if(msgInfoObj.dataName=="Others"){
             KLineSocket.KChart.setOption({
-                xAxis:[
+                grid: [
                     {
-                        data: KLineSocket.HistoryData.hCategoryList
+                        top: "7%",
+                        height: '45.8%'
                     },
                     {
-                        data: KLineSocket.HistoryData.hCategoryList
+                        top: '61.7%',
+                        height: '9.2%'
+                    },
+                    {
+                        top:'75.4%',
+                        height:'9.2%',
                     }
                 ],
                 series: [
@@ -1667,20 +2198,292 @@ function chartPaint(isHistory){
                         data: KLineSocket.HistoryData.hValuesList,
                     },
                     {
-                        data: KLineSocket.HistoryData.hVolumesList
+                        data: KLineSocket.TechIndexHistoryData.MA.data[0], // MA5
                     },
                     {
-                        data: KLineSocket.HistoryData.hCategoryList
+                        data: KLineSocket.TechIndexHistoryData.MA.data[1], // MA10
                     },
                     {
-                        data: KLineSocket.HistoryData.hVolumesList
+                        data: KLineSocket.TechIndexHistoryData.MA.data[2], // MA20
+                    },
+                    {
+                        data: KLineSocket.HistoryData.hVolumesList,
+                    },
+                    {
+                        data: KLineSocket.TechIndexHistoryData.MAVOL.data[0]?KLineSocket.TechIndexHistoryData.MAVOL.data[0]:null, // MAVOL5
+                    },
+                    {
+                        data: KLineSocket.TechIndexHistoryData.MAVOL.data[1]?KLineSocket.TechIndexHistoryData.MAVOL.data[1]:null, // MAVOL10
+                    },
+                    {
+                        data: KLineSocket.TechIndexHistoryData.MAVOL.data[2]?KLineSocket.TechIndexHistoryData.MAVOL.data[2]:null, // MAVOL20
+                    },
+                    {
+                        name: 'Others0', // Others0
+                        type: chartTypes[KLineSocket.TechIndexHistoryData.Others.name][0],
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: KLineSocket.TechIndexHistoryData.Others.data[0], // Others0
+                        lineStyle: {
+                            normal:{
+                                color: KColorList[KLineSocket.TechIndexHistoryData.Others.name][0],
+                            }
+                        },
+                    },
+                    {
+                        name: 'Others1', // Others1
+                        type: chartTypes[KLineSocket.TechIndexHistoryData.Others.name][1],
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: KLineSocket.TechIndexHistoryData.Others.data[1], // Others1
+                        lineStyle: {
+                            normal:{
+                                color: KColorList[KLineSocket.TechIndexHistoryData.Others.name][1],
+                            }
+                        }
+                    },
+                    {
+                        name: 'Others2', // Others2
+                        type: chartTypes[KLineSocket.TechIndexHistoryData.Others.name][2]?chartTypes[KLineSocket.TechIndexHistoryData.Others.name][2]:'line',
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: KLineSocket.TechIndexHistoryData.Others.data[2]?KLineSocket.TechIndexHistoryData.Others.data[2]:null, // Others2
+                        lineStyle: {
+                            normal:{
+                                color: KColorList[KLineSocket.TechIndexHistoryData.Others.name][2]?KColorList[KLineSocket.TechIndexHistoryData.Others.name][2]:'',
+                            }
+                        },
+                        itemStyle: {
+                            normal: {
+                                borderWidth: 0,
+                                color:  function(param){
+                                        if(KLineSocket.TechIndexHistoryData.Others.name=="无"){
+                                            return false;
+                                        }
+                                            if(param.data[1]>=0){
+                                                return KColorList[KLineSocket.TechIndexHistoryData.Others.name][2]
+                                            }else{
+                                                return KColorList[KLineSocket.TechIndexHistoryData.Others.name][3]
+                                            }
+                                        }
+                            },
+                        },
+                        barMaxWidth: 1.5,
                     }
                 ]
             });
+            $(".deal").css("top","57.1%");
+            $(".volumnKline").css("top","60.5%");
+            $(".techIndex,.volMacd").show();
         }
-         
     }
+}
+// 解析并存储-指标数据
+function saveTechIndex(dataList, isHistory) {
+    var msgInfo = {
+        msgName:null,
+        dataName: null
+    }
+    let msgName = ""; 
+    var week = ["日","一","二","三","四","五","六"];
+    // 遍历json，将它们push进不同的数组
+    $.each(dataList,function(index,object){
+        msgInfo.msgName = getQueryTechIndexName(object.IndexID+"").msgName;
+        msgInfo.dataName = getQueryTechIndexName(object.IndexID+"").dataName;
+
+        if(!KLineSocket.TechIndexHistoryData[msgInfo.dataName]) return;
+
+        if(!KLineSocket.TechIndexHistoryData[msgInfo.dataName].data[0]){
+        // if(KLineSocket.TechIndexHistoryData[msgInfo.dataName].queryTimes==0){
+            for(var i=0;i<object.OutCount;i++){
+                KLineSocket.TechIndexHistoryData[msgInfo.dataName].data.push([]);
+            }
+        }
+        if(object.RecordCount!=0){ // 数据长度不为0
+            $.each(object.TechIndexInfo,function(i,o){
+                    if(o.Date==-1) return;
+                    $.each(o.DATA,function(dataIndex,data){
+                        // 按照坐标轴的顺序写进去
+                        if(data.ITEM!=0){
+                            let tn_date = formatDateSplit(o.Date),                 // 当天日期
+                                tn_day = week[(new Date(tn_date)).getDay()],        // 计算星期
+                                tn_time;  
+
+                            if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
+                                KLineSocket.HistoryData.hTime = formatTime((o.Time/100000>=1)?o.Time:("0"+o.Time));
+                                tn_time = tn_date + " " + tn_day;
+                            }else{
+                                tn_time = tn_date + " " + tn_day + " " + formatTime((o.Time/100000>=1)?o.Time:("0"+o.Time));
+                            } 
+                            var index = KLineSocket.HistoryData.hCategoryList.indexOf(tn_time);
+                            if(index<0) return;
+                            KLineSocket.TechIndexHistoryData[msgInfo.dataName].data[dataIndex][index] = [tn_time,data.ITEM];
+                        }
+                        
+                    });
+                
+            });
+        }
+    });
+    
+    // 返回指标线图所需数据对象
+    return msgInfo;
 };
+// 进行下一次查询
+function getTechIndexMore(msgName,dataName){
+
+    if(!KLineSocket.TechIndexHistoryData[dataName]) return false;
+
+    // 第一次请求时，非分钟周期K线不进行绘制，第二次请求才开始绘制
+    var dayFirstTime = KLineSocket.TechIndexHistoryData[dataName].queryTimes==0&&(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year");
+    var daySecondTime = KLineSocket.TechIndexHistoryData[dataName].queryTimes==1&&(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year");
+    
+    var minutFirstTime = KLineSocket.TechIndexHistoryData[dataName].queryTimes==0&&!(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year");
+    var minutSecondTime = KLineSocket.TechIndexHistoryData[dataName].queryTimes==1&&!(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year");
+    
+    if(minutFirstTime){  // 第一次查询分钟周期K线时，不绘制图形，而是继续历史数据查询，因为数据较少，避免闪屏
+        KLineSocket.TechIndexHistoryData[dataName].queryTimes++;
+        var funcName = "getTechIndexKQFirstMinPrev"+msgName;
+        KLineSocket[funcName]();
+        if(KLineSocket.TechIndexHistoryData[dataName].dataLengthToday!=0){
+            return;
+        }
+        
+    }else if(dayFirstTime||minutSecondTime){  // 如果是分钟周期K线第二次请求，和日期周期K线第一次请求后，便开始绘制图表
+        /* 
+         * 日期周期K线在进行查询时就已经是查询历史数据了，所以对应正常的查询次数queryTimes，queryTimes自增后更新            
+         * 分钟周期K线的查询，第一次是当天的数据，而历史数据是从前一个交易日开始算的，在queryTimes查询数据次数更新前更新查询参数
+         */
+        // 更新分钟周期K线指标请求参数
+        KLineSocket.option.TechIndexOption['TechIndexKQAllMinPrev'+msgName] = $.extend({},KLineSocket.option.TechIndexOption['TechIndexKQAllMinPrev'+msgName],{StartIndex:"-"+KLineSocket.TechIndexHistoryData[dataName].queryTimes*200});
+        // 查询次数增加
+        KLineSocket.TechIndexHistoryData[dataName].queryTimes++;
+        // 更新日期周期K线请求参数
+        KLineSocket.option.TechIndexOption['TechIndexKQAllDayPrev'+msgName] = $.extend({},KLineSocket.option.TechIndexOption['TechIndexKQAllDayPrev'+msgName],{StartIndex:"-"+KLineSocket.TechIndexHistoryData[dataName].queryTimes*200});
+        
+        // 开始查询历史数据
+        if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
+            var funcName = "getTechIndexKQAllDayPrev"+msgName;
+            KLineSocket[funcName]();
+        }else{
+            var funcName = "getTechIndexKQAllMinPrev"+msgName;
+            KLineSocket[funcName]();
+        }
+    }else{
+
+        var isLastQuery;
+        var beforeLastQuery;
+        var todayData = 0;
+        var nextQueryTime;
+        var lastQueryTime;
+
+        // 更新分钟周期K线数据查询参数
+        KLineSocket.option.TechIndexOption['TechIndexKQAllMinPrev'+msgName] = $.extend({},KLineSocket.option.TechIndexOption['TechIndexKQAllMinPrev'+msgName],{StartIndex:"-"+KLineSocket.TechIndexHistoryData[dataName].queryTimes*200});
+        // queryTimes查询数据次数更新
+        KLineSocket.TechIndexHistoryData[dataName].queryTimes++;
+        // 更新日、周、月、年数据查询参数
+        KLineSocket.option.TechIndexOption['TechIndexKQAllDayPrev'+msgName] = $.extend({},KLineSocket.option.TechIndexOption['TechIndexKQAllDayPrev'+msgName],{StartIndex:"-"+KLineSocket.TechIndexHistoryData[dataName].queryTimes*200});
+        
+        if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
+            // 当前查询后蜡烛总数目是否超过规定数据，前一次查询是否小于规定数目，满足条件即为最后一次查询
+            nextQueryTime = KLineSocket.TechIndexHistoryData[dataName].queryTimes+1;
+            lastQueryTime = KLineSocket.TechIndexHistoryData[dataName].queryTimes;
+            
+            isLastQuery = todayData + nextQueryTime*200>=KLineSocket.HistoryData.dataLength;
+            beforeLastQuery = todayData + lastQueryTime*200 < KLineSocket.HistoryData.dataLength;
+            if(isLastQuery&&beforeLastQuery){
+                var count = KLineSocket.HistoryData.dataLength + 1 - lastQueryTime*200+"";
+                KLineSocket.option.TechIndexOption['TechIndexKQAllDayPrev'+msgName] = $.extend({},KLineSocket.option.TechIndexOption['TechIndexKQAllDayPrev'+msgName],{Count: count});
+                if(!KLineSocket.TechIndexHistoryData[dataName].stopQuery){
+                    var funcName = "getTechIndexKQAllDayPrev"+msgName;
+                    KLineSocket[funcName]();
+                }
+                // 最后一次查询标志
+                KLineSocket.TechIndexHistoryData[dataName].stopQuery = true;
+            }
+            if(!KLineSocket.TechIndexHistoryData[dataName].stopQuery){
+                var funcName = "getTechIndexKQAllDayPrev"+msgName;
+                KLineSocket[funcName]();
+            }
+        }else{
+            // 当前查询后蜡烛总数目是否超过规定数据，前一次查询是否小于规定数目，满足条件即为最后一次查询
+            todayData = KLineSocket.TechIndexHistoryData[dataName].dataLengthToday;
+            nextQueryTime = KLineSocket.TechIndexHistoryData[dataName].queryTimes;
+            lastQueryTime = KLineSocket.TechIndexHistoryData[dataName].queryTimes-1;
+
+            isLastQuery = todayData + nextQueryTime*200>=KLineSocket.HistoryData.dataLength;
+            beforeLastQuery = todayData + lastQueryTime*200 < KLineSocket.HistoryData.dataLength;
+            if(isLastQuery&&beforeLastQuery){
+                var count = KLineSocket.HistoryData.dataLength + 1 - todayData - lastQueryTime*200 + "";
+                KLineSocket.option.TechIndexOption['TechIndexKQAllMinPrev'+msgName] = $.extend({},KLineSocket.option.TechIndexOption['TechIndexKQAllMinPrev'+msgName],{Count: count});
+                if(!KLineSocket.TechIndexHistoryData[dataName].stopQuery){
+                    var funcName = "getTechIndexKQAllMinPrev"+msgName;
+                    KLineSocket[funcName]();
+                }
+                // 最后一次查询标志
+                KLineSocket.TechIndexHistoryData[dataName].stopQuery = true;
+            }
+            if(!KLineSocket.TechIndexHistoryData[dataName].stopQuery){
+                var funcName = "getTechIndexKQAllMinPrev"+msgName;
+                KLineSocket[funcName]();
+            }
+        }
+        
+    }
+}
+// 更新图表数据
+function setChartData(){
+    KLineSocket.KChart.setOption({
+        xAxis:[
+            {
+                data: KLineSocket.HistoryData.hCategoryList
+            },
+            {
+                data: KLineSocket.HistoryData.hCategoryList
+            },
+            {
+                data: KLineSocket.HistoryData.hCategoryList,
+            }
+        ],
+        series: [
+            {
+                data: KLineSocket.HistoryData.hValuesList,  // 蜡烛图
+            },
+            {
+                data: KLineSocket.TechIndexHistoryData.MA.data[0], // MA5
+            },
+            {
+                data: KLineSocket.TechIndexHistoryData.MA.data[1], // MA10
+            },
+            {
+                data: KLineSocket.TechIndexHistoryData.MA.data[2], // MA20
+            },
+            {
+                data: KLineSocket.HistoryData.hVolumesList // 成交量
+            },
+            {
+                data: KLineSocket.TechIndexHistoryData.MAVOL.data[0], // MAVOL5
+            },
+            {
+                data: KLineSocket.TechIndexHistoryData.MAVOL.data[1], // MAVOL10
+            },
+            {
+                data: KLineSocket.TechIndexHistoryData.MAVOL.data[2], // MAVOL20
+            },
+            {
+                data: KLineSocket.TechIndexHistoryData.Others.data[0]?KLineSocket.TechIndexHistoryData.Others.data[0]:null,
+            },
+            {
+                data: KLineSocket.TechIndexHistoryData.Others.data[1]?KLineSocket.TechIndexHistoryData.Others.data[1]:null,
+            },
+            {
+                data: KLineSocket.TechIndexHistoryData.Others.data[2]?KLineSocket.TechIndexHistoryData.Others.data[2]:null,
+            }
+        ]
+    });
+    // 初始化并显示数据栏和数据信息框的信息
+    initMarketTool();
+}
 // 设置x轴动态更换分隔
 function setXAxisInterval(index,value,length){
     var valueList = KLineSocket.HistoryData.hCategoryList;
@@ -1794,7 +2597,7 @@ function setXAxisInterval(index,value,length){
                     returnValue = true;
                 }
             }
-            if(length>=30&&length<200){
+            if(length>=30&&length<300){
                 // 整点、半点显示
                 if(timeCurr.split(":")[1]=="00"||timeCurr.split(":")[1]=="30"){
                     returnValue = true;
@@ -1816,22 +2619,23 @@ function setXAxisInterval(index,value,length){
                     returnValue = false;
                 }
             }
-            if(length>200&&length<500){
-                // 整点显示
-                if(timeCurr.split(":")[1]=="00"){
-                    returnValue = true;
-                }
-                // 第2个时间段第1根显示
-                if(startTime1&&timeCurr==startTime1){
-                    returnValue = true;
-                }
-            }
-            if(length>=500){
-                // 每天第一根显示
-                if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
-                    returnValue = true;
-                }
-            }
+            // if(length>200&&length<500){
+            //     console.log(timeCurr)
+            //     // 整点显示
+            //     if(timeCurr.split(":")[1]=="00"){
+            //         returnValue = true;
+            //     }
+            //     // 第2个时间段第1根显示
+            //     if(startTime1&&timeCurr==startTime1){
+            //         returnValue = true;
+            //     }
+            // }
+            // if(length>=500){
+            //     // 每天第一根显示
+            //     if(valueList[index-1]&&valueList[index].split("-")[2].split(" ")[0]!==valueList[index-1].split("-")[2].split(" ")[0]){
+            //         returnValue = true;
+            //     }
+            // }
             break;
         case "fivem":
             if(length<30){
@@ -2031,14 +2835,6 @@ function toolContentPosition(event) {
         $("#kline_tooltip").css({"left":"auto","right":83/830*continerWidth});
     }
 };
-// 设置成交量的单位变化状况
-function setyAsixName(value) {
-    var data = setUnit(value,true);
-    var maximun = (data=="0"?"0":floatFixedZero(data.value))
-    var yAxisName = (data=="0"?"量":data.unit);
-    $(".volumn div:first").text(maximun);
-    $(".volumn div:last").text(yAxisName);
-};
 // 初始化设置显示信息
 function initMarketTool() {
     var length = KLineSocket.HistoryData.hCategoryList.length;
@@ -2065,8 +2861,11 @@ function setToolInfo(length, showTip){
     }
     var countent = $("#kline");
     if (length) {
-        $(".date", countent).text(KLineSocket.HistoryData.hDate[setPoint].replace(/-/g,'/')); //日期
-        $(".day", countent).text(KLineSocket.HistoryData.hDay[setPoint]); //星期
+        if(KLineSocket.HistoryData.hCategoryList[setPoint]=="1997-1-1 一 9:30"){
+            return;
+        }
+        $(".date", countent).text(KLineSocket.HistoryData.hCategoryList[setPoint].split(" ")[0].replace(/-/g,'/')); //日期
+        $(".day", countent).text(KLineSocket.HistoryData.hCategoryList[setPoint].split(" ")[1]); //星期
         // 分钟K线每根柱子都有一条时间数据
         // 日K线，只有最后一根存在当前分钟时间数据
         if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
@@ -2104,12 +2903,20 @@ function setToolInfo(length, showTip){
 
         if(volume>=100){
             //量--单位:手
-            $(".volume", countent).text(setUnit(floatFixedZero(volume))+"手");
+            $(".volume", countent).text(setUnit(volume/100,true)+"手");
         }else{
             //量--单位:股
             $(".volume", countent).text(volume+"股");
         }
+        // MA
+        showTechIndexPoint(setPoint,"MA",[".kline-MA5 em",".kline-MA10 em",".kline-MA20 em"]);
+        showTechIndexPoint(setPoint,"MAVOL",[".deal-MA5 em",".deal-MA10 em",".deal-MA20 em"]);
+
+        // others下部点击出现的指标
+        if(KLineSocket.TechIndexHistoryData.Others.name=="无") return;
+        showTechIndexPointOters(setPoint);
         
+
     }else{
         $(".date", countent).text("-");
         $(".day", countent).text("-");
@@ -2123,4 +2930,32 @@ function setToolInfo(length, showTip){
         $(".amplitude", countent).text("-");
 
     }
+};
+// MA和MAVOL指标的鼠标滑过设置
+function showTechIndexPoint(setPoint,techName,classList){
+    $.each(classList,function(index,object){
+        var data = KLineSocket.TechIndexHistoryData[techName].data[0];
+        if( data && data[setPoint] ){
+            $(object).text(floatFixedTwo(KLineSocket.TechIndexHistoryData[techName].data[index][setPoint][1]));
+        }else{
+            $(object).text("--");
+        }
+    });
+}
+// 点击出现的指标的鼠标滑过设置
+function showTechIndexPointOters(setPoint){
+    
+    var nameArr = Names[KLineSocket.TechIndexHistoryData.Others.name];
+    if(nameArr){
+        $.each(nameArr,function(index,object){
+            var data = KLineSocket.TechIndexHistoryData.Others.data[0];
+            if( data && data[setPoint] ){
+                $(".techIndex_"+[index]).html(object+": "+"<em>"+floatFixedTwo(KLineSocket.TechIndexHistoryData.Others.data[index][setPoint][1])+"</em>");
+            }else{
+                $(".techIndex_"+[index]).html(object+": "+"<em>--</em>");
+            }  
+        });
+    }
+    
+         
 };

@@ -1,10 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
+    <META HTTP-EQUIV="pragma" CONTENT="no-cache"> 
+    <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
+    <META HTTP-EQUIV="expires" CONTENT="0">
 	<title>行情详情</title>
-    <link rel="stylesheet" type="text/css" href="../css/echarts.css" />
-    <link rel="stylesheet" type="text/css" href="../css/detail.css" />
+    <link rel="stylesheet" type="text/css" href="../css/echarts.css?v=1.0" />
+    <link rel="stylesheet" type="text/css" href="../css/detail.css?v=1.0" />
 </head>
 <body>
      <!-- 页面开始 -->
@@ -15,7 +21,7 @@
                 <div class="tb-fn-title">-</div>
                 <div class="tb-fn-num"></div>
             </div>
-            <ul class="tb-fielList"></ul>
+            <ul class="tb-fielList clearfix"></ul>
         </div>
         <!-- 上部信息框结束 -->
         <!-- 中部开始 -->
@@ -54,8 +60,7 @@
                         <div class="kline-MAs">
                             <span class="kline-MA5">MA5:<em></em></span>
                             <span class="kline-MA10">MA10:<em></em></span>
-                            <span class="kline-MA20">MA20:<em></em></span> 
-                            <span class="kline-MA30">MA30:<em></em></span>                       
+                            <span class="kline-MA20">MA20:<em></em></span>                    
                         </div>
                         <!-- 上部信息显示结束 -->
                         <!-- echarts图开始 -->
@@ -78,27 +83,28 @@
 
                             <div class="bar-tools">
                                 <div class="deal">
-                                    <span class="deal-title">成交</span><span class="deal-Vol">VOL : <em></em></span><span class="deal-MA5">MA5 : <em></em></span><span class="deal-MA10">MA10 : <em></em></span>
+                                    <span class="deal-title">成交</span><span class="deal-Vol">VOL : <em></em></span><span class="deal-MA5">MA5 : <em></em></span><span class="deal-MA10">MA10 : <em></em></span><span class="deal-MA20">MA20 : <em></em></span>
                                 </div>
-                                <div class="volumn">
+                                <div class="volumn volumnKline">
                                     <div class="volumeMax"></div>
                                     <div class="vol-unit"></div>
                                 </div>
-                                <div class="macd">
-                                    <span class="macd-title">MACD</span><span class="macd-Dif">DIF : <em></em></span><span class="macd-Dea">DEA : <em></em></span><span class="macd-Macd">MACD : <em></em></span>
+                                <div class="techIndex">
+                                    <span class="techIndex-name"></span>
+                                    <span class="techIndex_0"><em></em></span>
+                                    <span class="techIndex_1"><em></em></span>
+                                    <span class="techIndex_2"><em></em></span>
                                 </div>
                                 <div class="volMacd">
-                                    <div class="vmMax">3.78</div>
-                                    <div class="vmMin">1.93</div>
+                                    <div class="vmMax"> </div>
+                                    <div class="vmMin"> </div>
                                 </div>
                                 <div class="kline-buttons">
                                     <span class="active">无</span>
-                                    <span>MACD</span>
+                                    <!-- <span>MACD</span>
                                     <span>KDJ</span>
                                     <span>RSI</span>
-                                    <span>BOLL</span>
-                                    <span>WR</span>
-                                    <span>DMI</span>
+                                    <span>MTM</span> -->
                                 </div>
                             </div>
                             
@@ -186,14 +192,13 @@
     <script type="text/javascript" src="../js/echarts.js"></script>
     <script type="text/javascript" src="../js/moment.min.js"></script>
 
-    <script type="text/javascript" src="../js/public.js"></script>
-    <script type="text/javascript" src="../js/mLineWeb.js"></script>
+    <script type="text/javascript" src="../js/public.js?v=1.0"></script>
+    <script type="text/javascript" src="../js/mLineWeb.js?v=1.0"></script>
     
-    <script type="text/javascript" src="../js/websocket.js"></script> <!-- K线 -->
-    <script type="text/javascript" src="../js/kLineWeb.js"></script> <!-- K线 -->
-
+    <script type="text/javascript" src="../js/websocket.js?v=1.0"></script> <!-- K线 -->
+    <script type="text/javascript" src="../js/kLineWeb.js?v=1.0"></script> <!-- K线 -->
     <script>
-        $(function(){
+        window.onload = function(){
             // 行情echarts切换标签
             $(".container").toggleLi(
                 {
@@ -243,7 +248,7 @@
             // 个股需要查询企业信息，公司信息
             var reqComOpt = ["23000171","23000138","23000164","23000188"];
             requireCom(reqComOpt, id);
-        }); 
+        } 
     </script>
 </body>
 </html>

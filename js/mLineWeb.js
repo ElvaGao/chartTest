@@ -2,6 +2,11 @@ var yc=0,xml,decimal=2,tFlag=false;
 var stockType = '';
 var todayDate;//通过xml查询得到的当前日期
 var MarketStatus;//市场状态
+// 十大流通股 公司详情请求地址
+// var DKServiceUrl = "https://117.78.45.83:8443/";//正式环境 
+var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.cnfic.com.cn
+//var DKServiceUrl = "http://172.17.20.178:8080/" 内网环境
+
 ;(function($,undefined){
     var socket = null;
     var myChart = null;
@@ -182,6 +187,7 @@ var MarketStatus;//市场状态
         var _options = this.options;
         var _this = this;
         //第一次打开终端,初始化代码表第一次默认请求
+        var date = new Date();
         $.ajax({
             url:  _options.stockXMlUrl,
             type: 'GET',
@@ -340,14 +346,15 @@ var MarketStatus;//市场状态
                         var dateT = data.Date;
                         $this.v_data = getxAxis(dateT,$this.options);
                         initYCCharts(yc,$this);
-                        if(parseFloat(data.Time) > 93015){
-                            tFlag = true;
-                        }
-                        if(tFlag){
-                            todayDate = -1;
-                        }else{
-                            todayDate = parseInt(data.Date)-1;
-                        }
+                        todayDate = -1;
+                        // if(parseFloat(data.Time) > 93015){
+                        //     tFlag = true;
+                        // }
+                        // if(tFlag){
+                        //     todayDate = -1;
+                        // }else{
+                        //     todayDate = parseInt(data.Date)-1;
+                        // }
                         var tradingHistoryData={
                             "MsgType":"Q3032",
                             "ExchangeID":$this.options.exchangeID,
@@ -355,7 +362,7 @@ var MarketStatus;//市场状态
                             "PructType":$this.options.typeIndex.toString(),
                             "StartIndex":"-1",
                             "StartDate":todayDate.toString(),
-                            "Count":(stockType == "Field"?"10":"5")
+                            "Count":(stockType == "Field"?"14":"5")
                         };
                         socket.request(tradingHistoryData);
                         return;
@@ -482,443 +489,17 @@ var MarketStatus;//市场状态
     // 逐笔成交
     InitXMLIChart.prototype.getWatchZBCJ = function(){
         socket.request(this.options.watchZBCJ);
-    };
-    function initYCCharts(yc,$this){
-        var maxY = parseFloat((parseFloat(yc)*0.01+parseFloat(yc)).toFixed($this.options.decimal));
-        var minY = parseFloat((parseFloat(yc)-parseFloat(yc)*0.01).toFixed($this.options.decimal));
-        var maxY1 = parseFloat((maxY/yc).toFixed(2));
-        var minY1 = -parseFloat((minY/yc).toFixed(2));
-        var split = parseFloat(((maxY - yc)/3).toFixed($this.options.decimal));
-        var split1= parseFloat((split / yc))*100;
-        var option = {
-            backgroundColor: "#fff",
-            animation: false,
-            grid: [
-                {
-                    top: "5%",
-                    height: '70%',
-                    show:true
-                },
-                {
-                    top: '85%',
-                    height: '13%',
-                },
-                // {
-                //     bottom:'-100%',
-                //     height:'10%',
-                // }
-            ],
-            title: {
-                show: false
-            },
-            axisPointer: {
-                link: {xAxisIndex: 'all'},
-                label: {
-                    backgroundColor: colorList[2]
-                },
-                lineStyle:{
-                    color:colorList[2],
-                    type:"dotted",
-                    width:1
-                },
-                type:'line',
-                show:true,
-                triggerTooltip:false
-            },
-            tooltip: {
-                trigger: 'axis',
-                showContent:false
-            },
-            xAxis: [
-                {
-                    type:"category",
-                    axisTick: {
-                        show:false
-                    },
-                    axisLabel: {
-                        show:true,
-                        interval: function (number, string) {
-                            if(number == 0 || number == $this.v_data.length-1){
-                                return true;
-                            }
-                            if(stopTime){
-                                if(string.indexOf(stopTime[0].split(" ")[1])>-1){
-                                    return true
-                                }
-                            }
-                            if(string.indexOf("00")>-1){
-                                return true
-                            }
-
-                        },
-                        formatter: function (value, number) {
-                            var tVal = value.split(" ")[2];
-                            return tVal;
-                        },
-                        textStyle: {
-                            color: colorList[3]
-                        }
-                    },
-                    axisLine: {
-                        lineStyle:{
-                            color:colorList[4]
-                        }
-                    },
-                    data: $this.v_data,
-                    splitLine: {
-                        show: true
-                    },
-                    axisPointer: {
-                        show:true,
-                        label: {
-                            formatter: function (params, value, s) {
-                                return (params.value);
-                                // return moment(parseFloat(params.value)).format("YYYY-MM-DD HH:mm");
-                            },
-                            padding:[3,5,5,5],
-                            show:true
-                        }
-                    },
-                    boundaryGap:false
-                },
-                {
-                    type:"category",
-                    name:"万",
-                    nameLocation:'start',
-                    nameTextStyle:{
-                        color:colorList[2]
-                    },
-                    axisTick: {
-                        interval: function (number, string) {
-                            if($this.typeIndex == "128" || $this.typeIndex == "224"){
-                                if (number % 180 == 0) {
-                                    return true;
-                                } else {
-                                    return false;
-                                }
-                            }else{
-                                if (number % 30 == 0) {
-                                    return true;
-                                } else {
-                                    return false;
-                                }
-                            }
-                        },
-                        show:false
-                    },
-                    axisLabel: {
-                        show:false,
-                        interval: function (number, string) {
-                            if($this.typeIndex == "128" || $this.typeIndex == "224"){
-                                if (number % 180 == 0) {
-                                    return true;
-                                } else {
-                                    return false;
-                                }
-                            }else{
-                                if (number % 30 == 0) {
-                                    return true;
-                                } else {
-                                    return false;
-                                }
-                            }
-                        },
-                        formatter: function (value, number) {
-                            return value.split(" ")[3];
-                        },
-                        textStyle: {
-                            color: colorList[3]
-                        }
-                    },
-                    axisLine: {
-                        lineStyle:{
-                            color:colorList[4]
-                        }
-                    },
-                    data: $this.v_data,
-                    splitLine: {
-                        show: false
-                    },
-                    gridIndex: 1,
-                    boundaryGap:false
-                },
-            ],
-            yAxis: [
-                {
-                    min: minY,
-                    max: maxY,
-                    interval: split,
-                    boundaryGap: [0, '100%'],
-                    axisTick: {
-                        show: false
-                    },
-                    type: "value",
-                    splitLine:{
-                        lineStyle:{
-                            color:"transparent"
-                        }
-                    },
-                    axisLine:{
-                        lineStyle:{
-                            color:colorList[4]
-                        }
-                    },
-                    axisLabel: {
-                        formatter: function (value, index) {
-                            if (index == 3) {
-                                return "";
-                            } else {
-                                return parseFloat(value).toFixed($this.options.decimal);
-                            }
-                        },
-                        textStyle: {
-                            color: function (value, index) {
-                                if (parseFloat(value) > parseFloat(yc)) {
-                                    return colorList[0];
-                                } else {
-                                    return colorList[1];
-                                }
-                            }
-                        }
-                    },
-                    axisPointer: {
-                        label: {
-                            formatter: function (params, value, s) {
-                                return parseFloat(params.value).toFixed($this.options.decimal);
-                            }
-                        }
-                    }
-                },
-                {
-                    min: minY1,
-                    max: maxY1,
-                    interval: split1,
-                    name:"涨跌幅",
-                    boundaryGap: [0, '100%'],
-                    axisTick: {
-                        show: false
-                    },
-                    type: "value",
-                    splitLine:{
-                        lineStyle:{
-                            color:"transparent"
-                        }
-                    },
-                    axisLine:{
-                        lineStyle:{
-                            color:colorList[4]
-                        }
-                    },
-                    axisLabel: {
-                        formatter: function (value, index) {
-                            if (index == 3) {
-                                return "";
-                            } else {
-                                return parseFloat(value).toFixed(2) + "%";
-                            }
-                        },
-                        textStyle: {
-                            color: function (value, index) {
-                                if (parseFloat(value) > 0) {
-                                    return colorList[0];
-                                } else {
-                                    return colorList[1];
-                                }
-                            }
-                        }
-                    },
-                    axisPointer: {
-                        label: {
-                            formatter: function (params, value, s) {
-                                return parseFloat(params.value) + "%";
-                            }
-                        }
-                    }
-                },
-                {
-                    type:'value',
-                    name:'成交',
-                    nameLocation:'end',
-                    nameTextStyle:{
-                        color:colorList[2],
-                        fontSize:14
-                    },
-                    nameGap:10,
-                    scale: true,
-                    splitLine:{
-                        lineStyle:{
-                            color:colorList[4]
-                        }
-                    },
-                    axisLine:{
-                        lineStyle:{
-                            color:colorList[4]
-                        }
-                    },
-                    axisLabel:{
-                        formatter:function(value,index){
-                            setyAsixName(value/100);
-                            return;
-                        },
-                        textStyle:{
-                            color:colorList[3],
-                            fontSize:14,
-                        },
-                        showMinLabel:true,
-                        showMaxLabel:true,
-                    },
-                    gridIndex: 1,
-                    splitNumber: 2
-                }
-            ],
-            series: [
-                {
-                    name: 'Mline',
-                    type: 'line',
-                    showSymbol: false,
-                    hoverAnimation: false,
-                    data: "",
-                    connectNulls:true,
-                    symbolSize:0,
-                    markLine: {
-                        animation:false,
-                        silent:true,
-                        lineStyle: {
-                            normal: {
-                                type: 'dashed',
-                                color: colorList[2],
-                                width:1
-                            }
-                        },
-                        label: {
-                            normal: {
-                                position: "start",
-                                formatter: function (params) {
-                                    return params.value + " ";
-                                }
-                            }
-                        },
-                        data: [
-                            {
-                                name: 'Y 轴值为 100 的水平线',
-                                yAxis: yc
-                            }
-                        ],
-                        symbol: ['none', 'none']
-                    },
-                    lineStyle:{
-                        normal:{
-                            color:"#2b99ff",
-                            width:1
-                        }
-                    },
-                    areaStyle:{
-                        normal:{
-                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                                offset: 0,
-                                color: 'rgba(43, 153, 255,0.3)'
-                            }, {
-                                offset: 1,
-                                color: 'rgba(43, 153, 255,0.1)'
-                            }])
-                        }
-                    }
-                },
-                {
-                    name:'limit',
-                    type: 'line',
-                    showSymbol: false,
-                    hoverAnimation: false,
-                    connectNulls:true,
-                    symbolSize:0,
-                    markLine: {
-                        animation:false,
-                        silent:true,
-                        lineStyle: {
-                            normal: {
-                                type: 'dashed',
-                                color: colorList[2],
-                                width:0
-                            }
-                        },
-                        label: {
-                            normal: {
-                                position: "end",
-                                formatter: function (params) {
-                                    // return " " + params.value + ".00%";
-
-                                }
-                            }
-                        },
-                        data: [
-                            {
-                                name: 'Y 轴值为 100 的水平线',
-                                yAxis: 0.00
-                            }
-                        ],
-                        symbol: ['none', 'none']
-                    },
-                    lineStyle: {
-                        normal: {
-                            color: "#2b99ff",
-                            opacity:0
-                        }
-                    },
-                    data: "",
-                    yAxisIndex: 1
-                },
-                {
-                    name: 'Vol',
-                    type: 'bar',
-                    xAxisIndex: 1,
-                    yAxisIndex: 2,
-                    data: "",
-                    itemStyle:{
-                        normal:{
-                            color:function(params){
-                                if(flag[params.dataIndex] > 0){
-                                    return colorList[0];
-                                }else{
-                                    return colorList[1];
-                                }
-                            }
-                        }
-                    }
-                },
-                // {
-                //     name:'量比',
-                //     type:'line',
-                //     smooth:true,
-                //     symbol: 'none',
-                //     showSymbol: false,
-                //     hoverAnimation: false,
-                //     connectNulls:true,
-                //     symbol:'circle',
-                //     symbolSize:0,
-                //     itemStyle: {
-                //         normal: {
-                //             color: colorList[0]
-                //         }
-                //     },
-                //     data: a_history_data,
-                //     xAxisIndex: 2,
-                //     yAxisIndex: 3
-                // }
-            ]
-        };
-        myChart = echarts.init(document.getElementById('main1'));
-        myChart.setOption(option);
-    }
+    };    
     // 查询历史信息
     function fillTrading(data,$this){
         var strHtml = '';
-        for(var i =0;i<data.length;i++){
+        data.forEach(function (item){
             var abside = "";
             if(stockType != "Field"){
-                abside = (data[i].ABSide==83)?("<span class='green'>卖出</span>"):((data[i].ABSide==66)?("<span class='red'>买入</span>"):(data[i].ABSide==0)?("<span>平盘</span>"):"");
+                abside = (item.ABSide==83)?("<span class='green'>卖出</span>"):((item.ABSide==66)?("<span class='red'>买入</span>"):(item.ABSide==0)?("<span>平盘</span>"):"");
             }
-            strHtml += '<li><span>'+formatTimeSec(data[i].Time)+'</span><span>'+parseFloat(data[i].RecorePrice).toFixed(2)+'</span><span>'+data[i].Volume+'</span>'+abside +'</li>';
-        }
+            strHtml += '<li><span>'+formatTimeSec(item.Time)+'</span><span>'+parseFloat(item.RecorePrice).toFixed(2)+'</span><span>'+item.Volume+'</span>'+abside +'</li>';
+        });
         $(".cb-cj ul").html(strHtml);
     }
     // 设置顶部信息  当前指数/个股 请求快照数据
@@ -936,14 +517,18 @@ var MarketStatus;//市场状态
             zf = preClose==0?floatFixedTwo(0):floatFixedTwo((high - low)/preClose*100);
             zd = price - preClose;
             zdf = preClose==0?floatFixedTwo(0):floatFixedTwo((zd/preClose)*100);
+            if(price==0){
+                zd = 0;
+                zdf = floatFixedTwo(0.00);
+            }
 
             var html = "";
             //指数[0~8],股票[16~31]
             if(stockType=="Field"){
                 html = "<li><p>最高：</p><span class="+getColorName(high,preClose)+">"+floatFixedDecimal(high)+"</span></li>"
                         +"<li><p>最低：</p><span class="+getColorName(low,preClose)+">"+floatFixedDecimal(low)+"</span></li>"
-                        +"<li><p>成交额：</p><span>"+setUnit(floatFixedDecimal(dealVal))+"元</span></li>"
-                        +"<li><p>成交量：</p><span>"+(dealVol>=100?setUnit(dealVol/100)+"手":dealVol+"股")+"</span></li>"
+                        +"<li><p>成交额：</p><span>"+setUnit(floatFixedDecimal(dealVal),true)+"元</span></li>"
+                        +"<li><p>成交量：</p><span>"+(dealVol>=100?setUnit(dealVol/100,true)+"手":dealVol+"股")+"</span></li>"
                         +"<li><p>今开：</p><span class="+getColorName(open,preClose)+">"+floatFixedDecimal(open)+"</span></li>"
                         +"<li><p>昨收：</p><span>"+floatFixedDecimal(preClose)+"</span></li>"
 
@@ -957,20 +542,20 @@ var MarketStatus;//市场状态
                         +"<li><p>换手率：</p><span>-</span></li>"
                         +"<li><p>最低：</p><span class="+getColorName(low,preClose)+">"+floatFixedDecimal(low)+"</span></li>"
                         +"<li><p>昨收：</p><span>"+floatFixedDecimal(preClose)+"</span></li>"
-                        +"<li><p>成交量：</p><span>"+(dealVol>=100?setUnit(dealVol/100)+"手":dealVol+"股")+"</span></li>"
+                        +"<li><p>成交量：</p><span>"+(dealVol>=100?setUnit(dealVol/100,true)+"手":dealVol+"股")+"</span></li>"
                         +"<li><p>市&nbsp;&nbsp;&nbsp;&nbsp;值：</p><span>-</span></li>"
                         +"<li><p>振&nbsp;&nbsp;&nbsp;&nbsp;幅：</p><span>"+zf+"%</span></li>";
             }
 
             
 
-            var html2 = "<span class="+getColorName(price,preClose)+">"+floatFixedDecimal(price)+"</span>"
+            var html2 = "<span class="+(price==0?"black":getColorName(price,preClose))+">"+(price==0?"-":floatFixedDecimal(price))+"</span>"
                         +"<span class="+getColorName(zd,"0")+">"+floatFixedDecimal(zd)+"</span>"
                         +"<span class="+getColorName(zdf,"0")+">"+zdf+"%</span>";
             $(".tb-fn-num").html(html2);
             $(".tb-fielList").html(html);
         }
-    };
+    }
     // 五档盘口-五档盘口数据，没有委比委差
     function setfillPK(data){
         if($(".cb-pk h2").length==0){
@@ -990,8 +575,8 @@ var MarketStatus;//市场状态
         }
         var bids = data.Bids,       // 买
             offer = data.Asks,     // 卖
-            obj_titalB = setUnit(data.TotalBidVolume/100,true),      // 买盘(外盘)总量
-            obj_titalO = setUnit(data.TotalOfferVolume/100,true),    // 卖盘(内盘)总量
+            // obj_titalB = setUnit(data.TotalBidVolume/100,true,false,true).value,      // 买盘(外盘)总量
+            // obj_titalO = setUnit(data.TotalOfferVolume/100,true,false,true).value,    // 卖盘(内盘)总量
             txtOffer = "",
             txtBids = "", 
             upperCase = ["一","二","三","四","五"];
@@ -1003,38 +588,52 @@ var MarketStatus;//市场状态
 
         $(".cb-txtOffer").html(txtOffer);
         $(".cb-txtBids").html(txtBids);
-    };
+    }
     // 五档扩展接口的委比委差-个股信息-存在五笔盘口信息
     function setfillPKExt(data){
         var wb = data.Entrustment/10000;
-        var wc = data.EntrustmentSub;//(data.OuterVolume + data.InnerVolume)*wb/100;
+        var wc = data.EntrustmentSub;
         $(".cbt-wb").attr("class","cbt-wb "+getColorName(wb,0)).html( floatFixedTwo(wb)+"%" );
         $(".cbt-wc").attr("class","cbt-wc "+getColorName(wc,0)).html( floatFixedZero(wc/100) );
 
-        $(".cbt-np").html( floatFixedZero(data.InnerVolume/100)+"手" );
-        $(".cbt-wp").html( floatFixedZero(data.OuterVolume/100)+"手" );
-    };
+        $(".cbt-np").html( setUnit(data.InnerVolume/100,true)+"手" );
+        $(".cbt-wp").html( setUnit(data.OuterVolume/100,true)+"手" );
+    }
     // 五档扩展接口-指数接口-没有五笔盘口数据信息
     function setfillPKExtZS(data){
         if($(".cb-pk h2").length==0){
             var html = "<ul class=\"cb-zs-pk\">\
-                            <li><span>上涨数</span><span class=\"cb-zspk-szs\">--</span></li>\
-                            <li><span>平盘数</span><span class=\"cb-zspk-pps\">--</span></li>\
-                            <li><span>下跌数</span><span class=\"cb-zspk-xds\">--</span></li>\
+                            <li><span>上涨数</span><span class=\"cb-zspk-szs\"></span></li>\
+                            <li><span>平盘数</span><span class=\"cb-zspk-pps\"></span></li>\
+                            <li><span>下跌数</span><span class=\"cb-zspk-xds\"></span></li>\
                         </ul>";
             $(".cb-pk").html(html);
         }
-        $(".cb-zspk-szs").text(data.Ups!=undefined?(yc!=undefined?floatFixedDecimal(data.Ups):floatFixedTwo(data.Ups)):"--");
-        $(".cb-zspk-pps").text(data.HoldLines!=undefined?(yc!=undefined?floatFixedDecimal(data.HoldLines):floatFixedTwo(data.HoldLines)):"--");
-        $(".cb-zspk-xds").text(data.Downs!=undefined?(yc!=undefined?floatFixedDecimal(data.Downs):floatFixedTwo(data.Downs)):"--");
+        // $(".cb-zspk-szs").text(data.Ups!=undefined?(yc!=undefined?floatFixedDecimal(data.Ups):floatFixedTwo(data.Ups)):"");
+        // $(".cb-zspk-pps").text(data.HoldLines!=undefined?(yc!=undefined?floatFixedDecimal(data.HoldLines):floatFixedTwo(data.HoldLines)):"");
+        // $(".cb-zspk-xds").text(data.Downs!=undefined?(yc!=undefined?floatFixedDecimal(data.Downs):floatFixedTwo(data.Downs)):"");
+        $(".cb-zspk-szs").text(data.Ups!=undefined?(yc!=undefined?data.Ups:data.Ups):"");
+        $(".cb-zspk-pps").text(data.HoldLines!=undefined?(yc!=undefined?data.HoldLines:data.HoldLines):"");
+        $(".cb-zspk-xds").text(data.Downs!=undefined?(yc!=undefined?data.Downs:data.Downs):"");
     }
     // 五档盘口的统一拼接整个模块
     function setPKHtml(obj, status, data){
+        var price,volume;
         if(data){
-            var txtData = "<span class="+getColorName(data.Price,yc)+">"+(yc!=undefined?floatFixedDecimal(data.Price):floatFixedTwo(data.Price))+"</span>\
-                        <span>"+setUnit(Math.round(data.Volume/100))+"</span>";
+            if(data.Price==0){
+                price = "--"
+            }else{
+                price = yc!=undefined?floatFixedDecimal(data.Price):floatFixedTwo(data.Price);
+            }
+            if(data.Volume==0){
+                volume = "--"
+            }else{
+                volume = Math.round(data.Volume/100);
+            }
+            var txtData = "<span class="+getColorName(data.Price,yc)+">"+price+"</span>\
+                        <span>"+volume+"</span>";
         }else{
-            var txtData = "<span>--</span><span>--</span>";
+            var txtData = "<span></span><span></span>";
         }
         
         var text = "<li><span>"+status+obj+"</span>"+txtData+"</li>";
@@ -1043,7 +642,7 @@ var MarketStatus;//市场状态
     // 逐笔成交拼接
     function setfillZBCJ(data,$this){
         // 停盘后，数据日期返回0
-        if(data.Date=="0"&&data.Date==undefined){
+        if(data.Date=="0"||data.Date==undefined){
             return
         }
         // 数据处理
@@ -1093,6 +692,7 @@ var MarketStatus;//市场状态
             yc = parseFloat(yc);
             var limitUp = parseFloat((yc + yc*0.1).toFixed($this.decimal));
             var limitDown = parseFloat((yc - yc*0.1).toFixed($this.decimal));
+            var minY,middleY,maxY,minY1,maxY1;
             if(type == "add"){
                 if(myChart != undefined){
                     var a_lastData = data;
@@ -1107,7 +707,10 @@ var MarketStatus;//市场状态
                     }else if((parseFloat(a_lastData.Price)) <= limitDown){
                         a_lastData.Price = limitDown;
                     }
-
+                    // $this.c_data.length : 时间轴长度
+                    // last_date当前的时间
+                    // i 当前时间轴索引
+                    // $this.history_data.length历史数据长度
                     for(var i=0;i<$this.c_data.length;i++){
                         if(last_date == $this.c_data[i]){
                             $this.history_data[i] = parseFloat(a_lastData.Price);
@@ -1129,8 +732,6 @@ var MarketStatus;//市场状态
                                     }
                                 }
                             }
-                        }else{
-                            
                         }
                     }
                     
@@ -1143,21 +744,27 @@ var MarketStatus;//市场状态
                     set_marketTool(marktToolData,$this); //设置动态行情条
                     var fvalue, r1;
                     fvalue = parseFloat(a_lastData.Price);
-                    r1 = Math.abs(fvalue - parseFloat(yc));
-                    if (r1 > $this.interval) {
+                    r1 = Math.abs(fvalue - yc);
+                    // console.log(r1);
+                    // debugger;
+                    if (r1 >= $this.interval) {
                         $this.interval = r1 + r1*0.1;
-                        var minY = (yc - $this.interval).toFixed($this.decimal);
-                        var middleY = yc.toFixed($this.decimal);
-                        var maxY = (yc + $this.interval).toFixed($this.decimal);
+                        minY = (yc - $this.interval).toFixed($this.decimal);
+                        middleY = yc.toFixed($this.decimal);
+                        maxY = (yc + $this.interval).toFixed($this.decimal);
                         if(minY <= limitDown){
                             minY = limitDown;
                         }
                         if(maxY >= limitUp){
                             maxY = limitUp;
                         }
-                        var split = parseFloat(((maxY - minY) / 6).toFixed(4));
+                        minY1 = (parseFloat(minY) / yc).toFixed(4);
+                        maxY1 = (parseFloat(maxY) / yc).toFixed(4);
+                        split = parseFloat(((maxY - minY) / 6).toFixed($this.decimal));
+                        split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(6));
+
                         myChart.setOption({
-                            yAxis: {
+                            yAxis: [{
                                 min: minY,
                                 max: maxY,
                                 interval: split,
@@ -1175,9 +782,27 @@ var MarketStatus;//市场状态
                                         }
                                     }
                                 }
-                            },
+                            },{
+                                min: minY1,
+                                max: maxY1,
+                                interval: split1,
+                                boundaryGap: [0, '100%'],
+                                axisTick: {
+                                    show: false
+                                },
+                                type: "value",
+                                axisLabel: {
+                                    formatter: function (value, index) {
+                                        if (index == 3) {
+                                            return ""
+                                        } else {
+                                            return parseFloat(value).toFixed($this.decimal);
+                                        }
+                                    }
+                                }
+                            }],
                             series: 
-                            {
+                            [{
                                 markLine: {
                                     data: [
                                         {
@@ -1186,7 +811,18 @@ var MarketStatus;//市场状态
                                         }
                                     ]
                                 }
-                            }
+                            },
+                            // {
+                            //     markLine: {
+                            //         data: [
+                            //             {
+                            //                 name: 'Y 轴值为 0 的水平线',
+                            //                 yAxis: middleY1
+                            //             }
+                            //         ]
+                            //     }
+                            // }
+                        ]
                         });
                     }
                     if (mouseHoverPoint == $this.history_data.length - 1) {
@@ -1236,10 +872,7 @@ var MarketStatus;//市场状态
                         ]
                     });
                 }else{
-                    // $("#noData").show();
-                    // $("#toolContent_M").hide();
                     $(".vol").hide();
-                    // $(".chartsTab").hide();
                     console.log("初始化图表失败");
                     $("#MLine").hide();
                 }
@@ -1252,7 +885,7 @@ var MarketStatus;//市场状态
                     var price = [];//价格
                     var volume = [];//成交量
                     var zdfData = [];//涨跌幅
-                    var flag = [];//现价-开盘价 值为1和-1
+                    var flagColor = [];//现价-开盘价 值为1和-1
                     var lastDate = dateToStamp(formatDate(data[data.length-1].Date) +" "+formatTime(data[data.length-1].Time));
                     var unit="";
                     for(var i=0;i<$this.c_data.length;i++){
@@ -1276,7 +909,7 @@ var MarketStatus;//市场状态
                                 
                                 volume[i] = data[j].Volume;
                                 
-                                flag[i] = (parseFloat(data[j].Price)-parseFloat(data[j].Open)) >= 0 ? 1 : -1;
+                                flagColor[i] = (parseFloat(data[j].Price)-parseFloat(data[j].Open)) >= 0 ? 1 : -1;
                                 
                                 if(fvalue > 0){
                                     r1 = Math.abs(fvalue - yc);
@@ -1289,7 +922,7 @@ var MarketStatus;//市场状态
                                 price[i] = null;
                                 volume[i] = null;
                                 zdfData[i] = null;
-                                flag[i] = null;
+                                flagColor[i] = null;
                             }
                         }
                     }
@@ -1297,57 +930,33 @@ var MarketStatus;//市场状态
                     $this.history_data = price;//价格历史数据
                     $this.z_history_data = zdfData;//涨跌幅历史数据
                     $this.a_history_data = volume;//成交量历史数据
-                    $this.flag_data = flag;//成交量颜色标识
+                    $this.flag_data = flagColor;//成交量颜色标识
                     //取绝对值  差值 
                     $this.interval = $this.interval + $this.interval*0.1;
-                    if (yc) {
-                        var minY = Number((yc - $this.interval).toFixed($this.decimal));//(minPrice - r1).toFixed($this.decimal);//(yc - $this.interval).toFixed($this.decimal);
-                        var middleY = yc.toFixed($this.decimal);
-                        var maxY = Number((yc + $this.interval).toFixed($this.decimal));//(maxPrice + r1).toFixed($this.decimal);//(yc + $this.interval).toFixed($this.decimal);
-                        if(minY < limitDown){
-                            minY = limitDown;
-                        }
-                        if(maxY > limitUp){
-                            maxY = limitUp;
-                        }
-
-                        var dd = ((parseFloat(minY) - (yc)) / (yc) );//* 100);
-                        if(Math.abs(dd) > 1){
-                            var minY1 = ((parseFloat(minY) - (yc)) / (yc)).toFixed(2);
-                            var maxY1 = ((parseFloat(maxY) - (yc)) / (yc)).toFixed(2);
-                        }else{
-                            var minY1 = ((parseFloat(minY) - (yc)) / (yc) * 100).toFixed(2);
-                            var maxY1 = ((parseFloat(maxY) - (yc)) / (yc) * 100).toFixed(2);
-                        }
-                    } else {
-                        var minY = 0;
-                        var middleY = 1;
-                        var maxY = 2;
+                    middleY = yc.toFixed($this.decimal);
+                    // 左1轴
+                    var minY = Number((yc - $this.interval).toFixed($this.decimal));//(minPrice - r1).toFixed($this.decimal);//(yc - $this.interval).toFixed($this.decimal);
+                    var maxY = Number((yc + $this.interval).toFixed($this.decimal));//(maxPrice + r1).toFixed($this.decimal);//(yc + $this.interval).toFixed($this.decimal);
+                    if(minY < limitDown){
+                        minY = limitDown;
                     }
-
-                    var split = parseFloat(((maxY - minY) / 6).toFixed(4));
-                    var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(4));
+                    if(maxY > limitUp){
+                        maxY = limitUp;
+                    }
+                    // 右边y1轴
+                    var dd = ((parseFloat(minY) - (yc)) / (yc) );
+                    if(Math.abs(dd) > 1){
+                        minY1 = ((parseFloat(minY) - (yc)) / (yc)).toFixed(2);
+                        maxY1 = ((parseFloat(maxY) - (yc)) / (yc)).toFixed(2);
+                    }else{
+                        minY1 = ((parseFloat(minY) - (yc)) / (yc) * 100).toFixed(2);
+                        maxY1 = ((parseFloat(maxY) - (yc)) / (yc) * 100).toFixed(2);
+                    }
+                    var split = parseFloat(((maxY - minY) / 6).toFixed($this.decimal));
+                    var split1= parseFloat((split / yc))*100;
+                    // var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed($this.decimal));
                     var option = {
-                        backgroundColor: "#fff",
                         animation: false,
-                        grid: [
-                            {
-                                top: "5%",
-                                height: '70%',
-                                show:true
-                            },
-                            {
-                                top: '85%',
-                                height: '13%',
-                            },
-                            // {
-                            //     bottom:'-100%',
-                            //     height:'10%',
-                            // }
-                        ],
-                        title: {
-                            show: false
-                        },
                         axisPointer: {
                             link: {xAxisIndex: 'all'},
                             label: {
@@ -1366,90 +975,90 @@ var MarketStatus;//市场状态
                             trigger: 'axis',
                             showContent:false
                         },
-                        dataZoom: [
-                            // {
-                            //     type: 'inside',
-                            //     xAxisIndex: [0, 1],
-                            //     start: 0,
-                            //     end: 100
-                            // },
-                            // {
-                            //     show: true,
-                            //     xAxisIndex: [0, 1],
-                            //     type: 'slider',
-                            //     bottom:'0',
-                            //     height:"40px",
-                            //     start: 0,
-                            //     end: 100,
-                            //     backgroundColor:"#fff",
-                            //     fillerColor:"rgba(0,0,0,0.2)",
-                            //     borderColor:"transparent",
-                            //     handleIcon:'path://M 100 100 L 300 100 L 300 700 L 100 700 z',
-                            //     handleStyle:{
-                            //         color:"#f2f2f2",
-                            //         borderColor:"#b4b4b4",
-                            //         borderWidth:1
-                            //     },
-                            //     textStyle:{
-                            //         color:colorList[3],
-                            //         fontSize:14
-                            //     },
-                            //     labelFormatter: function (value) {
-                            //         if(!value) return;
-                            //         return $this.v_data[value].split(" ")[3];
-                            //     }
-                            // }
-                        ],
+                        // dataZoom: [
+                        //     // {
+                        //     //     type: 'inside',
+                        //     //     xAxisIndex: [0, 1],
+                        //     //     start: 0,
+                        //     //     end: 100
+                        //     // },
+                        //     // {
+                        //     //     show: true,
+                        //     //     xAxisIndex: [0, 1],
+                        //     //     type: 'slider',
+                        //     //     bottom:'0',
+                        //     //     height:"40px",
+                        //     //     start: 0,
+                        //     //     end: 100,
+                        //     //     backgroundColor:"#fff",
+                        //     //     fillerColor:"rgba(0,0,0,0.2)",
+                        //     //     borderColor:"transparent",
+                        //     //     handleIcon:'path://M 100 100 L 300 100 L 300 700 L 100 700 z',
+                        //     //     handleStyle:{
+                        //     //         color:"#f2f2f2",
+                        //     //         borderColor:"#b4b4b4",
+                        //     //         borderWidth:1
+                        //     //     },
+                        //     //     textStyle:{
+                        //     //         color:colorList[3],
+                        //     //         fontSize:14
+                        //     //     },
+                        //     //     labelFormatter: function (value) {
+                        //     //         if(!value) return;
+                        //     //         return $this.v_data[value].split(" ")[3];
+                        //     //     }
+                        //     // }
+                        // ],
                         xAxis: [
                             {
                                 type:"category",
-                                axisTick: {
-                                    show:false
-                                },
-                                axisLabel: {
-                                    interval: function (number, string) {
-                                        if(number == 0 || number == $this.v_data.length-1){
-                                            return true;
-                                        }
-                                        if(stopTime){
-                                            if(string.indexOf(stopTime[0].split(" ")[1])>-1){
-                                                return true
-                                            }
-                                        }
-                                        if(string.indexOf("00")>-1){
-                                            return true
-                                        }
+                                // axisTick: {
+                                //     show:false
+                                // },
+                                // axisLabel: {
+                                //     interval: function (number, string) {
+                                //         if(number == 0 || number == $this.v_data.length-1){
+                                //             return true;
+                                //         }
+                                //         if(stopTime){
+                                //             if(string.indexOf(stopTime[0].split(" ")[1])>-1){
+                                //                 return true
+                                //             }
+                                //         }
+                                //         if(string.indexOf("00")>-1){
+                                //             return true
+                                //         }
 
-                                    },
-                                    formatter: function (value, number) {
-                                        var tVal = value.split(" ")[2];
-                                        return tVal;
-                                    },
-                                    textStyle: {
-                                        color: colorList[3]
-                                    }
-                                },
-                                axisLine: {
-                                    lineStyle:{
-                                        color:colorList[4]
-                                    }
-                                },
+                                //     },
+                                //     formatter: function (value, number) {
+                                //         var tVal = value.split(" ")[2];
+                                //         return tVal;
+                                //     },
+                                //     textStyle: {
+                                //         color: colorList[3]
+                                //     }
+                                // },
+                                // axisLine: {
+                                //     lineStyle:{
+                                //         color:colorList[4]
+                                //     }
+                                // },
                                 data: $this.v_data,
-                                splitLine: {
-                                    show: true
-                                },
-                                axisPointer: {
-                                    show:true,
-                                    label: {
-                                        formatter: function (params, value, s) {
-                                            return (params.value);
-                                            // return moment(parseFloat(params.value)).format("YYYY-MM-DD HH:mm");
-                                        },
-                                        padding:[3,5,5,5],
-                                        show:true
-                                    }
-                                },
-                                boundaryGap:false
+                                // splitLine: {
+                                //     show: true
+                                // },
+                                // axisPointer: {
+                                //     show:true,
+                                //     label: {
+                                //         formatter: function (params, value, s) {
+                                //             return (params.value);
+                                //             // return moment(parseFloat(params.value)).format("YYYY-MM-DD HH:mm");
+                                //         },
+                                //         padding:[3,5,5,5],
+                                //         show:true
+                                //     }
+                                // },
+                                // boundaryGap:false
                             },
                             {
                                 type:"category",
@@ -1772,7 +1381,7 @@ var MarketStatus;//市场状态
                                 itemStyle:{
                                     normal:{
                                         color:function(params){
-                                            if(flag[params.dataIndex] > 0){
+                                            if(flagColor[params.dataIndex] > 0){
                                                 return colorList[0];
                                             }else{
                                                 return colorList[1];
@@ -1816,51 +1425,28 @@ var MarketStatus;//市场状态
 
                     myChart.on('showTip', function (params) {
                         mouseHoverPoint = params.dataIndex;
-                        $("#toolContent .dataTime").text(formatDate($this.c_data[mouseHoverPoint],"1"));
-                        if ($this.history_data[mouseHoverPoint]) {
-                            if($this.history_data[mouseHoverPoint] >= yc){
-                                // 浮窗数据
-                                $(".dataPrice").text($this.history_data[mouseHoverPoint]).css("color",colorList[0]);
-                                $(".change").text($this.z_history_data[mouseHoverPoint]+"%").css("color",colorList[0]);
-                            }else{
-                                // 浮窗数据
-                                $(".dataPrice").text($this.history_data[mouseHoverPoint]).css("color",colorList[1]);
-                                $(".change").text($this.z_history_data[mouseHoverPoint]+"%").css("color",colorList[1]);
-                            }
-                            $(".vol i").text($this.a_history_data[mouseHoverPoint]);
-                            $("#quantityRatio").text($this.a_history_data[mouseHoverPoint]);
-                            // 浮层中的销量
-                            var volFix = parseFloat($this.a_history_data[mouseHoverPoint])/100;
-                            $(".volume").text(setUnit(volFix) +"手"); 
-                            
-                        } else {
-                            $(".vol i").text("-");
-                            $("#quantityRatio").text("-");
-                            $(".dataPrice").text("-");
-                            $(".change").text("-");
-                            $(".volume").text("-");
-                        }
+                        setMlineToolInfo($this,true,mouseHoverPoint);
                     });
                     // 设置成交量的单位变化状况
                     function setyAsixName(value) {
-                        var data = setUnit(value,true);
+                        var data = setUnit(value,null,true);
                         var maximun = (data=="0"?"0":floatFixedZero(data.value))
                         var yAxisName = (data=="0"?"量":data.unit);
                         $(".volumn .volumeMax").text(maximun);
                         $(".volumn .vol-unit").text(yAxisName);
                     };
 
-                    $("#main1").bind("mouseenter", function (event) {
+                    $("#main1").on("mouseenter", function (event) {
                         toolContentPosition(event);
                         $("#toolContent").show();
 
                          _this = $("#MLine");
                     });
 
-                    $("#main1").bind("mousemove", function (event) {
+                    $("#main1").on("mousemove", function (event) {
                         isHoverGraph = true;
                         toolContentPosition(event);
-
+                        $("#toolContent").show();
                          _this = $("#MLine");
                     });
 
@@ -1868,26 +1454,26 @@ var MarketStatus;//市场状态
                         isHoverGraph = false;
                         $("#toolContent").hide();
                         mouseHoverPoint = 0;
-                        
+                        setMlineToolInfo($this);
                         $(_this).children(".charts-focus").blur();
                         _this = window;
                     });
+                    
+                    // console.log($(document).scrollTop())
+                    $(document).scrollTop($(document).scrollTop()+100)
 
                     function toolContentPosition(event) {
                         var offsetX = event.offsetX;
                         var continerWidth = $("#main1").width(), toolContent = $("#toolContent").width();
                         var centerX = continerWidth / 2;
                         if (offsetX > centerX) {
-                            $("#toolContent").css("left", 55);
+                            $("#toolContent").css("left", 85);
                         } else {
-                            $("#toolContent").css("left", continerWidth - toolContent - 60);
+                            $("#toolContent").css("left", continerWidth - toolContent - 85);
                         }
                     }
                 }else{
-                    // $("#noData").show();
-                    // $("#toolContent_M").hide();
                     $(".vol").hide();
-                    // $(".chartsTab").hide();
                     console.log("初始化图表失败");
                     $("#MLine").hide();    
                 }
@@ -1905,14 +1491,490 @@ var MarketStatus;//市场状态
             if (!isHoverGraph || isHoverGraph && !$this.history_data[mouseHoverPoint] && data) {
                 $(".vol i").text(parseFloat(data[2]).toFixed(2));
                 $("#quantityRatio").text(data[2]);
-                // if( parseFloat(data[0]) >= parseFloat(yc)){
-                // }else{
-                // }
+                setMlineToolInfo($this);
             }
         }
 
     }
+    function setMlineToolInfo($this,showTip,mouseHoverPoint){
+        var point;
+        $(".vol i").text("-");
+        $("#quantityRatio").text("-");
+        $(".dataPrice").text("-");
+        $(".change").text("-");
+        $(".volume").text("-");
+        if($this.c_data.length>0){
+            if(showTip){
+                point = mouseHoverPoint;
+            }else{
+                point = $this.c_data.length-1;
+            }
+            $("#toolContent .dataTime").text(formatDate($this.c_data[point],"1"));
+            if ($this.history_data[point]) {
+                if($this.history_data[point] >= yc){
+                    // 浮窗数据
+                    $(".dataPrice").text($this.history_data[point]).css("color",colorList[0]);
+                    $(".change").text($this.z_history_data[point]+"%").css("color",colorList[0]);
+                }else{
+                    // 浮窗数据
+                    $(".dataPrice").text($this.history_data[point]).css("color",colorList[1]);
+                    $(".change").text($this.z_history_data[point]+"%").css("color",colorList[1]);
+                }
+                $(".vol i").text($this.a_history_data[point]);
+                $("#quantityRatio").text($this.a_history_data[point]);
+                // 浮层中的销量
+                var volFix = parseFloat($this.a_history_data[point])/100;
+                $(".volume").text(setUnit(volFix,true) +"手"); 
+                
+            }
+        }
+        
+        
+    }
+    //初始化图表-空图表
+    function initYCCharts(yc,$this){
+        var maxY = parseFloat((parseFloat(yc)*0.01+parseFloat(yc)).toFixed($this.options.decimal));
+        var minY = parseFloat((parseFloat(yc)-parseFloat(yc)*0.01).toFixed($this.options.decimal));
+        var maxY1 = parseFloat((maxY/yc).toFixed(2));
+        var minY1 = -parseFloat((minY/yc).toFixed(2));
+        var split = parseFloat(((maxY - yc)/3).toFixed($this.options.decimal));
+        var split1= parseFloat((split / yc))*100;
+        var option = {
+            backgroundColor: "#fff",
+            animation: false,
+            grid: [
+                {
+                    top: "5%",
+                    height: '70%',
+                    show:true
+                },
+                {
+                    show:true,
+                    top: '85%',
+                    height: '13%',
+                },
+                // {
+                //     bottom:'-100%',
+                //     height:'10%',
+                // }
+            ],
+            title: {
+                show: false
+            },
+            axisPointer: {
+                link: {xAxisIndex: 'all'},
+                label: {
+                    backgroundColor: colorList[2]
+                },
+                lineStyle:{
+                    color:colorList[2],
+                    type:"dotted",
+                    width:1
+                },
+                type:'line',
+                show:true,
+                triggerTooltip:false
+            },
+            tooltip: {
+                trigger: 'axis',
+                showContent:false
+            },
+            xAxis: [
+                {
+                    type:"category",
+                    axisTick: {
+                        show:false
+                    },
+                    axisLabel: {
+                        show:true,
+                        interval: function (number, string) {
+                            // if(number == 0 || number == $this.v_data.length-1){
+                            //     return true;
+                            // }
+                            // if(stopTime){
+                            //     if(string.indexOf(stopTime[0].split(" ")[1])>-1){
+                            //         return true;
+                            //     }
+                            // }
+                            // if(string.indexOf("00")>-1){
+                            //     return true;
+                            // }
+                            if(number % 60 == 0){
+                                return true;
+                            }else{
+                                return false;
+                            }
+                        },
+                        formatter: function (value, number) {
+                            var tVal = value.split(" ")[2];
+                            return tVal;
+                        },
+                        textStyle: {
+                            color: colorList[3]
+                        }
+                    },
+                    axisLine: {
+                        lineStyle:{
+                            color:colorList[4]
+                        }
+                    },
+                    data: $this.v_data,
+                    splitLine: {
+                        interval:function(index,value){
+                            if(index % 60 == 0){
+                                return true;
+                            }else{
+                                return false;
+                            }
+                        },
+                        show: true
+                    },
+                    axisPointer: {
+                        show:true,
+                        label: {
+                            formatter: function (params, value, s) {
+                                return (params.value);
+                                // return moment(parseFloat(params.value)).format("YYYY-MM-DD HH:mm");
+                            },
+                            padding:[3,5,5,5],
+                            show:true
+                        }
+                    },
+                    boundaryGap:false
+                },
+                {
+                    type:"category",
+                    name:"万",
+                    nameLocation:'start',
+                    nameTextStyle:{
+                        color:colorList[2]
+                    },
+                    axisTick: {
+                        interval: function (number, string) {
+                            if($this.typeIndex == "128" || $this.typeIndex == "224"){
+                                if (number % 180 == 0) {
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            }else{
+                                if (number % 30 == 0) {
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            }
+                        },
+                        show:false
+                    },
+                    axisLabel: {
+                        show:false,
+                        interval: function (number, string) {
+                            if($this.typeIndex == "128" || $this.typeIndex == "224"){
+                                if (number % 180 == 0) {
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            }else{
+                                if (number % 30 == 0) {
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            }
+                        },
+                        formatter: function (value, number) {
+                            return value.split(" ")[3];
+                        },
+                        textStyle: {
+                            color: colorList[3]
+                        }
+                    },
+                    axisLine: {
+                        lineStyle:{
+                            color:colorList[4]
+                        }
+                    },
+                    data: $this.v_data,
+                    splitLine: {
+                        show: false
+                    },
+                    gridIndex: 1,
+                    boundaryGap:false
+                },
+            ],
+            yAxis: [
+                {
+                    min: minY,
+                    max: maxY,
+                    interval: split,
+                    boundaryGap: [0, '100%'],
+                    axisTick: {
+                        show: false
+                    },
+                    type: "value",
+                    splitLine:{
+                        lineStyle:{
+                            color:"transparent"
+                        }
+                    },
+                    axisLine:{
+                        lineStyle:{
+                            color:colorList[4]
+                        }
+                    },
+                    axisLabel: {
+                        formatter: function (value, index) {
+                            if (index == 3) {
+                                return "";
+                            } else {
+                                return parseFloat(value).toFixed($this.options.decimal);
+                            }
+                        },
+                        textStyle: {
+                            color: function (value, index) {
+                                if (parseFloat(value) > parseFloat(yc)) {
+                                    return colorList[0];
+                                } else {
+                                    return colorList[1];
+                                }
+                            }
+                        }
+                    },
+                    axisPointer: {
+                        label: {
+                            formatter: function (params, value, s) {
+                                return parseFloat(params.value).toFixed($this.options.decimal);
+                            }
+                        }
+                    }
+                },
+                {
+                    min: minY1,
+                    max: maxY1,
+                    interval: split1,
+                    // name:"涨跌幅",
+                    boundaryGap: [0, '100%'],
+                    axisTick: {
+                        show: false
+                    },
+                    type: "value",
+                    splitLine:{
+                        lineStyle:{
+                            color:"transparent"
+                        }
+                    },
+                    axisLine:{
+                        lineStyle:{
+                            color:colorList[4]
+                        }
+                    },
+                    axisLabel: {
+                        formatter: function (value, index) {
+                            if (index == 3) {
+                                return "";
+                            } else {
+                                return parseFloat(value).toFixed(2) + "%";
+                            }
+                        },
+                        textStyle: {
+                            color: function (value, index) {
+                                if (parseFloat(value) > 1) {
+                                    return colorList[0];
+                                } else {
+                                    return colorList[1];
+                                }
+                            }
+                        }
+                    },
+                    axisPointer: {
+                        label: {
+                            formatter: function (params, value, s) {
+                                return parseFloat(params.value).toFixed(2) + "%";
+                            }
+                        }
+                    }
+                },
+                {
+                    type:'value',
+                    name:'成交',
+                    nameLocation:'end',
+                    nameTextStyle:{
+                        color:colorList[2],
+                        fontSize:14
+                    },
+                    nameGap:10,
+                    scale: true,
+                    splitLine:{
+                        lineStyle:{
+                            color:colorList[4]
+                        }
+                    },
+                    axisLine:{
+                        lineStyle:{
+                            color:colorList[4]
+                        }
+                    },
+                    axisLabel:{
+                        formatter:function(value,index){
+                            var data = setUnit(value,null,true,true);
+                            $(".volumeMax").text(floatFixedZero(data.value/100));
+                            $(".vol-unit").text(data.unit);
+                            return;
+                        },
+                        textStyle:{
+                            color:colorList[3],
+                            fontSize:14,
+                        },
+                        showMinLabel:true,
+                        showMaxLabel:true,
+                    },
+                    axisTick:{
+                        show:false
+                    },
+                    gridIndex: 1,
+                    splitNumber: 2
+                }
+            ],
+            series: [
+                {
+                    name: 'Mline',
+                    type: 'line',
+                    showSymbol: false,
+                    hoverAnimation: false,
+                    data: "",
+                    connectNulls:true,
+                    symbolSize:0,
+                    markLine: {
+                        animation:false,
+                        silent:true,
+                        lineStyle: {
+                            normal: {
+                                type: 'dashed',
+                                color: colorList[2],
+                                width:1
+                            }
+                        },
+                        label: {
+                            normal: {
+                                position: "start",
+                                formatter: function (params) {
+                                    return params.value + " ";
+                                }
+                            }
+                        },
+                        data: [
+                            {
+                                name: 'Y 轴值为 100 的水平线',
+                                yAxis: yc
+                            }
+                        ],
+                        symbol: ['none', 'none']
+                    },
+                    lineStyle:{
+                        normal:{
+                            color:"#2b99ff",
+                            width:1
+                        }
+                    },
+                    areaStyle:{
+                        normal:{
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                offset: 0,
+                                color: 'rgba(43, 153, 255,0.3)'
+                            }, {
+                                offset: 1,
+                                color: 'rgba(43, 153, 255,0.1)'
+                            }])
+                        }
+                    }
+                },
+                {
+                    name:'limit',
+                    type: 'line',
+                    showSymbol: false,
+                    hoverAnimation: false,
+                    connectNulls:true,
+                    symbolSize:0,
+                    markLine: {
+                        animation:false,
+                        silent:true,
+                        lineStyle: {
+                            normal: {
+                                type: 'dashed',
+                                color: colorList[2],
+                                width:0
+                            }
+                        },
+                        label: {
+                            normal: {
+                                position: "end",
+                                formatter: function (params) {
+                                    // return " " + params.value + ".00%";
 
+                                }
+                            }
+                        },
+                        data: [
+                            {
+                                name: 'Y 轴值为 100 的水平线',
+                                yAxis: 0.00
+                            }
+                        ],
+                        symbol: ['none', 'none']
+                    },
+                    lineStyle: {
+                        normal: {
+                            color: "#2b99ff",
+                            opacity:0
+                        }
+                    },
+                    data: "",
+                    yAxisIndex: 1
+                },
+                {
+                    name: 'Vol',
+                    type: 'bar',
+                    xAxisIndex: 1,
+                    yAxisIndex: 2,
+                    data: "",
+                    itemStyle:{
+                        normal:{
+                            color:function(params){
+                                if(flag[params.dataIndex] > 0){
+                                    return colorList[0];
+                                }else{
+                                    return colorList[1];
+                                }
+                            }
+                        }
+                    }
+                },
+                // {
+                //     name:'量比',
+                //     type:'line',
+                //     smooth:true,
+                //     symbol: 'none',
+                //     showSymbol: false,
+                //     hoverAnimation: false,
+                //     connectNulls:true,
+                //     symbol:'circle',
+                //     symbolSize:0,
+                //     itemStyle: {
+                //         normal: {
+                //             color: colorList[0]
+                //         }
+                //     },
+                //     data: a_history_data,
+                //     xAxisIndex: 2,
+                //     yAxisIndex: 3
+                // }
+            ]
+        };
+        myChart = echarts.init(document.getElementById('main1'));
+        myChart.setOption(option);
+    }
     $("#MLine,#kline").keyup(function (e) {
         var keyCode = e.keyCode;
         switch (keyCode) {
@@ -1944,12 +2006,17 @@ var MarketStatus;//市场状态
 
             var count = KLineSocket.KChart?KLineSocket.KChart.getOption().series[0].data.length:0;
             if (type) {
-                if (KLineSocket.KLineSet.mouseHoverPoint == 0 && index == -1) {
-                    KLineSocket.KLineSet.mouseHoverPoint = KLineSocket.KChart.getOption().series[0].data.length;
-                }
-                if (KLineSocket.KLineSet.mouseHoverPoint + index > KLineSocket.KChart.getOption().series[0].data.length - 1 && index == 1) {
-                    KLineSocket.KLineSet.mouseHoverPoint = 0;
-                    index = 0;
+                // if (KLineSocket.KLineSet.mouseHoverPoint == 0 && index == -1) {
+                //     KLineSocket.KLineSet.mouseHoverPoint = KLineSocket.KChart.getOption().series[0].data.length;
+                // }
+                // if (KLineSocket.KLineSet.mouseHoverPoint + index > KLineSocket.KChart.getOption().series[0].data.length - 1 && index == 1) {
+                //     KLineSocket.KLineSet.mouseHoverPoint = 0;
+                //     index = 0;
+                // }
+                var max = KLineSocket.KLineSet.mouseHoverPoint>=Math.round(KEnd*KLength/100)-1;
+                var min = KLineSocket.KLineSet.mouseHoverPoint<Math.round(KStart*KLength/100); 
+                if((index==-1&&min)||(index==1&&max)){
+                    return;
                 }
                 // 信息框位置
                 if ((KLineSocket.KLineSet.mouseHoverPoint+1)/KLength > KCenter/100) {
@@ -2053,6 +2120,7 @@ var MarketStatus;//市场状态
 
     // 接收到清盘指令重绘图表
     function redrawChart(data,$this){
+        console.log(111)
         $this = $this.options;
         $this.history_data = []; //价格历史记录
         $this.z_history_data = []; //涨跌幅历史记录
@@ -2066,11 +2134,11 @@ var MarketStatus;//市场状态
                 var minY = (yc - yc*0.1).toFixed(decimal);
                 var middleY = yc.toFixed(decimal);
                 var maxY = (yc + yc*0.1).toFixed(decimal);
-                var dd = ((parseFloat(minY) - parseFloat(yc)) / parseFloat(yc) * 100);
+                var dd = ((parseFloat(minY) - parseFloat(yc)) / parseFloat(yc));
 
                 if(Math.abs(dd) > 1){
-                    var minY1 = ((parseFloat(minY) - parseFloat(yc)) / parseFloat(yc)).toFixed(2);
-                    var maxY1 = ((parseFloat(maxY) - parseFloat(yc)) / parseFloat(yc)).toFixed(2);
+                    var minY1 = ((parseFloat(minY) - (yc)) / (yc)).toFixed(2);
+                    var maxY1 = ((parseFloat(maxY) - (yc)) / (yc)).toFixed(2);
                 }else{
                     var minY1 = ((parseFloat(minY) - parseFloat(yc)) / parseFloat(yc) * 100).toFixed(2);
                     var maxY1 = ((parseFloat(maxY) - parseFloat(yc)) / parseFloat(yc) * 100).toFixed(2);
@@ -2080,8 +2148,8 @@ var MarketStatus;//市场状态
                 var middleY = 1;
                 var maxY = 2;
             }
-            var split = parseFloat(((maxY - minY) / 6).toFixed(4));
-            var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(4));
+            var split = parseFloat(((maxY - minY) / 6).toFixed(decimal));
+            var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(decimal));
 
             v_data =  getxAxis((data.Date?data.Date:data[0].Date),$this);
             var option ={
@@ -2093,7 +2161,36 @@ var MarketStatus;//市场状态
                     },{
                         min: minY1,
                         max: maxY1,
-                        interval: split1
+                        interval: split1,
+                        axisLabel: {
+                            formatter: function (value, index) {
+                                if (index == 3) {
+                                    return "";
+                                } else {
+                                    return parseFloat(value).toFixed(2) + "%";
+                                }
+                            },
+                            textStyle: {
+                                color: function (value, index) {
+                                    var status = 0;
+                                    // if(MarketStatus == 1){
+                                    //     status = 1;
+                                    // }
+                                    if (parseFloat(value) > status) {
+                                        return colorList[0];
+                                    } else {
+                                        return colorList[1];
+                                    }
+                                }
+                            }
+                        },
+                        axisPointer: {
+                            label: {
+                                formatter: function (params, value, s) {
+                                    return parseFloat(params.value).toFixed(2) + "%";
+                                }
+                            }
+                        }
                     }
                 ],
                 // xAxis:[{
@@ -2123,7 +2220,7 @@ var MarketStatus;//市场状态
                 ]
             };
             myChart.setOption(option);
-            $('.tb-fn-num').html('<span class="">-</span><span class="">-</span><span class="">-</span>');
+            $('.tb-fn-num').html('<span class="">-</span><span class="">0.00</span><span class="">0.00%</span>');
             var strHtml = '';
             if(stockType == "Field"){
                 strHtml +='<ul class=\"cb-zs-pk\">\
@@ -2264,7 +2361,10 @@ var MarketStatus;//市场状态
 */
 // 查询十大流通股和公司信息
 function requireCom(reqComOpt,code){
-    var reqUrl = "http://172.17.20.178:8080/DKService/GetService?Service=DataSourceService.Gets&ReturnType=JSON&OBJID=";
+    var date = new Date();
+    // var reqUrl = DKServiceUrl + "DKService/GetService?time="+date.getMinutes()+date.getSeconds()+"&Service=DataSourceService.Gets&ReturnType=JSON&OBJID=";
+    var reqUrl = DKServiceUrl + "DKService/GetService?time="+date.getMinutes()+date.getSeconds()+"&Service=DataSourceService.Gets&ReturnType=JSON&OBJID=";
+    
     // 1=》000001
     if(code.length<6){
         code = new Array(6-code.length+1).join("0") + code;
@@ -2279,6 +2379,9 @@ function requireCom(reqComOpt,code){
             error: function(data){
                 console.log("请求公司信息出错");
             },
+            // complete:function(xhr){
+            //     console.log(xhr)
+            // },
             success: function(data){
                 if(data.response.data){
                     var responseInfo = data.response.data;
@@ -2408,7 +2511,7 @@ function setSDLTGInfo(list){
         var className = obj.DIRECT=="减持"?"green":(obj.DIRECT=="增持"?"red":null);
         var s_hld_shr_chg = parseInt(obj.HLD_SHR_CHG_LST)!=0?setUnit(obj.HLD_SHR_CHG_LST.replace(/,/g,"").trim()):"";
         txt += "<li>\
-                    <span>"+obj.SH_NAME+"</span>\
+                    <span title="+obj.SH_NAME+">"+obj.SH_NAME+"</span>\
                     <span>"+floatFixedTwo(obj.TTL_CPTL_RAT)+"%</span>\
                     <span>"+s_hld_shr+"</span>\
                     <span class="+className+">"+obj.DIRECT+s_hld_shr_chg+"</span>\

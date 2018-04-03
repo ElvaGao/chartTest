@@ -2,6 +2,10 @@ html,body,div,ul,li,h1,h2{
     margin: 0;
     padding: 0;
 }
+body{
+    font-family: 'Microsoft YaHei',Arial,'微软雅黑','宋体';
+    background-color:'#f6f6f6'; 
+}
 ul{
     display: block;
 }
@@ -53,21 +57,29 @@ table, tr, td, th {
     border: 0;
     padding: 0;
 }
-body{
-    font-family: 'Microsoft YaHei',Arial,'微软雅黑','宋体';
-    background-color:'#f6f6f6'; 
-}
 .wrap{
     width: 1280px;
     margin: auto;
     padding: 0 20px;
 }
 .col_e22{
-    color: #e22f2a;
+    color: #e22f2a !important;
 }
 .col_3bc{
-    color: #3bc25b;
+    color: #3bc25b !important;
 }
+.col_bgC{
+    background-color: rgba(240, 230, 140, 0.5);
+    transition: background-color 0.5s ease-in;
+}
+/* @keyframes colorBGC{
+    50%{
+        background-color: rgba(240, 230, 140, 0.5);
+    }
+    100%{
+        background-color: transparent;
+    }
+} */
 /* 图表 */
 .container{
     width: 833px;
@@ -166,6 +178,7 @@ body{
     padding: 0 10px;
     display: inline-block;
     color: #333;
+    outline: none
 }
 .search-input>input::-webkit-input-placeholder{
     color: #555;
@@ -186,6 +199,9 @@ body{
 }
 .search-btn:hover{
     background-color: #f0f0f0;
+}
+.tr-active{
+    background: #f0f0f0;
 }
 .market-charts{
     margin: 20px;
@@ -214,6 +230,9 @@ body{
 .market-chart-decs>i:first-child{
     font-size: 24px;
 }
+.market-chart-decs-black{
+    color: #666;
+}
 .market-main-chart{
     padding-right: 40px;
     text-align: center;
@@ -222,7 +241,10 @@ body{
 .market-main-chart>a{
     color: #333;
 }
-/* 涨跌幅列表 */
+#main1 canvas,#main2 canvas,#main3 canvas{
+    cursor: pointer;
+}
+/* 报价表 */
 .zdf-list{
     padding: 40px;
 }
@@ -235,11 +257,15 @@ body{
 .zdf-list-one{
     width: 100%;
 }
-.zdf-list-one>ul,.zdf-list-detail>a>ul{
+.noData{
+    width: 100%;
+    text-align: center;
+    padding-top: 20px;
+    color: #555;
+}
+.zdf-list-one>ul,.zdf-list-detail>ul{
     display: flex;
     text-align: center;
-    text-overflow: ellipsis;
-    overflow: hidden;
     font-size: 14px;
 }
 .zdf-list-title{
@@ -262,36 +288,54 @@ body{
     border-right: 4px solid transparent;
     border-left: 4px solid transparent;
 }
-.zdf-list-detail>a>ul>li{
+.zdf-list-detail>ul>li{
     flex: 1;
     line-height: 50px;
     color: #555;
+    /* max-width: 83px; */
+    text-align: center;
+    /* text-overflow: ellipsis;
+    overflow: hidden; */
 }
-.zdf-list-detail>a>ul:hover,.zdf-list-detail>a>ul:focus,.zdf-list-detail>a>ul:active{
+.zdf-list-title>li:nth-child(n+12){
+    flex:1.3;
+}
+.zdf-list-detail>ul>li:nth-child(n+12){
+    flex:1.3;
+}
+/* .zdf-list-detail>ul>li{
+
+} */
+.zdf-list-detail>ul:hover,.zdf-list-detail>ul:focus,.zdf-list-detail>ul:active{
     background-color: #e5e5e5;
 }
 .zdf-list-detail:nth-of-type(even){
     background-color: #f2f2f2;
 }
+.zdf-list-detail>ul>li>a{
+    color: #555;
+}
 /* 页码 */
-.M-box{
+.M-box2{
     line-height: 40px;
     font-size: 14px;
     text-align: right;
     padding-bottom: 40px;
 }
-.M-box>a{
+.M-box2>a{
     color: #555;
     width: 40px;
     display: inline-block;
+    text-align: center;
 }
-.M-box>.active{
+.M-box2>.active{
     color: #2b99ff;
     width: 40px;
     display: inline-block;
     font-weight: bold;
+    text-align: center;
 }
-.M-box>.prev,.M-box>.next{
+.M-box2>.prev,.M-box2>.next{
     color: #555;
     width: 100px; 
     display: inline-block;

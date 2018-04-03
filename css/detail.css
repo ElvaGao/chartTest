@@ -30,7 +30,14 @@ i,em{
 	float: right;
 }
 .clearfix{
+	*zoom: 1;
+}
+.clearfix:after{
+	content: "";
+	height: 0;
+	display: block;
 	clear: both;
+	overflow: hidden;
 }
 .container-detail{
 	width: 1240px;
@@ -49,13 +56,18 @@ i,em{
 	border: 1px solid #e5e5e5;
 	overflow: hidden;
 }
+#toolContent{
+	top: 38px;
+}
 /*top bar*/
 .top-bar{
-	display: flex;
+	display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
 }
 .tb-fieldName{
-	padding-right: 40px;
-	min-width: 260px;
+	width: 260px;
 	border-right: 1px solid #e5e5e5;
 }
 .tb-fn-title{
@@ -65,23 +77,27 @@ i,em{
 .tb-fn-num{
 	font-size: 16px;
 	line-height: 27px;
+	overflow: hidden;
 }
 .tb-fn-num span{
 	float: left;
 	margin-right: 20px;
 }
 .tb-fielList{
-	font-size: 0;
-	padding-left: 40px;
-	overflow: hidden;
-	/*width: 890px;*/
+	-webkit-box-flex: 1;
+    -webkit-flex: 1;
+    -ms-flex: 1;
 	flex: 1;
+	padding-left: 40px;
 }
 .tb-fielList li{
-	display: block;
 	float: left;
 	font-size: 16px;
 	line-height: 27px;
+	height: 27px;
+	width: 25%;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 .tb-fielList li:nth-child(n){
 	width: 19%;
@@ -348,16 +364,13 @@ ul{
 	font-size: 14px;
 }
 .kline-MA5{
-	color: #20bfeb;
+	color: #97bdde;
 }
 .kline-MA10{
-	color: #2c81ff;
+	color: #c4a926;
 }
 .kline-MA20{
-	color: #9d62ff;
-}
-.kline-MA30{
-	color: #ff6adb;
+	color: #d182aa;
 }
 .kline-charts-container{
     position: relative;
@@ -405,7 +418,7 @@ ul{
     margin-right: 10px;
     font-weight: normal;
 }
-.macd,.deal,.volumn,.volMacd,.kline-buttons{
+.techIndex,.deal,.volumn,.volMacd,.kline-buttons{
 	position: absolute;
 	cursor: pointer;
 	z-index: 2;
@@ -416,12 +429,12 @@ ul{
 	/* top: 73.4%; */
 }
 .deal span,
-.macd span{
+.techIndex span{
 	margin-right: 20px;
 	font-size: 14px;
 }
 .deal .deal-title,
-.macd .macd-title{
+.techIndex .techIndex-name{
 	display: inline-block;
 	text-align: right;
 	margin-left: 0;
@@ -432,22 +445,25 @@ ul{
 	color: #555;
 }
 .deal-MA5{
-	color: #51c8ee;
+	color: #97bdde;
 }
 .deal-MA10{
-	color: #2c81ff;
+	color: #c4a926;
 }
-.macd{
+.deal-MA20{
+	color: #d182aa;
+}
+.techIndex{
 	top: 71.6%;
 	left: 3%;
 }
-.macd-Dif{
+.techIndex_0{
 	color: #20bfeb;
 }
-.macd-Dea{
+.techIndex_1{
 	color: #ff8964;
 }
-.macd-Macd{
+.techIndex_2{
 	color: #ff6adb;
 }
 .volumn{
@@ -462,9 +478,9 @@ ul{
 	height: 9%;
 }
 .volMacd{
-	top: 75%;
-	height: 9%;
-	left: 6%;
+	top: 74.5%;
+	height: 10.5%;
+	left: 5%;
 }
 .volumn div,
 .volMacd div{

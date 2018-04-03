@@ -72,6 +72,8 @@ $(document).keydown(function(e){
                                     }
                                     // Code是不为空的数字时，进行查询
                                     if(value!=""&&value!=null){
+                                        // 连续按键会清除查询
+                                        clearTimeout(ele.options.timer);
                                         // 延时查询
                                         ele.options.timer = setTimeout(function(){
                                             var url = "http://103.66.33.58:443/GetCodes?ExchangeID=0&Codes="+value;
