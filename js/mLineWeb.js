@@ -758,8 +758,8 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
                         if(maxY >= limitUp){
                             maxY = limitUp;
                         }
-                        minY1 = (parseFloat(minY) / yc).toFixed(4);
-                        maxY1 = (parseFloat(maxY) / yc).toFixed(4);
+                        minY1 = ((parseFloat(minY)-yc) / yc).toFixed(4);
+                        maxY1 = ((parseFloat(maxY)-yc) / yc).toFixed(4);
                         split = parseFloat(((maxY - minY) / 6).toFixed($this.decimal));
                         split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(6));
 
@@ -796,7 +796,7 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
                                         if (index == 3) {
                                             return ""
                                         } else {
-                                            return parseFloat(value).toFixed($this.decimal);
+                                            return parseFloat(value).toFixed($this.decimal)+ "%";
                                         }
                                     }
                                 }
@@ -812,16 +812,36 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
                                     ]
                                 }
                             },
-                            // {
-                            //     markLine: {
-                            //         data: [
-                            //             {
-                            //                 name: 'Y 轴值为 0 的水平线',
-                            //                 yAxis: middleY1
-                            //             }
-                            //         ]
-                            //     }
-                            // }
+                            {
+                                name:'limit',
+                                type: 'line',
+                                markLine: {
+                                    lineStyle: {
+                                        normal: {
+                                            type: 'dashed',
+                                            color: colorList[2],
+                                            width:0
+                                        }
+                                    },
+                                    // label: {
+                                    //     normal: {
+                                    //         position: "end",
+                                    //         formatter: function (params) {
+                                    //             return " " + params.value + ".00%";
+            
+                                    //         }
+                                    //     }
+                                    // },
+                                    data: [
+                                        {
+                                            name: 'Y 轴值为 100 的水平线',
+                                            yAxis: 0.00
+                                        }
+                                    ],
+                                    symbol: ['none', 'none']
+                                },
+                                yAxisIndex: 1
+                            },
                         ]
                         });
                     }
@@ -1507,7 +1527,7 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
             if(showTip){
                 point = mouseHoverPoint;
             }else{
-                point = $this.c_data.length-1;
+                point = $this.a_history_data.length-1;
             }
             $("#toolContent .dataTime").text(formatDate($this.c_data[point],"1"));
             if ($this.history_data[point]) {
@@ -1535,8 +1555,8 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
     function initYCCharts(yc,$this){
         var maxY = parseFloat((parseFloat(yc)*0.01+parseFloat(yc)).toFixed($this.options.decimal));
         var minY = parseFloat((parseFloat(yc)-parseFloat(yc)*0.01).toFixed($this.options.decimal));
-        var maxY1 = parseFloat((maxY/yc).toFixed(2));
-        var minY1 = -parseFloat((minY/yc).toFixed(2));
+        var maxY1 = parseFloat(((maxY-yc)/yc).toFixed(2));
+        var minY1 = -parseFloat(((maxY-yc)/yc).toFixed(2));
         var split = parseFloat(((maxY - yc)/3).toFixed($this.options.decimal));
         var split1= parseFloat((split / yc))*100;
         var option = {
@@ -1780,7 +1800,7 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
                         },
                         textStyle: {
                             color: function (value, index) {
-                                if (parseFloat(value) > 1) {
+                                if (parseFloat(value) > 0) {
                                     return colorList[0];
                                 } else {
                                     return colorList[1];
@@ -1911,7 +1931,7 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
                             normal: {
                                 position: "end",
                                 formatter: function (params) {
-                                    // return " " + params.value + ".00%";
+                                    return " " + params.value + ".00%";
 
                                 }
                             }
@@ -2001,7 +2021,7 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
             var KStart = KLineSocket.KChart.getOption().dataZoom[0].start,
                 KEnd = KLineSocket.KChart.getOption().dataZoom[0].end,
                 KCenter = (KEnd-KStart)/2+KStart,
-                KLength = KLineSocket.HistoryData.hDate.length,
+                KLength = KLineSocket.HistoryData.hCategoryList.length,
                 KContinerWidth = $("#kline_charts").width();
 
             var count = KLineSocket.KChart?KLineSocket.KChart.getOption().series[0].data.length:0;
@@ -2120,7 +2140,6 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
 
     // 接收到清盘指令重绘图表
     function redrawChart(data,$this){
-        console.log(111)
         $this = $this.options;
         $this.history_data = []; //价格历史记录
         $this.z_history_data = []; //涨跌幅历史记录

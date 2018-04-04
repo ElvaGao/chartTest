@@ -210,13 +210,12 @@ function connectEvent(opt){
                 if(!data.QueryRes && data.QueryRes.length<=0){
                     return;
                 }
-                count++;             
-                fillNewOfferForm(data);
-                if(count==1){
+                count++;
+                // console.log(priceForm[0]?priceForm[0].InstrumentName:null,data.QueryRes[0].InstrumentName)
+                if(priceForm.length==0||priceForm[0]&&priceForm[0].InstrumentName==data.QueryRes[0].InstrumentName){
+                    fillNewOfferForm(data);
                     priceForm = data.QueryRes;
-                }else if(data.QueryRes[0].InstrumentName==priceForm[0].InstrumentName){
-                    priceForm = data.QueryRes;
-                }
+                }  
                 break;
             case "R3302":
                 if(data.ErrorCode == 9999){

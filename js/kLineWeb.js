@@ -131,27 +131,27 @@ $(document).keydown(function(e){
                     case "hour":
                         if(MarketStatus==2||MarketStatus==4){
                             KLineSocket.getHistoryKQAllMinToday();
-                            // 指标
-                            // 查询当天数据
-                            KLineSocket.getTechIndexKQAllMinTodayMA();
-                            // 查询历史数据
-                            setTimeout(function(){
-                                // 查询MAVOL
-                                KLineSocket.getTechIndexKQAllMinTodayMAVOL();
-                            },500);
+                            // // 指标
+                            // // 查询当天数据
+                            // KLineSocket.getTechIndexKQAllMinTodayMA();
+                            // // 查询历史数据
+                            // setTimeout(function(){
+                            //     // 查询MAVOL
+                            //     KLineSocket.getTechIndexKQAllMinTodayMAVOL();
+                            // },500);
                         }else{
                             KLineSocket.getHistoryKQFirstMinPrev();
                             KLineSocket.HistoryData.queryTimes = 1;
-                            // 指标
-                            // 查询当天数据
-                            KLineSocket.getTechIndexKQFirstMinPrevMA();
-                            KLineSocket.TechIndexHistoryData.MA.queryTimes = 1;
-                            // 查询历史数据
-                            setTimeout(function(){
-                                // 查询MAVOL
-                                KLineSocket.getTechIndexKQFirstMinPrevMAVOL();
-                                KLineSocket.TechIndexHistoryData.MAVOL.queryTimes = 1;
-                            },500);
+                            // // 指标
+                            // // 查询当天数据
+                            // KLineSocket.getTechIndexKQFirstMinPrevMA();
+                            // KLineSocket.TechIndexHistoryData.MA.queryTimes = 1;
+                            // // 查询历史数据
+                            // setTimeout(function(){
+                            //     // 查询MAVOL
+                            //     KLineSocket.getTechIndexKQFirstMinPrevMAVOL();
+                            //     KLineSocket.TechIndexHistoryData.MAVOL.queryTimes = 1;
+                            // },500);
                         }
                         
                         break;
