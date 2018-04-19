@@ -1,11 +1,12 @@
 var KLineSocket;
 var _this;
 var clickTimer = null;
+var myVolume = 0;
 var KColorList = {
     MA:['#97bdde','#c4a926','#d182aa'],
     MAVOL:['#97bdde','#c4a926','#d182aa'],
     MACD:['#6c88bb','#c4a926','#e1322f','#5acf5e'],
-    MTM:['#6c88bb','#c4a926'],
+    MTM:['#6c88bb','#c4a926','#e1322f'],
     RSI:['#6c88bb','#c4a926','#d182aa'],
     KDJ:['#6c88bb','#c4a926','#d182aa']
 }
@@ -13,7 +14,7 @@ var chartTypes = {
     MA:['line','line','line'],
     MAVOL:['line','line','line'],
     MACD:['line','line','bar'],
-    MTM:['line','line'],
+    MTM:['line','line','line'],
     RSI:['line','line','line'],
     KDJ:['line','line','line']
 }
@@ -23,6 +24,15 @@ var Names = {
     RSI:['RSI$1','RSI$2','RSI$3'],
     KDJ:['K','D','J']
 }
+// 技术指标 下面点击的地方的小数位数
+var fixedIndex = {
+    MACD: [2,2,3],
+    MTM:[2,2,2],
+    RSI:[2,2,2],
+    KDJ:[2,2,2]
+}
+var VMmin,VMmax;
+var oldIndexNameOthers = "";
 $(document).keydown(function(e){
     if(_this!=undefined&&($(_this).attr("id")=="MLine"||$(_this).attr("id")=="kline")){
         $(_this).children(".charts-focus").focus();
@@ -76,6 +86,13 @@ $(document).keydown(function(e){
                 // 取消之前的订阅,同时清空历史数据数组
                 if(KLineSocket.HistoryData.preLineType!=undefined&&KLineSocket.HistoryData.preLineType!=""){
                     KLineSocket.getKWatchCC();
+                    KLineSocket.getKWatchCCIndexMA_VOL();
+                    if(KLineSocket.HistoryData.preLineType&&KLineSocket.HistoryData.preLineType!="mline"&&oldIndexNameOthers&&oldIndexNameOthers!=""){
+                        //更新订阅的参数
+                        var indexOthersOptions = getQueryTechIndexMsg(KLineSocket.HistoryData.preLineType,oldIndexNameOthers);
+                        KLineSocket.option.KWatchCCIndexOthers = $.extend({}, KLineSocket.option.KWatchCCIndexOthers, { Instrumenttype: "51-"+indexOthersOptions.Period+"-"+indexOthersOptions.IndexID });
+                        KLineSocket.getKWatchCCIndexOthers();
+                    }
 
                     // 清空数据，设置假数据
                     $.each(KLineSocket.HistoryData,function(i,obj){
@@ -98,65 +115,69 @@ $(document).keydown(function(e){
                 if(klineType=="mline"){
                     return;
                 } 
+
                 KLineSocket.HistoryData.queryTimes = 0;
                 $.each(KLineSocket.TechIndexHistoryData,function(i,o){
                     o.queryTimes = 0;
-                })
+                });
 
-                // KLineSocket.ws.onopen();
-                /*
-                * 个股/指数 实时数据，通过快照接口
-                * 其他数据，处理方式不同
-                */
-                switch(KLineSocket.option.lineType){
-                    case "day":
-                    case "week":
-                    case "month":
-                    case "year":
-                        KLineSocket.getHistoryKQFirstDayPrev();
-                        // 指标
-                        // 查询当天数据
-                        // KLineSocket.getTechIndexKQFirstDayPrevMA();
-                        // 查询历史数据
-                        // setTimeout(function(){
-                        //     // 查询MA MAVOL
-                            // KLineSocket.getTechIndexKQFirstDayPrevMAVOL();
-                        // },500)
-                        break;
-                    case "minute":
-                    case "fivem":
-                    case "tenm":
-                    case "fifm":
-                    case "thim":
-                    case "hour":
-                        if(MarketStatus==2||MarketStatus==4){
-                            KLineSocket.getHistoryKQAllMinToday();
-                            // // 指标
-                            // // 查询当天数据
-                            // KLineSocket.getTechIndexKQAllMinTodayMA();
-                            // // 查询历史数据
-                            // setTimeout(function(){
-                            //     // 查询MAVOL
-                            //     KLineSocket.getTechIndexKQAllMinTodayMAVOL();
-                            // },500);
-                        }else{
-                            KLineSocket.getHistoryKQFirstMinPrev();
-                            KLineSocket.HistoryData.queryTimes = 1;
-                            // // 指标
-                            // // 查询当天数据
-                            // KLineSocket.getTechIndexKQFirstMinPrevMA();
-                            // KLineSocket.TechIndexHistoryData.MA.queryTimes = 1;
-                            // // 查询历史数据
-                            // setTimeout(function(){
-                            //     // 查询MAVOL
-                            //     KLineSocket.getTechIndexKQFirstMinPrevMAVOL();
-                            //     KLineSocket.TechIndexHistoryData.MAVOL.queryTimes = 1;
-                            // },500);
-                        }
+                // 查询市场状态
+                KLineSocket.getKMarketStatus();
+
+
+                // /*
+                // * 个股/指数 实时数据，通过快照接口
+                // * 其他数据，处理方式不同
+                // */
+                // switch(KLineSocket.option.lineType){
+                //     case "day":
+                //     case "week":
+                //     case "month":
+                //     case "year":
+                //         KLineSocket.getHistoryKQFirstDayPrev();
+                //         // 指标
+                //         // 查询当天数据
+                //         KLineSocket.getTechIndexKQFirstDayPrevMA();
+                //         // 查询历史数据
+                //         setTimeout(function(){
+                //             // 查询MA MAVOL
+                //             KLineSocket.getTechIndexKQFirstDayPrevMAVOL();
+                //         },500)
+                //         break;
+                //     case "minute":
+                //     case "fivem":
+                //     case "tenm":
+                //     case "fifm":
+                //     case "thim":
+                //     case "hour":
+                //         // if(MarketStatus==2||MarketStatus==4){
+                //             KLineSocket.getHistoryKQAllMinToday();
+                //             // 指标
+                //             // 查询当天数据
+                //             KLineSocket.getTechIndexKQAllMinTodayMA();
+                //             // 查询历史数据
+                //             setTimeout(function(){
+                //                 // 查询MAVOL
+                //                 KLineSocket.getTechIndexKQAllMinTodayMAVOL();
+                //             },500);
+                //         // }else{
+                //         //     KLineSocket.getHistoryKQFirstMinPrev();
+                //         //     KLineSocket.HistoryData.queryTimes = 1;
+                //         //     // 指标
+                //         //     // 查询当天数据
+                //         //     KLineSocket.getTechIndexKQFirstMinPrevMA();
+                //         //     KLineSocket.TechIndexHistoryData.MA.queryTimes = 1;
+                //         //     // 查询历史数据
+                //         //     setTimeout(function(){
+                //         //         // 查询MAVOL
+                //         //         KLineSocket.getTechIndexKQFirstMinPrevMAVOL();
+                //         //         KLineSocket.TechIndexHistoryData.MAVOL.queryTimes = 1;
+                //         //     },500);
+                //         // }
                         
-                        break;
-                    default:;
-                }
+                //         break;
+                //     default:;
+                // }
 
                 // 当前K线存储为前一根K线
                 KLineSocket.HistoryData.preLineType = KLineSocket.option.lineType;     
@@ -266,6 +287,40 @@ var KLineRequire = function(option, klineType){
             MsgType:"N1010",
             Instrumenttype:""
         },
+        // 订阅指标
+        KWatchIndexMA_VOL: {                
+            InstrumentID: InstrumentID,
+            ExchangeID: ExchangeID,
+            MsgType:"S1010",
+            Instrumenttype:""
+        },
+        // 取消订阅指标
+        KWatchCCIndexMA_VOL: {                
+            InstrumentID: InstrumentID,
+            ExchangeID: ExchangeID,
+            MsgType:"N1010",
+            Instrumenttype:"51"
+        },
+        //KWatchIndexOthers
+        KWatchIndexOthers: {                
+            InstrumentID: InstrumentID,
+            ExchangeID: ExchangeID,
+            MsgType:"S1010",
+            Instrumenttype:""
+        },
+        // 取消订阅指标
+        KWatchCCIndexOthers: {                
+            InstrumentID: InstrumentID,
+            ExchangeID: ExchangeID,
+            MsgType:"N1010",
+            Instrumenttype:""
+        },
+        KMarketStatus:{
+            InstrumentID: InstrumentID,
+            ExchangeID: ExchangeID,
+            MsgType:"Q8002",
+            PructType:"0"
+        },
         // 指标查询历史数据
         // IndexID    MA-3;MAVOL-4;MACD-5;MTM-6;RSI-10;KDJ-11
         // Period     10-1分钟；11-5分钟；12-10分钟；13-15分钟；14-30分钟；15-60分钟；30-日线；31-周线；32-月线；33-季线；34-年线
@@ -345,6 +400,9 @@ var KLineRequire = function(option, klineType){
     // 确定订阅类型
     this.options.KWatch = $.extend({}, this.options.KWatch, { Instrumenttype: objKWatch.Instrumenttype });
 
+    var objIndexWatch = getQueryTechIndexMsg(klineType,"MA");
+    this.options.KWatchIndexMA_VOL = $.extend({}, this.options.KWatchIndexMA_VOL, { Instrumenttype: "51-"+objIndexWatch.Period+"-3,51-"+objIndexWatch.Period+"-4"});
+
     // 更新查询历史数据参数-日周月年
     this.options.HistoryKQFirstDayPrev = $.extend({}, this.options.HistoryKQFirstDayPrev, { MsgType: objKWatch.MsgType});
     this.options.HistoryKQAllDayPrev = $.extend({}, this.options.HistoryKQAllDayPrev, { MsgType: objKWatch.MsgType});
@@ -368,6 +426,8 @@ var KLineRequire = function(option, klineType){
     if(KLineSocket.HistoryData.preLineType!=undefined){
         var objKWatchCC = getQueryType(KLineSocket.HistoryData.preLineType);
         this.options.KWatchCC = $.extend({}, this.options.KWatchCC, { Instrumenttype: objKWatchCC.Instrumenttype });
+        var objIndexWatchCC = getQueryTechIndexMsg(KLineSocket.HistoryData.preLineType,"MA")
+        this.options.KWatchCCIndexMA_VOL = $.extend({}, this.options.KWatchCCIndexMA_VOL, { Instrumenttype: "51-"+objIndexWatchCC.Period+"-3,51-"+objIndexWatchCC.Period+"-4" });
     }
 };
 function getQueryType(klineType){
@@ -453,7 +513,7 @@ function getQueryType(klineType){
 
     return typeObj;
 }
-// 技术指标请求参数查询-根据名字得到对应数值
+// 技术指标请求参数查询-根据名字得到对应数值Period\IndexID
 function getQueryTechIndexMsg(klineType,lineName){
     var LineMsg = {
         Period: null,
@@ -738,6 +798,23 @@ WebSocketConnect.prototype.__proto__ = {
     getKWatchCC:        function(){
                             this.request(this.option.KWatchCC);
                         },
+                        
+    // 订阅指标
+    getKWatchIndexMA_VOL: function(){
+                            this.request(this.option.KWatchIndexMA_VOL);
+                        },
+    // 取消订阅指标
+    getKWatchCCIndexMA_VOL: function(){
+                                this.request(this.option.KWatchCCIndexMA_VOL);
+                            },
+    // 订阅指标getKWatchIndexOthers
+    getKWatchIndexOthers: function(){
+                                this.request(this.option.KWatchIndexOthers);
+                            },
+    // 取消订阅指标getKWatchIndexOthers
+    getKWatchCCIndexOthers: function(){
+                                this.request(this.option.KWatchCCIndexOthers);
+                            },
     getHeartSend:       function(){
                             this.request(this.HeartSend);
                         },
@@ -752,6 +829,10 @@ WebSocketConnect.prototype.__proto__ = {
                                     };
                                 })(TechIndexName);
                             }
+                        },
+    //市场状态查询
+    getKMarketStatus: function(){
+                            this.request(this.option.KMarketStatus);
                         }
 };
 // websocket请求
@@ -804,7 +885,6 @@ var initSocketEvent = function(socket){
                             if(!(exchangeID==MsgExchangeID&&instrumentID==MsgInstrumentID)){
                                 return;
                             }
-
 
                              // 开始查询历史数据
                             if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
@@ -894,29 +974,6 @@ var initSocketEvent = function(socket){
                                     if( msgTypeNow.MsgType&&(MsgType.slice(1) != msgTypeNow.MsgType.slice(1))){
                                         return;
                                     }
-                                    // 处理日周月年多返回一条当天的数据的错误
-                                    if(KLineSocket.option.lineType=="day"){
-                                        if(KLineSocket.HistoryData.queryTimes==0){
-                                            if(data.KLineCount<=199){
-                                                if(data.KLineCount!=data.KLineSeriesInfo.length){
-                                                    data.KLineCount = data.KLineSeriesInfo.length; 
-                                                }
-                                            }else{
-                                                data.KLineCount = data.KLineCount - 199 + data.KLineSeriesInfo.length;
-                                            }
-                                        }
-                                    }
-                                    if(KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
-                                        if(KLineSocket.HistoryData.queryTimes==0){
-                                            if(data.KLineCount<=199){
-                                                if(data.KLineCount!=data.KLineSeriesInfo.length){
-                                                    data.KLineSeriesInfo.length = data.KLineCount; 
-                                                }
-                                            }else{
-                                                data.KLineSeriesInfo.length = 199;
-                                            }
-                                        }
-                                    }
                                     var notDay = !(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year");
                                     if(notDay&&KLineSocket.HistoryData.dataLengthToday==0&&KLineSocket.HistoryData.queryTimes==1||KLineSocket.HistoryData.queryTimes==0){
                                         $.each(KLineSocket.HistoryData,function(i,obj){
@@ -925,8 +982,6 @@ var initSocketEvent = function(socket){
                                                 KLineSocket.HistoryData.dataLength = data.KLineCount>=720?720:data.KLineCount;
                                                 KLineSocket.HistoryData[i] = new Array(KLineSocket.HistoryData.dataLength);
                                                 
-
-
                                                 if(i == "hCategoryList"){
                                                     $.each(KLineSocket.HistoryData.hCategoryList,function(i,o){
                                                         KLineSocket.HistoryData.hCategoryList[i] = "1997-1-1 一 9:30";          // 横轴
@@ -953,9 +1008,15 @@ var initSocketEvent = function(socket){
                                             }
                                         });
 
-                                        if(!(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year")){
-                                            socket.getKWatch();      // 订阅当前日期K线=分钟K线
-                                        }
+                                        // if(!(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year")){
+                                            socket.getKWatch();      // 订阅当前日期K线+分钟K线
+                                            // var indexObj = getQueryType(KLineSocket.option.lineType);
+                                            if(!(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year")){
+                                                socket.getKWatchIndexMA_VOL();
+                                            }
+                                            // console.log(getQueryType);
+                                            // socket.getKWatch();      // 订阅当前指标
+                                        // }
                                         
                                     }
                                     
@@ -970,6 +1031,65 @@ var initSocketEvent = function(socket){
                                     }
                                     TechIndexLines(dataList, "history");
                                     break;
+                                case 'P0051': // 技术指标订阅
+                                    TechIndexLines(dataList);//处理技术指标
+                                    break;
+                                case 'R8002':
+                                        var MarketStatus = data.MarketStatus;
+                                        /*
+                                         * 个股/指数 实时数据，通过快照接口
+                                         * 其他数据，处理方式不同
+                                         */
+                                        switch(KLineSocket.option.lineType){
+                                            case "day":
+                                            case "week":
+                                            case "month":
+                                            case "year":
+                                                KLineSocket.getHistoryKQFirstDayPrev();
+                                                // 日周月年指标不可用
+                                                // // 指标
+                                                // // 查询当天数据
+                                                // KLineSocket.getTechIndexKQFirstDayPrevMA();
+                                                // // 查询历史数据
+                                                // setTimeout(function(){
+                                                //     // 查询MA MAVOL
+                                                //     KLineSocket.getTechIndexKQFirstDayPrevMAVOL();
+                                                // },500)
+                                                break;
+                                            case "minute":
+                                            case "fivem":
+                                            case "tenm":
+                                            case "fifm":
+                                            case "thim":
+                                            case "hour":
+                                                // if(MarketStatus==2||MarketStatus==4){
+                                                    KLineSocket.getHistoryKQAllMinToday();
+                                                    // 指标
+                                                    // 查询当天数据
+                                                    KLineSocket.getTechIndexKQAllMinTodayMA();
+                                                    // 查询历史数据
+                                                    setTimeout(function(){
+                                                        // 查询MAVOL
+                                                        KLineSocket.getTechIndexKQAllMinTodayMAVOL();
+                                                    },500);
+                                                // }else{
+                                                //     KLineSocket.getHistoryKQFirstMinPrev();
+                                                //     KLineSocket.HistoryData.queryTimes = 1;
+                                                //     // 指标
+                                                //     // 查询当天数据
+                                                //     KLineSocket.getTechIndexKQFirstMinPrevMA();
+                                                //     KLineSocket.TechIndexHistoryData.MA.queryTimes = 1;
+                                                //     // 查询历史数据
+                                                //     setTimeout(function(){
+                                                //         // 查询MAVOL
+                                                //         KLineSocket.getTechIndexKQFirstMinPrevMAVOL();
+                                                //         KLineSocket.TechIndexHistoryData.MAVOL.queryTimes = 1;
+                                                //     },500);
+                                                // }
+                                                
+                                                break;
+                                            default:;
+                                        };
                                 default:
                             }
                         }
@@ -991,10 +1111,11 @@ function KCharts(dataList, isHistory){
         var dataJsons = splitData(dataList, isHistory); 
         // 存储数据
         saveData(dataJsons, isHistory);
-        // 画图
-        chartPaint(isHistory);
         // 初始化并显示数据栏和数据信息框的信息
         initMarketTool();
+        // 画图
+        chartPaint(isHistory);
+        
 
         /*
          * K线图事件绑定
@@ -1050,7 +1171,6 @@ function splitData(data, isHistory) {
 
     // 遍历json，将它们push进不同的数组
     $.each(data,function(i,object){
-        
         let e_date = formatDateSplit(object.Date),                 // 当天日期
             e_day = week[(new Date(e_date)).getDay()],        // 计算星期
             e_time;  
@@ -1070,19 +1190,33 @@ function splitData(data, isHistory) {
 
         // 如果是最后一条数据的更新，lastClose就是前一根柱子的收盘价
         if(!isHistory){
-            if(k_categoryData[0].toString() == KLineSocket.HistoryData.hCategoryList[KLineSocket.HistoryData.hCategoryList.length-1]){
+            if(k_categoryData[0].toString() == KLineSocket.HistoryData.hCategoryList[KLineSocket.HistoryData.hCategoryList.length-1] && KLineSocket.HistoryData.hValuesList.length>1){
                 KLineSocket.option.lastClose = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-2][1];
             }else{
                 KLineSocket.option.lastClose = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][1];
             }
         }
         
+        var byDay = KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year";
+        // 月周年订阅快照，在最后一条数据进行高低收和成交量的更新
+        // 高低 进行历史数据的对比
+        // 收实时更新
+        // 成交量在历史数据基础上累加
+        if(byDay&&(k_categoryData[0].toString() == KLineSocket.HistoryData.hCategoryList[KLineSocket.HistoryData.hCategoryList.length-1])){
+            var e_open = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][1],          // 开
+                e_highest = (object.High)>KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][3]?(object.High):KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][3],       // 高
+                e_lowest = (object.Low)<KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][2]?(object.High):KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][2],         // 低
+                e_price = ((KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year")&&(!isHistory))?(object.Last):(object.Price),           // 收盘价
+                e_volumnData = myVolume[1]+object.Volume/100;                              // 成交量---单位：手
+        }else{
+            var e_open = (object.Open),          // 开
+                e_highest = (object.High),       // 高
+                e_lowest = (object.Low),         // 低
+                e_price = ((KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year")&&(!isHistory))?(object.Last):(object.Price),           // 收盘价
+                e_volumnData = object.Volume/100;                              // 成交量---单位：手  
+        }
 
-        let e_open = (object.Open),          // 开
-            e_highest = (object.High),       // 高
-            e_lowest = (object.Low),         // 低
-            e_price = ((KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year")&&(!isHistory))?(object.Last):(object.Price),           // 收盘价
-            e_value = [                                       // 开收低高-蜡烛图数据格式
+        var e_value = [                                       // 开收低高-蜡烛图数据格式
                 e_open, 
                 e_price, 
                 e_lowest, 
@@ -1094,11 +1228,12 @@ function splitData(data, isHistory) {
                 ((e_lowest-KLineSocket.option.lastClose)*100/KLineSocket.option.lastClose),
                 ((e_highest-KLineSocket.option.lastClose)*100/KLineSocket.option.lastClose)
             ],
-            e_volumnData = object.Volume/100,                              // 成交量---单位：手
+            
             e_zValues = KLineSocket.option.lastClose?(e_price-KLineSocket.option.lastClose):0,               // 涨幅-相对昨收      
             e_zValuesPercent = (e_zValues*100/KLineSocket.option.lastClose),              // 涨幅百分比
             e_amplitude = (e_highest - e_lowest),                      // 振幅
             e_amplPercent = (100*e_amplitude/KLineSocket.option.lastClose);               // 振幅百分比
+        
 
         if(isHistory){
             if(e_price-e_open>0){
@@ -1124,7 +1259,7 @@ function splitData(data, isHistory) {
                 if(e_price>KLineSocket.option.lastClose){
                     e_volume = [KLineSocket.HistoryData.hVolumesList.length,e_volumnData,1];
                 }else if(e_price<KLineSocket.option.lastClose){
-                    e_volume = [KLineSocket.HistoryData.hVolumesList.lengthi,e_volumnData,-1];
+                    e_volume = [KLineSocket.HistoryData.hVolumesList.length,e_volumnData,-1];
                 }else{
                     e_volume = [KLineSocket.HistoryData.hVolumesList.length,e_volumnData,0];
                 }
@@ -1208,6 +1343,7 @@ function saveData(data, isHistory){
         KLineSocket.HistoryData.hZf = KLineSocket.HistoryData.hZf.slice(0,index).concat(data.amplitude,KLineSocket.HistoryData.hZf.slice(index+dataLength));
         KLineSocket.HistoryData.hZfList = KLineSocket.HistoryData.hZfList.slice(0,index).concat(data.amplPercent,KLineSocket.HistoryData.hZfList.slice(index+dataLength));
         KLineSocket.HistoryData.hasHistory = "has data";
+        myVolume = KLineSocket.HistoryData.hVolumesList[KLineSocket.HistoryData.hVolumesList.length-1];
     }else{
         var n_category = data.categoryData[0];  // 最后一分钟的时间
         var n_values = data.values[0];          // 要存储的values
@@ -1220,6 +1356,14 @@ function saveData(data, isHistory){
         var lastTime = KLineSocket.HistoryData.hCategoryList[KLineSocket.HistoryData.hCategoryList.length-1];
         var last_open = KLineSocket.HistoryData.hValuesList[KLineSocket.HistoryData.hValuesList.length-1][0];
         var last_openPercent = KLineSocket.HistoryData.hValuesPercentList[KLineSocket.HistoryData.hValuesPercentList.length-1][0];
+        
+        // 停盘订阅的Price返回0，进行处理
+        console.log(n_values)
+        if(n_values[1]==0){
+            return false;
+        }
+        
+        
         // 最新一条是历史category数据中的最后一条，则更新最后一条数据,否则push到数组里面
         if(n_category.toString() == lastTime){
 
@@ -1510,18 +1654,44 @@ function chartPaint(isHistory){
                             }
                         },
                         min: function(value) {
+                            
                             if(value.max!=-Infinity){
-                                var min = value.min-Math.abs(value.min)*2;
-                                var max = value.max+Math.abs(value.max)*2;
-                                if(Math.abs(max)>=Math.abs(min)){
-                                    min = -max;
+                                
+
+                                if(KLineSocket.TechIndexHistoryData.Others.name=="MACD"){
+                                    var min = value.min-Math.abs(value.min);
+                                    var max = value.max+Math.abs(value.max);
+                                    if(Math.abs(max)>=Math.abs(min)){
+                                        min = -max;
+                                    }else{
+                                        max = -min;
+                                    }
                                 }else{
-                                    max = -min;
+                                    min = value.min;
+                                    max = value.max;
                                 }
+                                console.log(VMmax,VMmin,"111")
+                                VMmax = max;
+                                VMmin = min;
                                 $(".vmMin").html(floatFixedDecimal(min));
                                 $(".vmMax").html(floatFixedDecimal(max));
-                                // return min;
+                                return VMmin;
                             }
+                        },
+                        max: function(value) {
+                            // if(value.max!=-Infinity){
+                                // var min = value.min-Math.abs(value.min)*2;
+                                // var max = value.max+Math.abs(value.max)*2;
+                                // if(Math.abs(max)>=Math.abs(min)){
+                                //     min = -max;
+                                // }else{
+                                //     max = -min;
+                                // }
+                                // $(".vmMin").html(floatFixedDecimal(min));
+                                // $(".vmMax").html(floatFixedDecimal(max));
+                                console.log(VMmax,VMmin,"222")
+                                return VMmax;
+                            // }
                         },
                         splitLine: { show: false },
                         
@@ -1772,8 +1942,17 @@ function chartPaint(isHistory){
             });
             // 量比等指标的点击
             $(".kline-buttons").on('click','span',function(){
+                if(oldIndexNameOthers&&oldIndexNameOthers!=""){
+                    //更新订阅的参数
+                    var indexOthersOptions = getQueryTechIndexMsg(KLineSocket.option.lineType,oldIndexNameOthers);
+                    KLineSocket.option.KWatchCCIndexOthers = $.extend({}, KLineSocket.option.KWatchCCIndexOthers, { Instrumenttype: "51-"+indexOthersOptions.Period+"-"+indexOthersOptions.IndexID });
+                    KLineSocket.getKWatchCCIndexOthers();
+                }
                 KLineSocket.TechIndexHistoryData.Others.name = $(this).text();
                 KLineSocket.TechIndexHistoryData.Others.queryTimes = 0;
+                KLineSocket.TechIndexHistoryData.Others.data = [];
+                $(".vmMax").html("");
+                $(".vmMin").html("");
                 // 高亮按钮
                 $(this).addClass("active").end();
                 $(this).siblings().removeClass("active");
@@ -1843,12 +2022,17 @@ function chartPaint(isHistory){
                         $(".techIndex_2").html(Names[Name][2]?Names[Name][2]+": --":"");
                     }
                     
-                    $(".vmMax").html("");
-                    $(".vmMin").html("");
                     try{
                         KLineSocket['getTechIndexKQAllMinToday'+Name]();
+                        //更新订阅的参数
+                        var indexOptions = getQueryTechIndexMsg(KLineSocket.option.lineType,Name);
+                        KLineSocket.option.KWatchIndexOthers = $.extend({}, KLineSocket.option.KWatchIndexOthers, { Instrumenttype: "51-"+indexOptions.Period+"-"+indexOptions.IndexID });
+                        if(!(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year")){
+                            KLineSocket.getKWatchIndexOthers();
+                        }
+                        oldIndexNameOthers = Name;
                     }catch(e){
-                        console.warn(e,"还没有此项数据")
+                        console.warn(e,"还没有此项数据");
                     }
                     
                 }
@@ -1966,10 +2150,14 @@ function chartPaint(isHistory){
                                                 day = Number(value.split("-")[2].split(" ")[0]);
                                                 time = value.split(" ")[2];
                                                 if(length<500){
-                                                    return Number(time.split(":")[0])+":"+time.split(":")[1];
+                                                    if(time){
+                                                        return Number(time.split(":")[0])+":"+time.split(":")[1];
+                                                    }
                                                 }
                                                 if(length>=500){
-                                                    return month+"/"+day;
+                                                    if(time){
+                                                        return month+"/"+day;
+                                                    }
                                                 }
                                                 break;
                                             case "fivem":
@@ -2176,7 +2364,10 @@ function TechIndexLines(dataList, isHistory){
         // 解析并存储数据
         var msgInfoObj = saveTechIndex(dataList, isHistory); 
         // 继续下一步查询指标
-        getTechIndexMore(msgInfoObj.msgName,msgInfoObj.dataName);
+        if(isHistory){
+            getTechIndexMore(msgInfoObj.msgName,msgInfoObj.dataName);
+        }
+        
         if(msgInfoObj.dataName=="Others"){
             KLineSocket.KChart.setOption({
                 grid: [
@@ -2226,9 +2417,13 @@ function TechIndexLines(dataList, isHistory){
                         data: KLineSocket.TechIndexHistoryData.Others.data[0], // Others0
                         lineStyle: {
                             normal:{
+                                width:'1.5',
                                 color: KColorList[KLineSocket.TechIndexHistoryData.Others.name][0],
                             }
                         },
+                        smooth: false,
+                        symbol: 'none',
+                        connectNulls: false,
                     },
                     {
                         name: 'Others1', // Others1
@@ -2240,7 +2435,10 @@ function TechIndexLines(dataList, isHistory){
                             normal:{
                                 color: KColorList[KLineSocket.TechIndexHistoryData.Others.name][1],
                             }
-                        }
+                        },
+                        smooth: false,
+                        symbol: 'none',
+                        connectNulls: false,
                     },
                     {
                         name: 'Others2', // Others2
@@ -2253,13 +2451,16 @@ function TechIndexLines(dataList, isHistory){
                                 color: KColorList[KLineSocket.TechIndexHistoryData.Others.name][2]?KColorList[KLineSocket.TechIndexHistoryData.Others.name][2]:'',
                             }
                         },
+                        smooth: false,
+                        symbol: 'none',
+                        connectNulls: false,
                         itemStyle: {
                             normal: {
                                 borderWidth: 0,
                                 color:  function(param){
-                                        if(KLineSocket.TechIndexHistoryData.Others.name=="无"){
-                                            return false;
-                                        }
+                                            if(KLineSocket.TechIndexHistoryData.Others.name=="无"){
+                                                return false;
+                                            }
                                             if(param.data[1]>=0){
                                                 return KColorList[KLineSocket.TechIndexHistoryData.Others.name][2]
                                             }else{
@@ -2294,17 +2495,19 @@ function saveTechIndex(dataList, isHistory) {
         if(!KLineSocket.TechIndexHistoryData[msgInfo.dataName]) return;
 
         if(!KLineSocket.TechIndexHistoryData[msgInfo.dataName].data[0]){
-        // if(KLineSocket.TechIndexHistoryData[msgInfo.dataName].queryTimes==0){
+        //  if(KLineSocket.TechIndexHistoryData[msgInfo.dataName].queryTimes==0){
             for(var i=0;i<object.OutCount;i++){
                 KLineSocket.TechIndexHistoryData[msgInfo.dataName].data.push([]);
             }
         }
-        if(object.RecordCount!=0){ // 数据长度不为0
-            $.each(object.TechIndexInfo,function(i,o){
+        if(isHistory){ // 数据长度不为0
+            if(object.RecordCount&&object.RecordCount!=0){
+                $.each(object.TechIndexInfo,function(i,o){
+                    
                     if(o.Date==-1) return;
                     $.each(o.DATA,function(dataIndex,data){
                         // 按照坐标轴的顺序写进去
-                        if(data.ITEM!=0){
+                        if(data.ITEM){
                             let tn_date = formatDateSplit(o.Date),                 // 当天日期
                                 tn_day = week[(new Date(tn_date)).getDay()],        // 计算星期
                                 tn_time;  
@@ -2321,6 +2524,38 @@ function saveTechIndex(dataList, isHistory) {
                         }
                         
                     });
+                    
+                });
+            }
+        }else{ // 数据长度不为0
+            $.each(object.TechIndex,function(dataIndex,data){
+                // 按照坐标轴的顺序写进去
+                if(data.ITEM){
+                    let tn_date = formatDateSplit(object.Date),                 // 当天日期
+                        tn_day = week[(new Date(tn_date)).getDay()],        // 计算星期
+                        tn_time;  
+
+                    if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
+                        KLineSocket.HistoryData.hTime = formatTime((object.Time/100000>=1)?object.Time:("0"+object.Time));
+                        tn_time = tn_date + " " + tn_day;
+                    }else{
+                        tn_time = tn_date + " " + tn_day + " " + formatTime((object.Time/100000>=1)?object.Time:("0"+object.Time));
+                    } 
+                    // 订阅的最后一条
+                    var dataListIndex = KLineSocket.TechIndexHistoryData[msgInfo.dataName].data[dataIndex];
+                    console.log(dataListIndex[dataListIndex.length-1],msgInfo.dataName);
+                    if(dataListIndex.length>0){
+                        
+                        if(dataListIndex[dataListIndex.length-1]){
+                            if(tn_time==dataListIndex[dataListIndex.length-1][0]){
+                                dataListIndex[dataListIndex.length-1] = [tn_time,data.ITEM];
+                            }else{
+                                KLineSocket.TechIndexHistoryData[msgInfo.dataName].data[dataIndex].push([tn_time,data.ITEM]);
+                            }
+                        }
+                    }
+                    
+                }
                 
             });
         }
@@ -2376,6 +2611,10 @@ function getTechIndexMore(msgName,dataName){
         var todayData = 0;
         var nextQueryTime;
         var lastQueryTime;
+
+        if(KLineSocket.TechIndexHistoryData[dataName].queryTimes>1&&KLineSocket.TechIndexHistoryData[dataName].data[0].length==0){
+            return;
+        }
 
         // 更新分钟周期K线数据查询参数
         KLineSocket.option.TechIndexOption['TechIndexKQAllMinPrev'+msgName] = $.extend({},KLineSocket.option.TechIndexOption['TechIndexKQAllMinPrev'+msgName],{StartIndex:"-"+KLineSocket.TechIndexHistoryData[dataName].queryTimes*200});
@@ -2487,7 +2726,12 @@ function setChartData(){
 // 设置x轴动态更换分隔
 function setXAxisInterval(index,value,length){
     var valueList = KLineSocket.HistoryData.hCategoryList;
-    var timeCurr = valueList[index].split(" ")[2];
+    try{
+        var timeCurr = valueList[index].split(" ")[2];
+    }catch(e){
+        console.log(e)
+    }
+    
     var startTime = xml.options.nowDateTime[0].startTime;
     var endTime = xml.options.nowDateTime[0].endTime;
     var startTime1 = xml.options.nowDateTime[xml.options.nowDateTime.length-1].startTime1;
@@ -2495,6 +2739,9 @@ function setXAxisInterval(index,value,length){
     var returnValue = false;
     switch(KLineSocket.option.lineType){
         case "day":
+            if(!valueList[index]){
+                return;
+            }
             // 每周第1根显示
             if(length<30&&valueList[index].split(" ")[1]=="一"){
                 returnValue = true;
@@ -2521,6 +2768,9 @@ function setXAxisInterval(index,value,length){
             }
             break;
         case "week":
+            if(!valueList[index]){
+                return;
+            }
             if(length<30){
                 if(valueList[index-1]&&valueList[index].split("-")[1]!==valueList[index-1].split("-")[1]){
                     // 每月第1根显示
@@ -2551,6 +2801,9 @@ function setXAxisInterval(index,value,length){
             }
             break;
         case "month":
+            if(!valueList[index]){
+                return;
+            }
             if(length<30){
                 // 每隔2个月显示
                 if(valueList[index].split("-")[1]%2==1) {
@@ -2571,6 +2824,9 @@ function setXAxisInterval(index,value,length){
             }
             break;
         case "year":
+            if(!valueList[index]){
+                return;
+            }
             if(length<30){
                 // 每隔2年显示
                 if(valueList[index].split("-")[0]%2==1) {
@@ -2591,6 +2847,9 @@ function setXAxisInterval(index,value,length){
             }
             break;
         case "minute":
+            if(!timeCurr){
+                return;
+            }
             if(length<30){
                 // 间隔5分钟显示
                 if(timeCurr.split(":")[1]%5==0){
@@ -2638,6 +2897,9 @@ function setXAxisInterval(index,value,length){
             // }
             break;
         case "fivem":
+            if(!timeCurr){
+                return;
+            }
             if(length<30){
                 // 整点、半点显示
                 if(timeCurr.split(":")[1]=="00"||timeCurr.split(":")[1]=="30"){
@@ -2684,6 +2946,9 @@ function setXAxisInterval(index,value,length){
             }
             break;
         case "tenm":
+            if(!timeCurr){
+                return;
+            }
             if(length<100){
                 // 整点显示
                 if(timeCurr.split(":")[1]=="00"){
@@ -2724,6 +2989,9 @@ function setXAxisInterval(index,value,length){
             }
             break;
         case "fifm":
+            if(!timeCurr){
+                return;
+            }
             if(length<100){
                 // 按照整点显示
                 if(timeCurr.split(":")[1]=="00"){
@@ -2751,6 +3019,9 @@ function setXAxisInterval(index,value,length){
             }
             break;
         case "thim":
+            if(!timeCurr){
+                return;
+            }
             if(length<40){
                 // 按照整点显示
                 if(timeCurr.split(":")[1]=="00"){
@@ -2788,6 +3059,9 @@ function setXAxisInterval(index,value,length){
             }
             break;
         case "hour": 
+            if(!timeCurr){
+                return;
+            }
             if(length<50){
                 // 每天最后一根显示 
                 if(!endTime1&&timeCurr==endTime){
@@ -2838,7 +3112,15 @@ function toolContentPosition(event) {
 // 初始化设置显示信息
 function initMarketTool() {
     var length = KLineSocket.HistoryData.hCategoryList.length;
-    if (!KLineSocket.KLineSet.isHoverGraph || KLineSocket.KLineSet.isHoverGraph && !KLineSocket.HistoryData.hCategoryList[KLineSocket.KLineSet.mouseHoverPoint]) {
+    // 鼠标所在的点为最后一个点
+    // 鼠标没有在图片上
+    // 鼠标所在的点不存在
+    // 以上三种情况，设置为最后一个点的信息。
+    var lastPoint = KLineSocket.KLineSet.isHoverGraph&&KLineSocket.KLineSet.mouseHoverPoint==length-1;
+    var notHover = !KLineSocket.KLineSet.isHoverGraph;
+    var notPoint = KLineSocket.KLineSet.isHoverGraph && !KLineSocket.HistoryData.hCategoryList[KLineSocket.KLineSet.mouseHoverPoint];
+
+    if ( lastPoint|| notHover || notPoint ) {
         setToolInfo(length, null);
     }
 };
@@ -2864,38 +3146,38 @@ function setToolInfo(length, showTip){
         if(KLineSocket.HistoryData.hCategoryList[setPoint]=="1997-1-1 一 9:30"){
             return;
         }
-        $(".date", countent).text(KLineSocket.HistoryData.hCategoryList[setPoint].split(" ")[0].replace(/-/g,'/')); //日期
-        $(".day", countent).text(KLineSocket.HistoryData.hCategoryList[setPoint].split(" ")[1]); //星期
+        $(".k-date", countent).text(KLineSocket.HistoryData.hCategoryList[setPoint].split(" ")[0].replace(/-/g,'/')); //日期
+        $(".k-day", countent).text(KLineSocket.HistoryData.hCategoryList[setPoint].split(" ")[1]); //星期
         // 分钟K线每根柱子都有一条时间数据
         // 日K线，只有最后一根存在当前分钟时间数据
         if(KLineSocket.option.lineType=="day"||KLineSocket.option.lineType=="week"||KLineSocket.option.lineType=="month"||KLineSocket.option.lineType=="year"){
             KLineSocket.HistoryData.hTime = (KLineSocket.HistoryData.hTime=="00:00")?null:KLineSocket.HistoryData.hTime;
             if(showTip){
-                $(".time", countent).text((KLineSocket.KLineSet.mouseHoverPoint==length-1)?KLineSocket.HistoryData.hTime:null); //时间
+                $(".k-time", countent).text((KLineSocket.KLineSet.mouseHoverPoint==length-1)?KLineSocket.HistoryData.hTime:null); //时间
             }else{
-                $(".time", countent).text(KLineSocket.HistoryData.hTime);
+                $(".k-time", countent).text(KLineSocket.HistoryData.hTime);
             }
         }else{
-            $(".time", countent).text(KLineSocket.HistoryData.hCategoryList[setPoint].split(" ")[2]); //时间
+            $(".k-time", countent).text(KLineSocket.HistoryData.hCategoryList[setPoint].split(" ")[2]); //时间
         }
 
-        $(".open", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][0])+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][0])+"%)")
-            .attr("class","open pull-right "+((setPoint==0)?"":getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][0],0))); //开
+        $(".k-open", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][0])+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][0])+"%)")
+            .attr("class","k-open pull-right "+((setPoint==0)?"":getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][0],0))); //开
         
-        $(".price", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][1])+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][1])+"%)")
-            .attr("class","price pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][1],0)); //收
+        $(".k-price", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][1])+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][1])+"%)")
+            .attr("class","k-price pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][1],0)); //收
         
-        $(".lowest", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][2])+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][2])+"%)")
-            .attr("class","lowest pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][2],0)); //低
+        $(".k-lowest", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][2])+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][2])+"%)")
+            .attr("class","k-lowest pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][2],0)); //低
         
-        $(".highest", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][3])+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][3])+"%)")
-            .attr("class","highest pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][3],0)); //高
+        $(".k-highest", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][3])+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][3])+"%)")
+            .attr("class","k-highest pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][3],0)); //高
         
-        $(".z-value", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hZValuesList[setPoint])+"("+floatFixedTwo(KLineSocket.HistoryData.hZValuesListPercent[setPoint])+"%)")
-            .attr("class","z-value pull-right "+getColorName(KLineSocket.HistoryData.hZValuesList[setPoint],0));   // 涨跌
+        $(".k-z-value", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hZValuesList[setPoint])+"("+floatFixedTwo(KLineSocket.HistoryData.hZValuesListPercent[setPoint])+"%)")
+            .attr("class","k-z-value pull-right "+getColorName(KLineSocket.HistoryData.hZValuesList[setPoint],0));   // 涨跌
         
         
-        $(".amplitude", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hZf[setPoint])+"("+floatFixedTwo(KLineSocket.HistoryData.hZfList[setPoint])+"%)");   // 振幅
+        $(".k-amplitude", countent).text(floatFixedDecimal(KLineSocket.HistoryData.hZf[setPoint])+"("+floatFixedTwo(KLineSocket.HistoryData.hZfList[setPoint])+"%)");   // 振幅
 
         var volume = KLineSocket.HistoryData.hVolumesList[setPoint][1];
 
@@ -2903,10 +3185,10 @@ function setToolInfo(length, showTip){
 
         if(volume>=100){
             //量--单位:手
-            $(".volume", countent).text(setUnit(volume/100,true)+"手");
+            $(".k-volume", countent).text(setUnit(volume,true)+"手");
         }else{
             //量--单位:股
-            $(".volume", countent).text(volume+"股");
+            $(".k-volume", countent).text(volume+"股");
         }
         // MA
         showTechIndexPoint(setPoint,"MA",[".kline-MA5 em",".kline-MA10 em",".kline-MA20 em"]);
@@ -2918,16 +3200,16 @@ function setToolInfo(length, showTip){
         
 
     }else{
-        $(".date", countent).text("-");
-        $(".day", countent).text("-");
-        $(".time", countent).text("-");
-        $(".open", countent).text("-");
-        $(".highest", countent).text("-");
-        $(".price", countent).text("-");
-        $(".lowest", countent).text("-");
-        $(".volume", countent).text("-");
-        $(".z-value", countent).text("-");
-        $(".amplitude", countent).text("-");
+        $(".k-date", countent).text("-");
+        $(".k-day", countent).text("-");
+        $(".k-time", countent).text("-");
+        $(".k-open", countent).text("-");
+        $(".k-highest", countent).text("-");
+        $(".k-price", countent).text("-");
+        $(".k-lowest", countent).text("-");
+        $(".k-volume", countent).text("-");
+        $(".k-z-value", countent).text("-");
+        $(".k-amplitude", countent).text("-");
 
     }
 };
@@ -2949,13 +3231,11 @@ function showTechIndexPointOters(setPoint){
     if(nameArr){
         $.each(nameArr,function(index,object){
             var data = KLineSocket.TechIndexHistoryData.Others.data[0];
-            if( data && data[setPoint] ){
-                $(".techIndex_"+[index]).html(object+": "+"<em>"+floatFixedTwo(KLineSocket.TechIndexHistoryData.Others.data[index][setPoint][1])+"</em>");
+            if( data && data[setPoint] && KLineSocket.TechIndexHistoryData.Others.data[index][setPoint] ){
+                $(".techIndex_"+[index]).html(object+": "+"<em>"+parseFloat(KLineSocket.TechIndexHistoryData.Others.data[index][setPoint][1]).toFixed(fixedIndex[KLineSocket.TechIndexHistoryData.Others.name][index])+"</em>");
             }else{
                 $(".techIndex_"+[index]).html(object+": "+"<em>--</em>");
             }  
         });
-    }
-    
-         
+    }     
 };

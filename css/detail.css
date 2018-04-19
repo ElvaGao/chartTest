@@ -5,6 +5,7 @@ body,div,p,ul,li{
 	box-sizing: border-box;
 	color: #555;
 	font-size: 14px;
+	font-family: 'Microsoft YaHei',Arial,'微软雅黑','宋体';
 }
 ul,li{
 	list-style-type: none;
@@ -480,7 +481,8 @@ ul{
 .volMacd{
 	top: 74.5%;
 	height: 10.5%;
-	left: 5%;
+	/* left: 5%; */
+	width: 68px;
 }
 .volumn div,
 .volMacd div{

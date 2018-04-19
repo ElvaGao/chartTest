@@ -17,6 +17,7 @@ var itemTotalCount = 0;
 var count = 0;//推送报价表的次数
 var priceForm = [];
 var MarketStatus = null;
+var sectionIdOld = 1;
 $(function(){
     // 查询板块
     checkoutBlock();
@@ -211,7 +212,8 @@ function connectEvent(opt){
                     return;
                 }
                 count++;
-                // console.log(priceForm[0]?priceForm[0].InstrumentName:null,data.QueryRes[0].InstrumentName)
+                console.log(data.QueryRes.length,data.QueryRes[0].InstrumentName)
+
                 if(priceForm.length==0||priceForm[0]&&priceForm[0].InstrumentName==data.QueryRes[0].InstrumentName){
                     fillNewOfferForm(data);
                     priceForm = data.QueryRes;
@@ -230,6 +232,16 @@ function connectEvent(opt){
                     coping: true,
                     // mode: 'fixed',
                     callback: function (api) {
+                        var cancelOfferHeader = {
+                            "msgtype":"D3301",
+                            "sectionId": sectionIdOld,
+                            "field": 0,
+                            "orderType": 0
+                        }
+                        oWs.request(cancelOfferHeader);
+
+                        priceForm = [];
+                        count = 0;
                         nowPage = api.getCurrent();
                         var offerHeader = {
                             "msgtype":"S3301",
@@ -239,9 +251,10 @@ function connectEvent(opt){
                             "field": 0,
                             "orderType": 0
                         };
+
                         oWs.request(offerHeader);
-                        count = 0;
-                        priceForm = [];
+                        
+                        
                     }
                 });
                 break;
@@ -257,6 +270,18 @@ function tabLi(index){
     var el = $(".mc-tab-li ul li").eq(index);
     $(".zdf-list>h1").html($(el).text());
     
+
+
+    var cancelOfferHeader = {
+        "msgtype":"D3301",
+        "sectionId": sectionIdOld,
+        "field": 0,
+        "orderType": 0
+    }
+    oWs.request(cancelOfferHeader);
+    priceForm = [];
+    count = 0;
+
     secId = $(el).data("sectionid");
     var offerHeader={
         "msgtype":"S3301",
@@ -267,6 +292,7 @@ function tabLi(index){
         "orderType": 0
     };
     oWs.request(offerHeader);
+    sectionIdOld = secId;
 
     var pageCount={
         "msgtype":"Q3302",
@@ -779,43 +805,34 @@ function redrawChart(data,stockOne){
             var minY = (yc - yc*0.03).toFixed(decimal);
             var middleY = yc.toFixed(decimal);
             var maxY = (yc + yc*0.03).toFixed(decimal);
-
-            var dd = ((parseFloat(minY) - parseFloat(yc)) / parseFloat(yc) * 100);
-            if(Math.abs(dd) > 1){
-                var minY1 = ((parseFloat(minY) - parseFloat(yc)) / parseFloat(yc)).toFixed(2);
-                var maxY1 = ((parseFloat(maxY) - parseFloat(yc)) / parseFloat(yc)).toFixed(2);
-            }else{
-                var minY1 = ((parseFloat(minY) - parseFloat(yc)) / parseFloat(yc) * 100).toFixed(2);
-                var maxY1 = ((parseFloat(maxY) - parseFloat(yc)) / parseFloat(yc) * 100).toFixed(2);
-            }
         } else {
             var minY = 0;
             var middleY = 1;
             var maxY = 2;
         }
         var split = parseFloat(((maxY - minY) / 6).toFixed(4));
-        var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(4));
 
         var v_data =  getxAxis((data.Date),stockOne);
         var option ={
-            yAxis: [
-                {
-                    min: minY,
-                    max: maxY,
-                    interval: split
-                },{
-                    min: minY1,
-                    max: maxY1,
-                    interval: split1
-                }
-            ],
-            xAxis:[{
+            yAxis: {
+                type:"value",
+                min: minY,
+                max: maxY,
+                interval: split,
+                position:"right",
+                boundaryGap: [0, '100%'],
+                splitLine:{
+                    lineStyle:{
+                        color:"#e5e5e5"
+                    }
+                },
+            },
+            xAxis:{
                 data:v_data
-            },{
-                data:v_data
-            }],
-            series: [
+            },
+            series: 
                 {
+                    type:'line',
                     data: [],
                     markLine: {
                         data: [
@@ -826,14 +843,7 @@ function redrawChart(data,stockOne){
                         ],
                         symbol: ['none', 'none']
                     }
-                },
-                {
-                    data: []
-                },
-                {
-                    data: []
                 }
-            ]
         };
         stockOne.myChart.setOption(option);
         $("#"+stockOne.elementId).parents("a").attr("href","./detail.html?exchangeID="+stockOne.exchangeID+"&id="+stockOne.id);
@@ -1036,33 +1046,6 @@ function initCharts(data,type,stockOne){
         var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(decimal));
 
         var option = {
-            // grid:{
-            //     show:true,
-            //     borderColor:"#e5e5e5",
-            //     top:'10%',
-            //     left:"5%",
-            //     right:"10%",
-            //     height:'90%',
-            //     containLabel:true
-            // },
-            // dataZoom:{
-            //     type:"inside",
-            //     disabled:true,
-            // },
-            // tooltip:{
-            //     trigger:"axis",
-            //     show:false
-            // },
-            // axisPointer:{
-            //     show:false,
-            //     label:{
-            //         show:false,
-            //         backgroundColor:"#555"
-            //     },
-            //     lineStyle:{
-            //         type:"dotted"
-            //     }
-            // },
             xAxis:{
                 splitLine:{
                     show:true,
@@ -1122,7 +1105,7 @@ function initCharts(data,type,stockOne){
                     }
                 }
             },
-            yAxis:[{
+            yAxis:{
                 position:"right",
                 type:"value",
                 min:minY,
@@ -1159,8 +1142,7 @@ function initCharts(data,type,stockOne){
                         color: "#999"
                     }
                 },
-            }
-            ],
+            },
             series:{
                 type:'line',
                 symbolSize:0,
