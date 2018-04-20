@@ -596,8 +596,8 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
         $(".cbt-wb").attr("class","cbt-wb "+getColorName(wb,0)).html( floatFixedTwo(wb)+"%" );
         $(".cbt-wc").attr("class","cbt-wc "+getColorName(wc,0)).html( floatFixedZero(wc/100) );
 
-        $(".cbt-np").html( setUnit(data.InnerVolume/100,true)+"手" );
-        $(".cbt-wp").html( setUnit(data.OuterVolume/100,true)+"手" );
+        $(".cbt-np").html( setUnit(data.InnerVolume/100,true,false)+"手" );
+        $(".cbt-wp").html( setUnit(data.OuterVolume/100,true,false)+"手" );
     }
     // 五档扩展接口-指数接口-没有五笔盘口数据信息
     function setfillPKExtZS(data){
@@ -2016,7 +2016,7 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
     });
     // 按键对应的move函数
     function move(index, type) {
-        if($("#MLine").css("display") == "none") {
+        if(KLineSocket.option.lineType!="mline") {
             // 获取dataZoom起始位置和结束位置，比较他的信息，设置他的位置
             var KStart = KLineSocket.KChart.getOption().dataZoom[0].start,
                 KEnd = KLineSocket.KChart.getOption().dataZoom[0].end,
@@ -2057,8 +2057,8 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
             } else {
                 if (index == 1) {
                     KLineSocket.KLineSet.start += 10;
-                    if (KLineSocket.KLineSet.start > 100) {
-                        KLineSocket.KLineSet.start = 100;
+                    if (KLineSocket.KLineSet.start > 90) {
+                        KLineSocket.KLineSet.start = 90;
                         return;
                     } else {
                         KLineSocket.KLineSet.mouseHoverPoint = KLineSocket.KLineSet.mouseHoverPoint + (count * KLineSocket.KLineSet.zoom / 100);

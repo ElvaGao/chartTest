@@ -155,17 +155,16 @@ function setUnit(data,integer,type,withUnit,floatTwo,lang){
     var data = Math.abs(data);
     var unit="", // 单位
         value=0, // 值
-        fh = data>=0?"":"-", // 符号：正负
-        obj = {};   // 返回值
-    // if(lang){
-    //     (data/1000000>1 ? (unit="m")&&(value=data/1000000) : 
-    //         (data/1000>1 ? (unit="k")&&(value=data/1000) : fh+data))
-    // }else{
+        fh = data>=0?"":"-"; // 符号：正负
+
+        
         data/100000000>=1 ? (unit="亿")&&(value=floatFixedTwo(data/100000000)) : 
             (data/10000>=1 ? (unit="万")&&(value=floatFixedTwo(data/10000)) : 
-                (integer?value=floatFixedZero(data):value=data)&&(unit="")
+                (value=data)&&(unit="")
             );
-    // }
+    if(integer){
+        value=floatFixedZero(data);
+    }
     // 不超过10000的保留两位
     if(floatTwo&&unit==""){
         value=floatFixedTwo(value)
@@ -174,14 +173,17 @@ function setUnit(data,integer,type,withUnit,floatTwo,lang){
     if(withUnit&&unit==""){
         unit="量";
     }
-    if(type){
+    if(!type){
+        var obj = fh+value+unit;
+        return obj; // 返回值
+    }else{
+        var obj = {};   // 返回值
         obj.value = fh+value;
         obj.unit = unit;
-    }else{
-        obj = fh+value+unit
+        return obj;
     }
     
-    return obj;
+    
 }
 function setUnitWan(data){
     var value = null;

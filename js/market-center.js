@@ -212,7 +212,6 @@ function connectEvent(opt){
                     return;
                 }
                 count++;
-                console.log(data.QueryRes.length,data.QueryRes[0].InstrumentName)
 
                 if(priceForm.length==0||priceForm[0]&&priceForm[0].InstrumentName==data.QueryRes[0].InstrumentName){
                     fillNewOfferForm(data);

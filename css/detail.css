@@ -364,13 +364,13 @@ ul{
 	margin-right: 20px;
 	font-size: 14px;
 }
-.kline-MA5{
+.MA5{
 	color: #97bdde;
 }
-.kline-MA10{
+.MA10{
 	color: #c4a926;
 }
-.kline-MA20{
+.MA20{
 	color: #d182aa;
 }
 .kline-charts-container{
@@ -445,26 +445,26 @@ ul{
 .deal-Vol{
 	color: #555;
 }
-.deal-MA5{
+.MAVOL5{
 	color: #97bdde;
 }
-.deal-MA10{
+.MAVOL10{
 	color: #c4a926;
 }
-.deal-MA20{
+.MAVOL20{
 	color: #d182aa;
 }
 .techIndex{
 	top: 71.6%;
 	left: 3%;
 }
-.techIndex_0{
+.techIndex span:nth-child(2){
 	color: #20bfeb;
 }
-.techIndex_1{
+.techIndex span:nth-child(3){
 	color: #ff8964;
 }
-.techIndex_2{
+.techIndex span:nth-child(4){
 	color: #ff6adb;
 }
 .volumn{
