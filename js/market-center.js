@@ -1531,8 +1531,8 @@ function fillNewOfferForm(data){
                     '<li>'+yc.toFixed(2)+'</li>'+
                     '<li>'+parseFloat(data.QueryRes[i].VolRatio).toFixed(2)+'</li>'+
                     '<li>'+parseFloat(data.QueryRes[i].Amplitude).toFixed(2)+'</li>'+
-                    '<li>'+setUnitWan(data.QueryRes[i].AccVolume)+'</li>'+
-                    '<li>'+setUnitWan(data.QueryRes[i].AccTurover)+'</li>'+
+                    '<li>'+floatFixedTwo(data.QueryRes[i].AccVolume/10000)+'</li>'+
+                    '<li>'+floatFixedTwo(data.QueryRes[i].AccTurover/10000)+'</li>'+
                     '</ul></li>';
     }
     $("#offerForm").html(strHtml);

@@ -409,7 +409,7 @@ ul{
 }
 .text-justify span:last-child{
     margin-right: 0;
-    float: right;
+    /* float: right; */
 }
 .toolbtn input,.toolbtn label{
     cursor: pointer;

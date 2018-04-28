@@ -24759,7 +24759,13 @@ function createNameList(result, data) {
             if (isArray(data[0]) && data[0].length > 1) {
                 nameList = [];
                 for (var i = 0; i < dataLen; i++) {
-                    nameList[i] = categories[data[i][result.categoryIndex || 0]];
+                    // 修改 -Gao --nameList
+                    try{
+                        nameList[i] = categories[data[i][result.categoryIndex || 0]];
+                    }catch(e){
+
+                    }
+                    
                 }
             }
             else {

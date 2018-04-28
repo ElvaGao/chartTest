@@ -152,18 +152,25 @@ function getColorName(data, compareData){
 // withUnit 不超过10000的是否带单位
 // floatTwo 不超过10000的是否保留两位
 function setUnit(data,integer,type,withUnit,floatTwo,lang){
+    
     var data = Math.abs(data);
     var unit="", // 单位
         value=0, // 值
         fh = data>=0?"":"-"; // 符号：正负
-
-        
-        data/100000000>=1 ? (unit="亿")&&(value=floatFixedTwo(data/100000000)) : 
-            (data/10000>=1 ? (unit="万")&&(value=floatFixedTwo(data/10000)) : 
-                (value=data)&&(unit="")
-            );
+    
+    if(data/100000000>=1){
+        unit="亿";
+        value=floatFixedTwo(data/100000000);
+    }else if(data/10000>=1){
+        unit="万";
+        value=floatFixedTwo(data/10000);
+    }else{
+        value=data;
+        unit="";
+    }
+    
     if(integer){
-        value=floatFixedZero(data);
+        value=floatFixedZero(value);
     }
     // 不超过10000的保留两位
     if(floatTwo&&unit==""){
@@ -182,17 +189,6 @@ function setUnit(data,integer,type,withUnit,floatTwo,lang){
         obj.unit = unit;
         return obj;
     }
-    
-    
-}
-function setUnitWan(data){
-    var value = null;
-    var unit = null;
-    var obj = null;
-    (data/10000>=1 ? (unit="万")&&(value=floatFixedTwo(data/10000)) : 
-        (value=floatFixedTwo(data))&&(unit=""));
-    obj = value+unit;
-    return obj;
 }
 //10:0转为10:00
 function formatTimeMin(time){

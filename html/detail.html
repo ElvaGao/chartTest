@@ -9,8 +9,8 @@
     <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
     <META HTTP-EQUIV="expires" CONTENT="0">
 	<title>行情详情</title>
-    <link rel="stylesheet" type="text/css" href="../css/echarts.css?v=1.1.1" />
-    <link rel="stylesheet" type="text/css" href="../css/detail.css?v=1.1.1" />
+    <link rel="stylesheet" type="text/css" href="../css/echarts.css?v=1.1.5" />
+    <link rel="stylesheet" type="text/css" href="../css/detail.css?v=1.1.5" />
 </head>
 <body>
      <!-- 页面开始 -->
@@ -66,7 +66,20 @@
                         <!-- echarts图开始 -->
                         <div class="kline-charts-container">
                             <div id="kline_charts" class="kline-charts"></div>
-
+                            <div id="kline_tooltip" class="kline-tooltip">
+                                <ul class="list-unstyled">
+                                    <!-- <li><span class="name"></span></li> -->
+                                    <li class="text-justify"><span class="k-date"></span></li>
+                                    <li>开盘<span class="k-open pull-right"></span></li>
+                                    <li>最高<span class="k-highest pull-right"></span></li>
+                                    <li>最低<span class="k-lowest pull-right"></span></li>
+                                    <li>收盘<span class="k-price pull-right"></span></li>
+                                    <li>涨跌<span class="k-z-value pull-right"></span></li>
+                                    <li>成交<span class="k-volume pull-right"></span></li>
+                                    <li>换手<span class="??? pull-right"></span></li>
+                                    <li>振幅<span class="k-amplitude pull-right"></span></li>
+                                </ul>
+                            </div>
                             <div class="bar-tools">
                                 <div class="deal">
                                     <span class="deal-title">成交</span><span class="deal-Vol">VOL : <em></em></span><span class="MAVOL5">MA5 : <em></em></span><span class="MAVOL10">MA10 : <em></em></span><span class="MAVOL20">MA20 : <em></em></span>
@@ -175,11 +188,11 @@
     <script type="text/javascript" src="../js/echarts.js"></script>
     <script type="text/javascript" src="../js/moment.min.js"></script>
 
-    <script type="text/javascript" src="../js/public.js?v=1.1.1"></script>
-    <script type="text/javascript" src="../js/mLineWeb.js?v=1.1.1"></script>
+    <script type="text/javascript" src="../js/public.js?v=1.1.5"></script>
+    <script type="text/javascript" src="../js/mLineWeb.js?v=1.1.5"></script>
     
-    <script type="text/javascript" src="../js/websocket.js?v=1.1.1"></script> <!-- K线 -->
-    <script type="text/javascript" src="../js/kLineWeb.js?v=1.1.1"></script> <!-- K线 -->
+    <script type="text/javascript" src="../js/websocket.js?v=1.1.5"></script> <!-- K线 -->
+    <script type="text/javascript" src="../js/kLineWeb.js?v=1.1.6"></script> <!-- K线 -->
     <script>
         window.onload = function(){
             // 行情echarts切换标签

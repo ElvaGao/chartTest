@@ -443,7 +443,7 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
                     fillTrading(data.TradeRecordInfo,$this);
                     break;
                     case "R8050":  //心跳包
-                    console.log(data)
+                    // console.log(data)
                     // console.log(data);
                 default:
             }
@@ -498,7 +498,7 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
             if(stockType != "Field"){
                 abside = (item.ABSide==83)?("<span class='green'>卖出</span>"):((item.ABSide==66)?("<span class='red'>买入</span>"):(item.ABSide==0)?("<span>平盘</span>"):"");
             }
-            strHtml += '<li><span>'+formatTimeSec(item.Time)+'</span><span>'+parseFloat(item.RecorePrice).toFixed(2)+'</span><span>'+item.Volume+'</span>'+abside +'</li>';
+            strHtml += '<li><span>'+formatTimeSec(item.Time)+'</span><span>'+parseFloat(item.RecorePrice).toFixed(2)+'</span><span>'+Math.round(item.Volume/100)+'</span>'+abside +'</li>';
         });
         $(".cb-cj ul").html(strHtml);
     }
@@ -527,8 +527,8 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
             if(stockType=="Field"){
                 html = "<li><p>最高：</p><span class="+getColorName(high,preClose)+">"+floatFixedDecimal(high)+"</span></li>"
                         +"<li><p>最低：</p><span class="+getColorName(low,preClose)+">"+floatFixedDecimal(low)+"</span></li>"
-                        +"<li><p>成交额：</p><span>"+setUnit(floatFixedDecimal(dealVal),true)+"元</span></li>"
-                        +"<li><p>成交量：</p><span>"+(dealVol>=100?setUnit(dealVol/100,true)+"手":dealVol+"股")+"</span></li>"
+                        +"<li><p>成交额：</p><span>"+setUnit(floatFixedDecimal(dealVal))+"元</span></li>"
+                        +"<li><p>成交量：</p><span>"+(dealVol>=100?setUnit(dealVol/100)+"手":dealVol+"股")+"</span></li>"
                         +"<li><p>今开：</p><span class="+getColorName(open,preClose)+">"+floatFixedDecimal(open)+"</span></li>"
                         +"<li><p>昨收：</p><span>"+floatFixedDecimal(preClose)+"</span></li>"
 
@@ -542,7 +542,7 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
                         +"<li><p>换手率：</p><span>-</span></li>"
                         +"<li><p>最低：</p><span class="+getColorName(low,preClose)+">"+floatFixedDecimal(low)+"</span></li>"
                         +"<li><p>昨收：</p><span>"+floatFixedDecimal(preClose)+"</span></li>"
-                        +"<li><p>成交量：</p><span>"+(dealVol>=100?setUnit(dealVol/100,true)+"手":dealVol+"股")+"</span></li>"
+                        +"<li><p>成交量：</p><span>"+(dealVol>=100?setUnit(dealVol/100)+"手":dealVol+"股")+"</span></li>"
                         +"<li><p>市&nbsp;&nbsp;&nbsp;&nbsp;值：</p><span>-</span></li>"
                         +"<li><p>振&nbsp;&nbsp;&nbsp;&nbsp;幅：</p><span>"+zf+"%</span></li>";
             }
@@ -596,8 +596,8 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
         $(".cbt-wb").attr("class","cbt-wb "+getColorName(wb,0)).html( floatFixedTwo(wb)+"%" );
         $(".cbt-wc").attr("class","cbt-wc "+getColorName(wc,0)).html( floatFixedZero(wc/100) );
 
-        $(".cbt-np").html( setUnit(data.InnerVolume/100,true,false)+"手" );
-        $(".cbt-wp").html( setUnit(data.OuterVolume/100,true,false)+"手" );
+        $(".cbt-np").html( floatFixedZero(data.InnerVolume/100));
+        $(".cbt-wp").html( floatFixedZero(data.OuterVolume/100));
     }
     // 五档扩展接口-指数接口-没有五笔盘口数据信息
     function setfillPKExtZS(data){
