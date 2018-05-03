@@ -34,7 +34,7 @@ var fixedDemicalIndex = {
 }
 var VMmin,VMmax;
 var myIndexClick = 0;
-$(document).keydown(function(e){
+$(document).click(function(e){
     if(_this!=undefined&&($(_this).attr("id")=="MLine"||$(_this).attr("id")=="kline")){
         $(_this).children(".charts-focus").focus();
         return;
@@ -622,7 +622,7 @@ var WebSocketConnect = function(options){
             MsgType:"S1010",
             Instrumenttype:"1"
         },
-        lineType: null
+        lineType: "mline"
     };
 };
 WebSocketConnect.prototype = {
@@ -1054,6 +1054,7 @@ function KCharts(dataList, isHistory){
         toolContentPosition(event);
         $("#kline_tooltip").show();
         _this = $("#kline");
+        KLineSocket.KLineSet.isHoverGraph = true;
     });
     $("#kline_charts").bind("mousemove", function (event) {
         KLineSocket.KLineSet.isHoverGraph = true;
@@ -1464,17 +1465,19 @@ function chartPaint(isHistory){
                             return;
                         }
 
+                        console.log(open,high,low,close);
+
                         $(".k-date").text(name+" "+time);
                         $(".k-open").text(open+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][0])+"%)")
                             .attr("class","k-open pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][0],0));
-                        $(".k-highest").text(high+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][3])+"%)")
+                        $(".k-high").text(high+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][3])+"%)")
                             .attr("class","k-high pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][3],0));
-                        $(".k-lowest").text(low+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][2])+"%)")
-                            .attr("class","k-lowest pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][2],0));
+                        $(".k-low").text(low+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][2])+"%)")
+                            .attr("class","k-low pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][2],0));
                         $(".k-price").text(close+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][1])+"%)")
                             .attr("class","k-price pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][1],0));
                         $(".k-z-value").text(zvalue+"("+floatFixedTwo(KLineSocket.HistoryData.hZValuesListPercent[setPoint])+"%)")
-                            .attr("class","z-value pull-right "+getColorName(KLineSocket.HistoryData.hZValuesList[setPoint],0));
+                            .attr("class","k-z-value pull-right "+getColorName(KLineSocket.HistoryData.hZValuesList[setPoint],0));
                         $(".k-volume").text(myvolume);
                         $(".k-amplitude").text(amplitude+"("+floatFixedTwo(KLineSocket.HistoryData.hZfList[setPoint])+"%)");
                     }
@@ -2813,6 +2816,13 @@ function setChartData(){
             }
         ]
     });
+    if(KLineSocket.KLineSet.isHoverGraph){
+        KLineSocket.KChart.dispatchAction({
+            type: 'showTip',
+            // 数据的 index，如果不指定也可以通过 name 属性根据名称指定数据
+            dataIndex: KLineSocket.HistoryData.mouseHoverPoint
+        });
+    }
 }
 // 设置x轴动态更换分隔
 function setXAxisInterval(index,value,length){
@@ -3205,6 +3215,14 @@ function toolContentPosition(event) {
 };
 // 填写信息框
 function initTooltip(){
+    if(KLineSocket.KLineSet.isHoverGraph){
+        KLineSocket.KChart.dispatchAction({
+            type: 'showTip',
+            // 数据的 index，如果不指定也可以通过 name 属性根据名称指定数据
+            dataIndex: KLineSocket.HistoryData.mouseHoverPoint
+        });
+        return;
+    }
     var setPoint = KLineSocket.HistoryData.hCategoryList.length-1;
     var name = KLineSocket.HistoryData.hCategoryList[setPoint];
     var open = floatFixedDecimal(KLineSocket.HistoryData.hValuesList[setPoint][0]);
@@ -3232,11 +3250,11 @@ function initTooltip(){
     $(".k-highest").text(high+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][3])+"%)")
         .attr("class","k-high pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][3],0));
     $(".k-lowest").text(low+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][2])+"%)")
-        .attr("class","k-lowest pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][2],0));
+        .attr("class","k-low pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][2],0));
     $(".k-price").text(close+"("+floatFixedTwo(KLineSocket.HistoryData.hValuesPercentList[setPoint][1])+"%)")
         .attr("class","k-price pull-right "+getColorName(KLineSocket.HistoryData.hValuesPercentList[setPoint][1],0));
     $(".k-z-value").text(zvalue+"("+floatFixedTwo(KLineSocket.HistoryData.hZValuesListPercent[setPoint])+"%)")
-        .attr("class","z-value pull-right "+getColorName(KLineSocket.HistoryData.hZValuesList[setPoint],0));
+        .attr("class","k-z-value pull-right "+getColorName(KLineSocket.HistoryData.hZValuesList[setPoint],0));
     $(".k-volume").text(myvolume);
     $(".k-amplitude").text(amplitude+"("+floatFixedTwo(KLineSocket.HistoryData.hZfList[setPoint])+"%)");
 

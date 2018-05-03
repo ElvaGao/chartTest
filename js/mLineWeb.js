@@ -1995,8 +1995,15 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
         myChart = echarts.init(document.getElementById('main1'));
         myChart.setOption(option);
     }
-    $("#MLine,#kline").keyup(function (e) {
+    $("#MLine,#kline").keydown(function (e) {
+
         var keyCode = e.keyCode;
+        if(e.ctrlKey && keyCode==37){
+            moveCtrl(-1, true);
+        }
+        if(e.ctrlKey && keyCode==39){
+            moveCtrl(1, true);
+        }
         switch (keyCode) {
             case 37:
                 move(-1, true);
@@ -2137,6 +2144,63 @@ var DKServiceUrl = "https://fd.cnfic.com.cn:8443/";//正式环境 修改为 fd.c
 
         }
     };
+    function moveCtrl(index, type){
+        if(KLineSocket.option.lineType!="mline") {
+            // 获取dataZoom起始位置和结束位置，比较他的信息，设置他的位置
+            var KStart = KLineSocket.KChart.getOption().dataZoom[0].start,
+                KEnd = KLineSocket.KChart.getOption().dataZoom[0].end,
+                KCenter = (KEnd-KStart)/2+KStart,
+                KLength = KLineSocket.HistoryData.hCategoryList.length,
+                KContinerWidth = $("#kline_charts").width();
+
+            var count = KLineSocket.KChart?KLineSocket.KChart.getOption().series[0].data.length:0;
+            if (type) {
+                var max = KLineSocket.KLineSet.mouseHoverPoint>=Math.round(KEnd*KLength/100)-1;
+                var min = KLineSocket.KLineSet.mouseHoverPoint<Math.round(KStart*KLength/100); 
+                if((index==-1&&min)||(index==1&&max)){
+                    return;
+                }
+                // 信息框位置
+                if ((KLineSocket.KLineSet.mouseHoverPoint+1)/KLength > KCenter/100) {
+                    $("#kline_tooltip").css("left", 83/830*KContinerWidth);
+                } else {
+                    $("#kline_tooltip").css({"left":"auto","right":83/830*KContinerWidth});
+                }
+                $("#kline_tooltip").show();
+                var name = KLineSocket.KChart.getOption().series[0].name;
+                KLineSocket.KChart.dispatchAction({
+                    type: 'showTip',
+                    seriesIndex: 0,
+                    dataIndex: KLineSocket.KLineSet.mouseHoverPoint + index*10,
+                    name: name,
+                    position: ['50%', '50%']
+                });
+
+            }
+        }else {
+            var chart = myChart;
+            if (type) {
+                if (mouseHoverPoint == 0 && index == -1) {
+                    mouseHoverPoint = chart.getOption().series[0].data.length;
+                }
+                if (mouseHoverPoint == 0 && index == 1) {
+                    // index = 0;
+                }
+                if (mouseHoverPoint + index > chart.getOption().series[0].data.length - 1 && index == 1) {
+                    mouseHoverPoint = 0;
+                    index = 0;
+                }
+                var name = chart.getOption().series[0].name;
+                chart.dispatchAction({
+                    type: 'showTip',
+                    seriesIndex: 0,
+                    dataIndex: mouseHoverPoint + index*10,
+                    name: name,
+                    position: ['50%', '50%']
+                });
+            }
+        }
+    }
 
     // 接收到清盘指令重绘图表
     function redrawChart(data,$this){

@@ -1265,7 +1265,7 @@ var yc=0,decimal=2,xml;
     $("#MLine,#kline").mouseout(function(){
         $(this).children(".kline-focus").blur();
     });
-    $("#kline,#MLine").keyup(function (e) {
+    $("#kline,#MLine").keydown(function (e) {
         $(window).off("scroll");
         var keyCode = e.keyCode;
         switch (keyCode) {
@@ -1292,7 +1292,7 @@ var yc=0,decimal=2,xml;
             var KStart = KLineSocket.KChart.getOption().dataZoom[0].start,
                 KEnd = KLineSocket.KChart.getOption().dataZoom[0].end,
                 KCenter = (KEnd-KStart)/2+KStart,
-                KLength = KLineSocket.HistoryData.hDate.length,
+                KLength = KLineSocket.HistoryData.hCategoryList.length,
                 KContinerWidth = $("#kline_charts").width();
 
             var count = KLineSocket.KChart?KLineSocket.KChart.getOption().series[0].data.length:0;

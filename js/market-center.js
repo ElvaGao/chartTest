@@ -787,7 +787,7 @@ function getHistoryData(i){
             "Count": "0"
         };
         socket.request( LSData );
-    },1000 * i);
+    },100 * i);
 }
 // 清盘后重绘图表
 function redrawChart(data,stockOne){
