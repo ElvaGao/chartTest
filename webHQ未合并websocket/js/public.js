@@ -127,7 +127,7 @@ function floatFixedTwo(data) {
 }
 // 取n位小数点
 function floatFixedDecimal(data) {
-    return parseFloat(data).toFixed(StockInfo.decimal);
+    return parseFloat(data).toFixed(xml.options.decimal);
 }
 // Text填写-dom的text和color
 function setTextAndColor(domObj,data,compareData,unit,className){

@@ -253,8 +253,14 @@ var yc=0,decimal=2,xml;
         };
         ws.onmessage = function (evt) {
             var data  = evt.data.split("|")[0];  //每个json包结束都带有一个| 所以分割最后一个为空
-            data = eval( "(" + data + ")" );
-            data = data || data[0];
+            try{
+                data = eval( "(" + data + ")" );
+                data = data || data[0];
+            }catch(e){
+                console.log(e);
+                return;
+            }
+            
             var MsgType =  data["MsgType"] || data[0]["MsgType"]; //暂时用他来区分推送还是历史数据 如果存在是历史数据,否则推送行情
             var beginTime,finishTime,beginTime1,finishTime1;
             //1、第一次进来要通过订阅来获取昨收

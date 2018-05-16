@@ -5,6 +5,7 @@ var _this;
 var clickTimer = null;
 var myVolume = 0;
 var reconnectWS = false;
+var wsUrlCodes = "http://103.66.33.13:443";
 $(document).keydown(function(e){
     if(_this!=undefined&&($(_this).attr("id")=="MLine"||$(_this).attr("id")=="kline")){
         $(_this).children(".charts-focus").focus();
@@ -79,7 +80,7 @@ $(document).keydown(function(e){
                                         clearTimeout(ele.options.timer);
                                         // 延时查询
                                         ele.options.timer = setTimeout(function(){
-                                            var url = "http://103.66.33.58:443/GetCodes?ExchangeID=0&Codes="+value;
+                                            var url = wsUrlCodes+"/GetCodes?ExchangeID=0&Codes="+value;
                                             $.ajax({
                                                 url:  url,
                                                 type: 'GET',
@@ -480,8 +481,8 @@ function getQueryType(klineType){
 }
 // websocket实例化相关参数以及数据存储参数
 var WebSocketConnect = function(options){
-    this.wsUrl = options.wsUrl?options.wsUrl:"ws://103.66.33.67:80";
-    this.stockXMlUrl = options.stockXMlUrl?options.stockXMlUrl:"http://103.66.33.58:443/GetCalcData?ExchangeID=2&Codes=1";
+    this.wsUrl = options.wsUrl;
+    this.stockXMlUrl = options.stockXMlUrl;
     this.ws = null;
     this.lockReconnect = false;
     this.timeout = 60000;       //60秒

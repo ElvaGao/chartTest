@@ -1,3 +1,6 @@
+var wsUrlDevelop = 'ws://103.66.33.67:80';//分时图地址
+var stockXMlUrl = "http://103.66.33.13:443/GetCalcData";
+var requestOffer = "ws://103.66.33.226:443";//报价表地址
 var stockList = [];//解析XML后得到的数组 所有指数的时间、类型、id、小数位数等
 var elementId,secId;
 var ZSId,ExchangeID;
@@ -15,7 +18,6 @@ var count = 0;//推送报价表的次数
 var priceForm = [];
 var MarketStatus = null;
 var sectionIdOld = 1;
-
 $(function(){
     // 查询板块
     checkoutBlock();
@@ -30,9 +32,7 @@ $(function(){
     secId = $("#tab li").eq(0).data("sectionid");//当前选中板块id
     $(".zdf-list>h1").html( $("#tab li").eq(0).text());
     // 填充报价表
-    console.log(wsUrl);
     initBlockInfo(secId);
-    console.log(wsUrl);
     // 填充图表
     $("#main1").initMline(
         {
@@ -75,7 +75,7 @@ $(function(){
         //第一次打开终端,初始化代码表第一次默认请求
         var date = new Date();
         $.ajax({
-            url: stockXMlUrl+"/GetCalcData",
+            url: stockXMlUrl,
             type: 'GET',
             dataType: 'json',
             data:{"ExchangeID":ExchangeID,"Codes":ZSId},
@@ -119,7 +119,7 @@ $(function(){
 function checkoutBlock(){
     var date = new Date();
     $.ajax({
-        url:stockXMlUrl+"/GetSections",
+        url:"http://103.66.33.13:443/GetSections",
         data:{"SectionClass":5},
         type:"GET",
         dataType:'json',
@@ -684,8 +684,8 @@ function compareTime(dataXML){
 }
 function initChartInfo(){
     // 建立查询图表的连接
-    socket = new WebSocketConnect({wsUrl:wsUrl});
-    echartsWS = socket.createWebSocket(wsUrl);
+    socket = new WebSocketConnect({wsUrl:wsUrlDevelop});
+    echartsWS = socket.createWebSocket(wsUrlDevelop);
     initChartInfoEvt();
 }
 function initChartInfoEvt(){
@@ -796,13 +796,13 @@ function getHistoryData(i){
     },100 * i);
 }
 // 清盘后重绘图表
-function redrawChart(date,stockOne){
+function redrawChart(data,stockOne){
     stockOne.history_data = []; //价格历史记录
     stockOne.z_history_data = []; //涨跌幅历史记录
     stockOne.a_history_data = []; //成交量记录
     stockOne.v_data = [];
     stockOne.c_data = [];
-    if(date){
+    if(data){
         if(stockOne.myChart == undefined) return;
         yc = parseFloat(stockOne.yc);
         decimal = stockOne.xmlData.PriceDecimal;
@@ -817,7 +817,7 @@ function redrawChart(date,stockOne){
         }
         var split = parseFloat(((maxY - minY) / 6).toFixed(4));
 
-        var v_data =  getxAxis((date),stockOne);
+        var v_data =  getxAxis((data.Date),stockOne);
         var option ={
             yAxis: {
                 type:"value",
@@ -1555,6 +1555,7 @@ $("#offerForm").on("dblclick","a",function(event){
 var WebSocketConnectBlock = function(options) {
     this.ws = null;
     var lockReconnect = false;//避免重复连接 连接锁如果有正在连接的则锁住
+    wsUrl = options.wsUrl;  //开发
     var timeout = 60000,//60秒
         timeoutObj = null,
         serverTimeoutObj = null;
@@ -1726,7 +1727,8 @@ function search(value){
     timer = setTimeout(function(){
         var date = new Date();
         $.ajax({
-            url:stockXMlUrl+"/GetCodes?time="+date.getMinutes()+date.getSeconds(),
+            url:"http://103.66.33.13:443/GetCodes?time="+date.getMinutes()+date.getSeconds(),
+            // url:"http://103.66.33.13:443/GetCodes",
             data:{"ExchangeID":0,"Codes":value},
             dataType:"json",
             cache:false,

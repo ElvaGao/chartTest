@@ -10,7 +10,7 @@
     <META HTTP-EQUIV="expires" CONTENT="0">
 	<title>行情详情</title>
     <link rel="stylesheet" type="text/css" href="../css/echarts.css?v=1.2.0" />
-    <link rel="stylesheet" type="text/css" href="../css/detail.css?v=1.2.3" />
+    <link rel="stylesheet" type="text/css" href="../css/detail.css?v=1.2.1" />
 </head>
 <body>
      <!-- 页面开始 -->
@@ -27,14 +27,13 @@
         <!-- 中部开始 -->
         <div class="content-bar">
             <!-- echarts图形开始 -->
-            <div class="box fl echarts detail" style="padding-bottom:10px">
+            <div class="box fl echarts" style="padding-bottom:10px">
                 <div class="container">
                     <div class="canvas" id="MLine">
                         <!-- <div class="no-data" id="noData">亲，暂时没有数据哦~~~~ ^_^</div> -->
                         <input type="text" class="charts-focus" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;width:0;height:0;color:transparent;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);color:#Fff;">
                         <!-- <label class="canvasTitle" id="toolContent_M" style="display:none;"><i>2017-10-10 10:00</i>价<i>-</i>量<i>-</i>幅<i>-</i></label> -->
-                        <div id="withoutDataM" style="width:840px;height:520px;background-color:#fff;line-height: 100px;"><img src="../img/loading.gif" class="loading"/></div>
-                        <div id="mline_charts" style="width:840px;height:582px;background-color:#fff;"></div>
+                        <div id="main1" style="width:840px;height:582px;background-color:#fff;"><img src="../img/loading.gif" class="loading"/></div>
                         <div class="hide-mleft"></div>
                         <div class="hide-mright"></div>
                         <div class="hide-top"></div>
@@ -43,15 +42,13 @@
                         <!-- <label class="quantityRatio">LB:<i id="quantityRatio">0.86</i></label> -->
                         <!-- <label class="quantityRatio">MACD:<i id="quantityRatio">0.86</i></label> -->
                         <!-- <div class="chartsTab" style="display:none;"></div> -->
-                        <div class="mline-charts-container">
-                            <div id="toolContent" style="display:none;">
-                                <ul>
-                                    <li><span class="dataTime">-</span></li>
-                                    <li>价格 <span class="dataPrice"></span></li>
-                                    <li>涨跌 <span class="change"></span></li>
-                                    <li>成交 <span class="volume"></span></li>
-                                </ul>
-                            </div>
+                        <div id="toolContent" style="display:none;">
+                            <ul>
+                                <li><span class="dataTime">-</span></li>
+                                <li>价格 <span class="dataPrice"></span></li>
+                                <li>涨跌 <span class="change"></span></li>
+                                <li>成交 <span class="volume"></span></li>
+                            </ul>
                         </div>
                         <div class="volumn" style="top:85%;height:13%;">
                             <div class="volumeMax"></div>
@@ -60,7 +57,7 @@
                     </div>
                     <!--K线图开始-->
                     <div class="canvas kline" id="kline">
-                        <div id="withoutDataK" style="width:840px;height:520px;background-color:#fff;line-height: 100px;"><img src="../img/loading.gif" class="loading"/></div>
+                        <div id="withoutData" style="width:840px;height:520px;background-color:#fff;line-height: 100px;"><img src="../img/loading.gif" class="loading"/></div>
                         <!-- div class="no-data no-data-k" id="withoutData">亲，暂时没有数据哦~~~~ ^_^</div> -->
                         <input type="text" class="charts-focus" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;width:0;height:0;color:transparent;background-color: inherit;border: none;color:#Fff;opacity:0;filter:alpha(opacity=0);">
                         
@@ -74,7 +71,7 @@
                         <!-- 上部信息显示结束 -->
                         <!-- echarts图开始 -->
                         <div class="kline-charts-container">
-                            <div id="kline_charts" class="kline-charts" style="width:830px;height:588px;"></div>
+                            <div id="kline_charts" class="kline-charts"></div>
                             <div id="kline_tooltip" class="kline-tooltip">
                                 <ul class="list-unstyled">
                                     <!-- <li><span class="name"></span></li> -->
@@ -193,20 +190,14 @@
         <!-- 企业资料结束 -->
     </div>
     <!-- 页面结束 -->
-    <script type="text/javascript" src="../js/jquery.js?v=1.3.0"></script>
-    <script type="text/javascript" src="../js/echarts.js?v=1.3.0"></script>
-    <script type="text/javascript" src="../js/moment.min.js?v=1.3.0"></script>
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <script type="text/javascript" src="../js/echarts.js"></script>
+    <script type="text/javascript" src="../js/moment.min.js"></script>
 
-    <script type="text/javascript" src="../js/data.js?v=1.2.4"></script>
-    <script type="text/javascript" src="../js/data-url.js?v=1.2.4"></script>
-
-    <script type="text/javascript" src="../js/public.js?v=1.3.0"></script>
-    <script type="text/javascript" src="../js/mLineWeb.js?v=1.2.4"></script>
+    <script type="text/javascript" src="../js/public.js?v=1.2.0"></script>
+    <script type="text/javascript" src="../js/mLineWeb.js?v=1.2.0"></script>
     
-    <script type="text/javascript" src="../js/kLineWeb.js?v=1.2.4"></script> <!-- K线 -->
-    <script type="text/javascript" src="../js/stock.js?v=1.2.4"></script>
-    <script type="text/javascript" src="../js/websocket.js?v=1.2.4"></script>
-    
+    <script type="text/javascript" src="../js/kLineWeb.js?v=1.2.2"></script> <!-- K线 -->
     <script>
         window.onload = function(){
             // 行情echarts切换标签
@@ -230,7 +221,7 @@
 
             //指数与个股区分
             var url = location.href;
-            var id, exchangeID;
+            var id, exchangeID, wsUrl, stockXMlUrl;
             if(url.indexOf("?")>-1){
                 id = getQueryString("id");
                 exchangeID = getQueryString("exchangeID");
@@ -238,20 +229,26 @@
                 id = "1";
                 exchangeID = "101";
             }
+            var stockXMlUrl = "http://103.66.33.13:443/GetCalcData?ExchangeID="+exchangeID+"&Codes="+id;
+            var wsUrl = "ws://103.66.33.67:80";
             
-            // 建立websocket连接
-            $.WS({
+            // 初始化分时图
+            $("#MLine").initMline({
+                id:id,
+                exchangeID:exchangeID,
+                wsUrl:wsUrl,
+                stockXMlUrl:stockXMlUrl
+            });
+            // 初始化K线图
+            $.queryKLine({
                 InstrumentID: id,
                 ExchangeID:exchangeID,
                 wsUrl:wsUrl,
-                stockXMlUrl: stockXMlUrl+"/GetCalcData?ExchangeID="+exchangeID+"&Codes="+id
+                stockXMlUrl:stockXMlUrl
             });
             // 个股需要查询企业信息，公司信息
             var reqComOpt = ["23000171","23000138","23000164","23000188"];
             requireCom(reqComOpt, id);
-            window.onbeforeunload= function(){
-                window.open('http://localhost/stock/webHQ/html/detail.html?id=000001&exchangeID=2','_new');
-            }
         } 
     </script>
 </body>

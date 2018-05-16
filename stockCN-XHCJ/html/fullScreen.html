@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>FullScreen</title>
+    <link rel="stylesheet" type="text/css" href="../css/detail.css">
+</head>
+
+<body class="full-screen">
+    <!-- 头部开始 -->
+    <div class="f-header">
+        <div class="fh-logo">
+            <img src="../img/logo.png">
+        </div>
+        <div class="fh-time">
+            <div class="fh-date">2017/1/1</div>
+            <div class="fh-minute">12:34</div>
+        </div>
+    </div>
+    <!-- 头部结束 -->
+
+    <div class="content">
+        <div class="container  full-screen-container">
+            <div class="f-lineType">
+                <div class="flt-text">
+                    <img src="../img/线形.png">
+                    <span class="fl-text">Line</span>
+                    <span class="fl-trangle"></span>
+                </div>
+                <div class="f-lineType-box">
+                    <span class="fl-trangle flb-tragle"></span>
+                    <span class="fl-trangle flb-tragle2"></span>
+                    <ul class="flb-toggle">
+                        <li>
+                            <img src="../img/线形.png">
+                            <span class="fl-text">Line</span>
+                        </li>
+                        <li>
+                            <img src="../img/面积.png">
+                            <span class="fl-text">Area</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="f-search">
+                <input type="text" class="fs-text" value="">
+                <input type="button" id="fSearch">
+                <ul id="url_list">
+                </ul>
+            </div>
+        </div>
+        <div class="chart_area">
+            <!-- 分时图 -->
+            <div id="MLine" class="clearfix">
+                <div class="mline" >
+                    <input type="text" class="charts-focus" readonly="readonly" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);color:transparent;">
+                    <div id="mline_charts" class="mline_full" style="width:100%;height:730px;">
+                        暂无数据
+                    </div>
+                    
+                    <!-- 固定提示框 -->
+                    <div class="mline_tooltip">
+                        <span>
+                            <label>Open</label>
+                            <i id="open">-</i>
+                        </span>
+                        <span>
+                            <label>High</label>
+                            <i id="high">-</i>
+                        </span>
+                        <span>
+                            <label>Low</label>
+                            <i id="low">-</i>
+                        </span>
+                        <span>
+                            <label>Close</label>
+                            <i id="close">-</i>
+                        </span>
+                        <span>
+                            <label>Volume</label>
+                            <i id="volume">-</i>
+                        </span>
+                        <span>
+                            <label>% Change</label>
+                            <i id="change">-</i>
+                        </span>
+                    </div>
+                    <label class="point_label">13.38</label>
+                </div>
+                <!-- 随鼠标走的提示框 -->
+                <div class="mline_info">
+                    <span class="stockDate">-</span>
+                    <span>
+                        <label class="stockName">-</label>
+                        <i class="lastPrice">-</i>
+                    </span>
+                </div>
+            </div>
+            <!--K线图开始-->
+            <div class="canvas kline fl f-kline" id="kline" style="display: none;">
+                <div class="no-data no-data-k" id="withoutData">亲，暂时没有数据哦~~~~ ^_^</div>
+                <input type="text" class="charts-focus" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;width:0;height:0;color:transparent;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);">
+                <!-- echarts图开始 -->
+                <div class="kline-charts-container">
+                    <div id="f_kline_charts" class="f-kline-charts">
+                        
+                    </div>
+                    <span id="markNewPoint">444</span>
+                    <div id="kline_tooltip" class="f-kline-info">
+                        <ul class="list-unstyled">
+                            <!-- <li><span class="name"></span></li> -->
+                            <!-- <li class="text-justify"><span class="date"></span><span class="day"></span><span class="time"></span></li> -->
+                            <li>Open
+                                <span class="open fr"></span>
+                            </li>
+                            <li>High
+                                <span class="highest fr"></span>
+                            </li>
+                            <li>Low
+                                <span class="lowest fr"></span>
+                            </li>
+                            <li>Close
+                                <span class="price fr"></span>
+                            </li>
+                            <li>Volume
+                                <span class="volume fr"></span>
+                            </li>
+                            <li>% Change
+                                <span class="z-value fr"></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- echarts图结束 -->
+            </div>
+            <!--K线图结束-->
+            <!-- 右侧信息框开始 -->
+            <div class="fr f-stockInfo">
+                <div class="f-tb-fieldName">
+                    <div class="tb-fn-title f-tbfn-title">-</div>
+                    <div class="tb-fn-num f-tbfn-num">
+                        <span>-</span>
+                        <span>-</span>
+                        <span>-</span>
+                    </div>
+                </div>
+                <ul class="tb-fielList f-tb-fielList">
+                    <li>
+                        <p>最高：</p>
+                        <span class="red">-</span>
+                    </li>
+                    <li>
+                        <p>今开：</p>
+                        <span class="green">-</span>
+                    </li>
+                    <li>
+                        <p>最低：</p>
+                        <span class="green">-</span>
+                    </li>
+                    <li>
+                        <p>昨收：</p>
+                        <span>-</span>
+                    </li>
+
+                    <li>
+                        <p>成交额：</p>
+                        <span>-</span>
+                    </li>
+                    <li>
+                        <p>市盈率：</p>
+                        <span>-</span>
+                    </li>
+                    <li>
+                        <p>成交量：</p>
+                        <span>-</span>
+                    </li>
+                    <li>
+                        <p>市&nbsp;&nbsp;&nbsp;&nbsp;值：</p>
+                        <span>-</span>
+                    </li>
+                    <li>
+                        <p>换手率：</p>
+                        <span>-</span>
+                    </li>
+                    <li>
+                        <p>振&nbsp;&nbsp;&nbsp;&nbsp;幅：</p>
+                        <span>-</span>
+                    </li>
+                </ul>
+                <div class="f-latest-stock">
+                    <h2>最近访问股</h2>
+                    <ul class="f-ls-list">
+                        <li>
+                            <span>新华传媒</span>
+                            <span>6.04</span>
+                            <span class="black">0.00%</span>
+                        </li>
+                        <!-- <li>
+                            <span>新华传媒</span>
+                            <span>6.04</span>
+                            <span class="red">0.00%</span>
+                        </li>
+                        <li>
+                            <span>新华传媒</span>
+                            <span>6.04</span>
+                            <span class="green">0.00%</span>
+                        </li>
+                        <li>
+                            <span>新华传媒</span>
+                            <span>6.04</span>
+                            <span class="black">0.00%</span>
+                        </li>
+                        <li>
+                            <span>新华传媒</span>
+                            <span>6.04</span>
+                            <span class="black">0.00%</span>
+                        </li> -->
+                    </ul>
+                </div>
+            </div>
+            <!-- 右侧信息框结束 -->
+        </div>
+        <footer class="bottom">
+            <span class="b_info">
+                <em>澳元/美元 </em>
+                <i>0.7575</i>
+                <i>
+                    <i class="b_arrow"></i>0.52%</i>
+            </span>
+            <span class="b_info">
+                <em>美元/港元 </em>
+                <i>0.3244</i>
+                <i>
+                    <i class="b_arrow"></i>0.11%</i>
+            </span>
+            <span class="b_info">
+                <em>英镑/美元 </em>
+                <i>0.1624</i>
+                <i>
+                    <i class="b_arrow"></i>0.32%</i>
+            </span>
+        </footer>
+    </div>
+
+
+    <script src="../js/jquery.js"></script>
+    <script src="../js/echarts.js"></script>
+    <script src="../js/moment.min.js"></script>
+    <script src="../js/publicFS.js"></script>
+    <script src="../js/jquery.nicescroll.min.js"></script>
+    <!-- 公共方法 -->
+
+    <script src="../js/data.js"></script>
+    <!-- 分时图  -->
+    <script src="../js/mLineFull.js"></script>
+
+    <script type="text/javascript" src="../js/kLineFull.js"></script>
+    <!-- K线 -->
+
+    <script type="text/javascript">
+
+        $(function () {
+            // 行情echarts切换标签
+            $(".container").toggleLi(
+                {
+                    data: [
+                        { name: "分时", id: "mline" },
+                        { name: "日K", id: "day" },
+                        { name:"周",id:"week" },
+                        { name:"月",id:"month" },
+                        { name:"年",id:"year" },
+                        { name:"1分",id:"minute" },
+                        { name:"5分",id:"fivem" },
+                        { name:"10分",id:"tenm" },
+                        { name:"15分",id:"fifm" },
+                        { name:"30分",id:"thim" },
+                        { name:"60分",id:"hour" }
+                    ],
+                    width: '120px',
+                    lineHeight: '60px'
+                }
+            );
+            //指数与个股区分
+            var url = location.href;
+            var id, exchangeID;
+            if (url.indexOf("?") > -1) {
+                id = getQueryString("id");
+                exchangeID = getQueryString("exchangeID");
+            } else {
+                id = "1";
+                exchangeID = "101";
+            }
+            var stockXMlUrl = wsUrlCodes+"/GetCalcData?ExchangeID="+exchangeID+"&Codes="+id;
+            // 初始化K线图
+            $.queryKLine({
+                InstrumentID: id,
+                ExchangeID: exchangeID,
+                wsUrl: wsUrl,
+                stockXMlUrl: stockXMlUrl
+            });
+            // 查询股票接口
+            $.selectOption({
+                container: ".f-search",
+                input: ".fs-text",
+                submit: "#fSearch",
+                list: "#url_list"
+            });
+            //初始化分时图 
+            $("#mline_charts").initMline({
+                id: id,
+                exchangeID: exchangeID,
+                wsUrl: wsUrl,
+                stockXMlUrl: stockXMlUrl
+            });
+
+
+        });
+
+
+
+        //美化滚动条
+    $(document).ready(function () {
+            $("#url_list").niceScroll({cursorborder: "", cursorcolor: "#6c707d", boxzoom: false, cursorwidth: "5px"}); // First scrollable DIV
+            $("html").niceScroll({cursorborder: "", cursorcolor: "#6c707d", boxzoom: false, cursorwidth: "5px"}); // First scrollable DIV
+    })
+    </script>
+</body>
+
+</html>
