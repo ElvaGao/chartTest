@@ -275,6 +275,8 @@ var yc=0,decimal=2,xml;
                     // $(document).trigger("SBR_HQ",data);
                     if(!yc){
                         yc = data.PreClose; //获取昨收值
+                        // 初始化空分时图
+                        initEmptyCharts(yc);
                     }
                     setFieldInfo(data);
                     // 接口变更  日期为前一天
@@ -289,9 +291,12 @@ var yc=0,decimal=2,xml;
                 break;
                 case "R8002"://清盘
                     var MarketStatus = data["MarketStatus"] || data[0]["MarketStatus"];
+                    
                     if(MarketStatus == 1){//收到清盘指令  操作图表
                         redrawChart(data,$this);
                     }
+                    
+
                 break;
                 case "R8050":  //心跳包
                     // console.log(data);
@@ -397,15 +402,395 @@ var yc=0,decimal=2,xml;
     //请求订阅 获取昨收
     InitXMLIChart.prototype.take_HQ = function(){
         socket.request(this.options.HQAll);
-    },
+    };
     //获取历史指数数据
     InitXMLIChart.prototype.getHistoryData = function(){
         socket.request(this.options.historyData);
-    },
+    };
     // 获取实时分钟推送
     InitXMLIChart.prototype.getRealTimePush = function(){
         socket.request(this.options.RTDATA);
-    },
+    };
+    //初始空图表
+    function initEmptyCharts(yc){
+        var maxY = parseFloat((parseFloat(yc)*0.01+parseFloat(yc)).toFixed(decimal));
+        var minY = parseFloat((parseFloat(yc)-parseFloat(yc)*0.01).toFixed(decimal));
+        var maxY1 = parseFloat(((maxY-yc)/yc).toFixed(2));
+        var minY1 = -parseFloat(((maxY-yc)/yc).toFixed(2));
+        var split = parseFloat(((maxY - yc)/3).toFixed(decimal));
+        var split1= parseFloat((split / yc))*100;
+        // 绘制图形前，隐藏动图
+        // 绘制图表 配置参数
+        var option = {
+            backgroundColor: "#1e2131",
+            animation: false,
+            grid: [
+                {
+                    top: 10,
+                    left:80,
+                    right:80,
+                    height:'630px',
+                },
+                {
+                    left:80,
+                    right:80,
+                    bottom: 90,
+                    height: '20%',
+                }
+            ],
+            title: {
+                show: false
+            },
+            axisPointer: {
+                link: {xAxisIndex: 'all'},
+                label: {
+                    backgroundColor: colorList[2]
+                },
+                show:true,
+                triggerTooltip:false,
+                snap:true
+            },
+            tooltip: {
+                trigger: 'axis',
+                showContent:false
+            },
+            xAxis: [
+                {
+                    type:"category",
+                    axisTick: {
+                        show:false
+                    },
+                    axisLabel: {
+                        interval: function (number, string) {
+                            if(number == 0 || number == $this.v_data.length-1){
+                                return true;
+                            }
+                            if(stopTime){
+                                if(string.indexOf(stopTime[0].split(" ")[1])>-1){
+                                    return true
+                                }
+                            }
+                            if(string.indexOf("00")>-1){
+                                return true
+                            }
+                        },
+                        formatter: function (value, number) {
+                            var tVal = value.split(" ")[2];
+                            return tVal;
+                        },
+                        textStyle: {
+                            color: "rgba(255,255,255,0.5)",
+                            fontSize:20,
+                            fontFamily:'Helvetica'
+                        },
+                        margin:'5'
+                    },
+                    axisLine: {
+                        lineStyle:{
+                            color:"#34394a"
+                        }
+                    },
+                    data: [],
+                    splitLine: {
+                        show: false
+                    },
+                    axisPointer: {
+                        show:true,
+                        lineStyle:{
+                            color:"rgba(255,255,255,0.5)",
+                            type:"dashed"
+                        },
+                        label: {
+                            formatter: function (params, value, s) {
+                                return (params.value);
+                            },
+                            padding:[3,5,5,5],
+                            show:false
+                        }
+                    },
+                    splitArea:{
+                        show:true,
+                        interval:30,
+                        areaStyle:{
+                            color:['rgba(255,255,255,0.1)','transparent']
+                        }
+                    },
+                    boundaryGap:false
+                },
+                {
+                    type:"category",
+                    axisLabel: {
+                        show:false
+                    },
+                    axisLine: {
+                        show:false
+                    },
+                    data: [],
+                    splitLine: {
+                        show: false
+                    },
+                    gridIndex: 1,
+                    axisPointer:{
+                        lineStyle:{
+                            color:"transparent"
+                        },
+                        label:{
+                            show:false
+                        }
+                    },
+                    boundaryGap:false
+                }
+            ],
+            yAxis: [
+                {
+                    // show:false,
+                    min: minY1,
+                    max: maxY1,
+                    interval: split1,
+                    boundaryGap: [0, '100%'],
+                    axisTick: {
+                        show: false
+                    },
+                    type: "value",
+                    splitLine:{
+                        lineStyle:{
+                            color:"transparent"
+                        }
+                    },
+                    axisLine:{
+                        lineStyle:{
+                            color:"#34394a"
+                        }
+                    },
+                    axisLabel: {
+                        show:false,
+                        formatter: function (value, index) {
+                            if (index == 3) {
+                                return "";
+                            } else {
+                                return parseFloat(value).toFixed(2) + "%";
+                            }
+                        },
+                        textStyle: {
+                            fontSize:20,
+                            fontFamily:"Helvetica",
+                            color: function (value, index) {
+                                if (parseFloat(value) > 0) {
+                                    return colorList[0];
+                                } else {
+                                    return colorList[1];
+                                }
+                            }
+                        }
+                    },
+                    axisPointer: {
+                        show:false,
+                        label: {
+                            formatter: function (params, value, s) {
+                                return parseFloat(params.value).toFixed(2) + "%";
+                            }
+                        },
+                        // snap: true
+                    }
+                },
+                {
+                    min: minY,
+                    max: maxY,
+                    interval: split,
+                    boundaryGap: [0, '100%'],
+                    axisTick: {
+                        show: true
+                    },
+                    type: "value",
+                    splitLine:{
+                        lineStyle:{
+                            color:"#34394a"
+                        }
+                    },
+                    axisLine:{
+                        lineStyle:{
+                            color:"#34394a"
+                        }
+                    },
+                    axisLabel: {
+                        formatter: function (value, index) {
+                            if (index == 3) {
+                                return "";
+                            } else {
+                                return parseFloat(value).toFixed(decimal);
+                            }
+                        },
+                        textStyle: {
+                            color: "rgba(255,255,255,0.5)",
+                            fontSize:20,
+                            fontFamily:'Helvetica',
+                        }
+                    },
+                    axisPointer: {
+                        lineStyle:{
+                            color:'rgba(255,255,255,0.5)',
+                            type:"dashed"
+                        },
+                        label: {
+                            show: true,
+                            formatter: function (params, value, s) {
+                                return parseFloat(params.value).toFixed($this.decimal);
+                            }
+                        },
+                        snap: true
+                    }
+                },
+                {
+                    type:'value',
+                    scale: true,
+                    splitLine:{
+                        show:false
+                    },
+                    axisLine:{
+                        show:false
+                    },
+                    axisLabel:{
+                        show:false
+                    },
+                    gridIndex: 1,
+                    splitNumber: 2,
+                    axisPointer: {
+                        show:false
+                    }
+                }
+            ],
+            series: [
+                {
+                    name:'limit',
+                    type: 'line',
+                    showSymbol: false,
+                    hoverAnimation: false,
+                    connectNulls:true,
+                    symbolSize:0,
+                    markLine: {
+                        animation:false,
+                        silent:true,
+                        lineStyle: {
+                            normal: {
+                                type: 'dashed',
+                                color: '#fff',
+                                width:0,
+                                opacity:0.5
+                            }
+                        },
+                        label: {
+                            normal: {
+                                // show:false,
+                                position:"start",
+                                formatter: function () {
+                                    return "0.00%";
+                                }
+                            }
+                        },
+                        data: [
+                            {
+                                name: 'Y 轴值为 100 的水平线',
+                                yAxis: 0.00
+                            }
+                        ],
+                        symbol: ['none', 'none']
+                    },
+                    lineStyle: {
+                        normal: {
+                            width:0,
+                            opacity:0
+                        }
+                    },
+                    data: []
+                },
+                {
+                    name: 'Mline',
+                    type: 'line',
+                    showSymbol: true,
+                    hoverAnimation: false,
+                    symbolSize:0,
+                    smooth: true,
+                    connectNulls:true,
+                    data: [],
+                    markLine: {
+                        animation:false,
+                        silent:true,
+                        lineStyle: {
+                            normal: {
+                                type: 'dashed',
+                                color: '#fff',
+                                width:0,
+                                opacity:0.5
+                            }
+                        },
+                        label: {
+                            normal: {
+                                // show:false,
+                                position:"start",
+                                formatter: function () {
+                                    return "0.00%";
+                                }
+                            }
+                        },
+                        data: [
+                            {
+                                name: 'Y 轴值为 100 的水平线',
+                                yAxis: parseFloat(yc),
+                                label:{
+                                    textStyle:{
+                                        fontSize: '20'
+                                    }
+                                }
+                            },
+                        ],
+                        symbol: ['none', 'none']
+                    },
+                    lineStyle:{
+                        normal:{
+                            color:"#2b99ff",
+                            width:1
+                        }
+                    },
+                    areaStyle:{
+                        normal:{
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                offset: 0,
+                                color: 'rgba(43, 153, 255,0.3)'
+                            }, {
+                                offset: 1,
+                                color: 'rgba(43, 153, 255,0.1)'
+                            }]),
+                            opacity:0
+                        }
+                    },
+                    yAxisIndex: 1
+                },
+                {
+                    name: 'Vol',
+                    type: 'bar',
+                    xAxisIndex: 1,
+                    yAxisIndex: 2,
+                    data: [],
+                    barWidth:3,
+                    itemStyle:{
+                        normal:{
+                            color:function(params){
+                                if(flag[params.dataIndex] > 0){
+                                    return colorList[0];
+                                }else{
+                                    return colorList[1];
+                                }
+                            },
+                            opacity: 0.8,
+                        }
+                    }
+                }
+            ]
+        };
+        myChart = echarts.init(document.getElementById('mline_charts'));
+        myChart.setOption(option);
+    }
+    
     // 清盘
     InitXMLIChart.prototype.getQP = function(){
         socket.request(this.options.QPDATA);
@@ -609,7 +994,7 @@ var yc=0,decimal=2,xml;
             }else{
                 if(data.KLineSeriesInfo && data.KLineSeriesInfo.length>0){
                     data = data.KLineSeriesInfo;
-		    if(!yc){
+		            if(!yc){
                         yc =  parseFloat(data[data.length-1].Open);
                     }
                     var price = [];//价格
@@ -739,44 +1124,6 @@ var yc=0,decimal=2,xml;
                             trigger: 'axis',
                             showContent:false
                         },
-                        // dataZoom: [
-                        //     {
-                        //         type: 'inside',
-                        //         xAxisIndex: [0, 1],
-                        //         start: 0,
-                        //         end: 100,
-                        //     },
-                        //     {
-                        //         show: true,
-                        //         xAxisIndex: [0, 1],
-                        //         type: 'slider',
-                        //         bottom:'0',
-                        //         height:"40px",
-                        //         start: 0,
-                        //         end: 100,
-                        //         backgroundColor:"transparent",
-                        //         fillerColor:"rgba(43,46,61,0.5)",
-                        //         borderColor:"#2b2f40",
-                        //         // handleIcon:'M 100 100 L 300 100 L 300 700 L 100 700 Z',
-                        //         handleStyle:{
-                        //             color:"#62646f",
-                        //             borderColor:"#62646f",
-                        //             borderWidth:1
-                        //         },
-                        //         textStyle:{
-                        //             color:colorList[3],
-                        //             fontSize:14
-                        //         },
-                        //         dataBackground:{
-                        //             lineStyle:{
-                        //                 color:'rgba(255,255,255,0.5)',
-                        //             },
-                        //             areaStyle:{
-                        //                 color:"transparent"
-                        //             }
-                        //         }
-                        //     }
-                        // ],
                         xAxis: [
                             {
                                 type:"category",

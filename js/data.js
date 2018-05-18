@@ -22,8 +22,8 @@ var Charts = {
     LatestVolume:0,     // 最新一笔成交量的值   
 
     // 需要点击查询的指标相关 记录
-    myIndexClick: 0,        // 记录 查询次数 ，分时图没有指标线，所以点击分时图时，参数归零，之后再点击其他线不自动查询。 
-    myTechIndexNumber: 0,   // 记录 当前查询的指标 的 索引，分时图没有指标线，所以点击分时图时，参数归零，之后再点击其他线不自动查询。 
+    myIndexClick: 0,        // 记录 当前查询的指标 的 索引，分时图没有指标线，所以点击分时图时，参数归零，之后再点击其他线不自动查询。 
+    myTechIndexNumber: 0,   // 记录 查询次数 ，分时图没有指标线，所以点击分时图时，参数归零，之后再点击其他线不自动查询。 
     oldIndexNameOthers: null, // 记录 上一次点击查询的 指标的 名称
     mouseHoverPoint: 0,         // 当前现实的数据索引
     paitChartsNow: false,          // 更新图表的锁

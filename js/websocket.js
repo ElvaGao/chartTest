@@ -9,9 +9,48 @@ function resetData(option){
     // 初始化K线参数
     initK(option);
 }
+// 清盘指令后，进行页面数据清理
+function clearData(){
+    // 更新MarketStatus状态后，重新查询数据
+    // $("#"+Charts.type).click();
+    //订阅快照 获取昨收 填写信息
+    StockInfo.getWatchKZ(); 
+    // 全部重新初始化数据
+    resetData(option);
+    
+    // 图形对象
+    Charts.isLoaded = false;
+    Charts.preType = null;
+    Charts.LatestVolume = 0;
+    Charts.thisChartFocus = null;
+    // 股票信息
+    StockInfo.hasKZ = false;
+    StockInfo.PreClose = null;
+    StockInfo.HistoryDataZBCJ.time = null;
+    StockInfo.HistoryDataZBCJ.price = null;
+    StockInfo.HistoryDataZBCJ.volumn = null;
+    StockInfo.HistoryDataZBCJ.dir = null;
+    // 逐笔成交清空
+    $(".cb-cj").empty();
+    // 盘口清空
+    if(StockInfo.stockType=="Field"){
+        var newDataPKExt = {"Downs":0,"HoldLines":0,"Ups":0}
+        setfillPKExtZS(newDataPKExt);
+    }else{
+        var newDataPK = {
+            Asks:[{"Price":"0","Volume":0},{"Price":"0","Volume":0},{"Price":"0","Volume":0},{"Price":"0","Volume":0},{"Price":"0","Volume":0}],
+            Bids:[{"Price":"0","Volume":0},{"Price":"0","Volume":0},{"Price":"0","Volume":0},{"Price":"0","Volume":0},{"Price":"0","Volume":0}],
+        };
+        setfillPK(newDataPK);
+        var newDataPKExt = {"Entrustment":0,"EntrustmentSub":"0","InnerVolume":"0","OuterVolume":"0"};
+        setfillPKExt(newDataPKExt);
+    }
+}
+var option = null;
 ;(function($){
     // socket通道-查询K线
     $.WS = function(option) {
+        option = option;
         KChart = echarts.init(document.getElementById('kline_charts'));
         KChart.on('dataZoom', function (params) {
             clearTimeout(Charts.dataZoomTimer);
@@ -300,10 +339,8 @@ function resetData(option){
                 if(KChart.getOption()&&KChart.getOption().series.length!=0){
                     if(Charts.preType=="mline"){
                         MChart.clear();
-                        // MChart = echarts.init(document.getElementById('mline_charts'));
                     }else{
                         KChart.clear();
-                        // KChart = echarts.init(document.getElementById('kline_charts'));
                     }  
                 }
 
@@ -316,7 +353,6 @@ function resetData(option){
                     if(!(Charts.preType=="day"||Charts.preType=="week"||Charts.preType=="month"||Charts.preType=="year")){
                         KLine.getKWatchCC();
                     }
-                    
                     
                     // 更新技术指标参数
                     if(Charts.preType!="mline"){
@@ -521,41 +557,28 @@ var initSocketEvent = function(){
                                         return;
                                     }
                                     
-                                    var MsgType =  data["MsgType"] || data[0]["MsgType"]; //暂时用他来区分推送还是历史数据 如果存在是历史数据,否则推送行情
-                                    if(MsgType=="R8002"||MsgType=="P8002"){
-                                        if(data["InstrumentID"] || data[0]&&data[0]["InstrumentID"]){
-                                            // 通过匹配InstrumentID和ExchangeID，对不是当前查询的股票的信息，进行截流
-                                            var MsgInstrumentID = data["InstrumentID"] || data[0]["InstrumentID"];
-                                            var instrumentID = Number(StockInfo.InstrumentID);
-                                            if(!(instrumentID==MsgInstrumentID)){
-                                                return;
-                                            }
-                                        }
-                                        // 通过匹配InstrumentID和ExchangeID，对不是当前查询的股票的信息，进行截流
-                                        var MsgExchangeID = data["ExchangeID"] || data[0]["ExchangeID"];
-                                        var exchangeID = Number(StockInfo.ExchangeID);
-                                        if(!(exchangeID==MsgExchangeID)){
-                                            return;
-                                        }
-                                    }else{
+                                    // 通过匹配InstrumentID和ExchangeID，对不是当前查询的股票的信息，进行截流
+                                    // 市场状态没有InstrumentID
+                                    if(data["InstrumentID"] || data[0]&&data[0]["InstrumentID"]){
                                         // 通过匹配InstrumentID和ExchangeID，对不是当前查询的股票的信息，进行截流
                                         var MsgInstrumentID = data["InstrumentID"] || data[0]["InstrumentID"];
-                                        var MsgExchangeID = data["ExchangeID"] || data[0]["ExchangeID"];
-                                        var exchangeID = Number(StockInfo.ExchangeID);
                                         var instrumentID = Number(StockInfo.InstrumentID);
-                                        if(!(exchangeID==MsgExchangeID&&instrumentID==MsgInstrumentID)){
+                                        if(!(instrumentID==MsgInstrumentID)){
                                             return;
                                         }
                                     }
+                                    var MsgExchangeID = data["ExchangeID"] || data[0]["ExchangeID"];
+                                    var exchangeID = Number(StockInfo.ExchangeID);
+                                    if(!(exchangeID==MsgExchangeID)){
+                                        return;
+                                    }
                                     
-
                                     // 解析数据串中的ErrorCode，数据列KLineSeriesInfo，MsgType
                                     var ErrorCode = data["ErrorCode"]?data["ErrorCode"]:null;
                                     var dataList = data.KLineSeriesInfo?data.KLineSeriesInfo:new Array(data);
                                     var MsgType =  data["MsgType"] || data[0]["MsgType"]; //暂时用他来区分推送还是历史数据 如果存在是历史数据,否则推送行情
                                     
                                     var beginTime,finishTime,beginTime1,finishTime1;
-
                                     /*
                                      * 个股/指数 实时数据，通过快照接口
                                      * 其他数据，处理方式不同
@@ -567,6 +590,7 @@ var initSocketEvent = function(){
                                             if(data.ErrorCode=="9999"){
                                                 return;
                                             }
+                                            
                                             if(StockInfo.MarketStatus!=data.MarketStatus){
                                                 StockInfo.Date = data.Date?data.Date:data[0].Date;
                                                 StockInfo.todayDate = -1;
@@ -578,10 +602,11 @@ var initSocketEvent = function(){
                                                 return;
                                             }
                                             if(StockInfo.MarketStatus==1){
-                                                // 更新MarketStatus状态后，重新查询数据
-                                                $("#"+Charts.type).click();
+                                                // 清盘指令后，进行页面数据清理
+                                                clearData();
                                             }
-                                            
+                                            //订阅快照 获取昨收
+                                            StockInfo.getWatchKZ();
                                             break;
                                         case "P0001":       // 订阅日K线
                                             if(data.ErrorCode=="9999"){
@@ -605,8 +630,7 @@ var initSocketEvent = function(){
                                                 if(StockInfo.stockType=="Field"){
                                                     //请求盘口扩展-内外盘-委比委差等
                                                     StockInfo.getKWatchKZ_KZPK_ZB();
-                                                }
-                                                if(StockInfo.stockType=="Stock"){
+                                                }else{
                                                     //请求盘口扩展-内外盘-委比委差等
                                                     StockInfo.getKWatchKZ_PK_KZPK_ZB();
                                                 }
@@ -622,9 +646,9 @@ var initSocketEvent = function(){
                                                 };
                                                 socket.request(tradingHistoryData);
                                                 // 刚打开页面之后，查询分时图
-                                                if(!Charts.isLoaded&&Charts.type=="mline"){
+                                                if(!Charts.isLoaded){
                                                     // 查询分时图
-                                                    $("#mline").click();
+                                                    $("#"+Charts.type).click();
                                                     // 页面打开后，第一次查询的数据加载完毕
                                                     Charts.isLoaded = true;
                                                 }
@@ -844,14 +868,13 @@ var initSocketEvent = function(){
                                         case "R8050":  //心跳包
                                             // console.log(data);
                                             break;
-                                            case "P0002":    //五档盘口
+                                        case "P0002":    //五档盘口
                                             if(data.ErrorCode=="9999"){
                                                 return;
                                             }
                                             if(data.ExchangeID != StockInfo.ExchangeID || data.InstrumentID != StockInfo.InstrumentID){
                                                 return;
                                             }
-                                            // if(!data || data.) return
                                             setfillPK(data);
                                             break;
                                         case "P0003":    //五档盘口扩展-内外盘-委比委差等
@@ -861,14 +884,10 @@ var initSocketEvent = function(){
                                             if(data.ExchangeID != StockInfo.ExchangeID || data.InstrumentID != StockInfo.InstrumentID){
                                                 return;
                                             }
-                                            switch(StockInfo.stockType){
-                                                case "Field":
-                                                    setfillPKExtZS(data);
-                                                    break;
-                                                case "Stock":
-                                                    setfillPKExt(data);
-                                                    break;
-                                                default:;
+                                            if(StockInfo.stockType=="Field"){
+                                                setfillPKExtZS(data);
+                                            }else{
+                                                setfillPKExt(data);
                                             }
                                             break;
                                         case "P0032":    //逐笔成交

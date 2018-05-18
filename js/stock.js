@@ -60,34 +60,6 @@ var CreateStock = function(options){
             "InstrumentID":options.InstrumentID,
             MsgType:"S1010",
             Instrumenttype:"1,3,32"
-        },
-        // 盘口
-        watchPK : {
-            "ExchangeID":options.ExchangeID,
-            "InstrumentID":options.InstrumentID,
-            MsgType: "S1010",
-            Instrumenttype: "2"
-        },
-        // 扩展盘口----个股
-        watchPKExt: {
-            "ExchangeID":options.ExchangeID,
-            "InstrumentID":options.InstrumentID,
-            MsgType: "S1010",
-            Instrumenttype: "3"
-        },
-        // 扩展盘口---指数
-        watchPKExtZS: {
-            "ExchangeID":options.ExchangeID,
-            "InstrumentID":options.InstrumentID,
-            MsgType: "S1010",
-            Instrumenttype: "3"
-        },
-        // 逐笔成交
-        watchZBCJ : {
-            "ExchangeID":options.ExchangeID,
-            "InstrumentID":options.InstrumentID,
-            MsgType: "S1010",
-            Instrumenttype: "32"
         }
     }
 }
@@ -143,22 +115,6 @@ CreateStock.prototype = {
     getKWatchKZ_KZPK_ZB :   function(){
                                 socket.request(this.option.KWatchKZ_KZPK_ZB);
                             },
-    // 盘口
-    getWatchPK :    function(){
-                        socket.request(this.option.watchPK);
-                    },
-    // 盘口扩展
-    getWatchPKExt : function(){
-                        socket.request(this.option.watchPKExt);
-                    },
-    // 指数扩展盘口
-    getWatchPKExtZS :   function(){
-                            socket.request(this.option.watchPKExtZS);
-                        },
-    // 逐笔成交
-    getWatchZBCJ :  function(){
-                        socket.request(this.option.watchZBCJ);
-                    }
 }; 
 //1、用id判断出是哪个指数，获取其开始时间和结束时间、保留小数位
 function compareTime(data){
@@ -228,6 +184,10 @@ function fillTrading(data){
 function setFieldInfo(data){
         var high,low,open,zf,price,zd,zdf,dealVal,dealVol,preClose;
         if(data){
+            if(StockInfo.MarketStatus==1){
+                // 更新MarketStatus状态后，重新查询数据
+                $("#"+Charts.type).click();
+            }
             high = data.High;
             low = data.Low;
             open = data.Open;
@@ -239,11 +199,16 @@ function setFieldInfo(data){
             zf = preClose==0?floatFixedTwo(0):floatFixedTwo((high - low)/preClose*100);
             zd = price - preClose;
             zdf = preClose==0?floatFixedTwo(0):floatFixedTwo((zd/preClose)*100);
+            if(StockInfo.MarketStatus==1){
+                // 更新MarketStatus状态后，重新查询数据
+                // 上部状态栏清空
+                price = 0;
+            }
             if(price==0){
                 zd = 0;
                 zdf = floatFixedTwo(0.00);
             }
-
+            
             var html = "";
             //指数[0~8],股票[16~31]
             if(StockInfo.stockType=="Field"){

@@ -30,9 +30,7 @@ $(function(){
     secId = $("#tab li").eq(0).data("sectionid");//当前选中板块id
     $(".zdf-list>h1").html( $("#tab li").eq(0).text());
     // 填充报价表
-    console.log(wsUrl);
     initBlockInfo(secId);
-    console.log(wsUrl);
     // 填充图表
     $("#main1").initMline(
         {
@@ -751,8 +749,6 @@ function initChartInfoEvt(){
                             return;
                         }
                         stockList[i].yc=data.PreClose; //获取昨收值
-
-                        initYCCharts(data,stockList[i]);
                     }
                 }
             break;
@@ -765,8 +761,13 @@ function initChartInfoEvt(){
                     }
                 }
             break;
+            case 'P8002':
             case "R8002"://清盘
-                MarketStatus = data["MarketStatus"] || data[0]["MarketStatus"];
+                var MSS = data["MarketStatus"] || data[0]["MarketStatus"];
+                if(MarketStatus == MSS){
+                    return;
+                }
+                MarketStatus = MSS;
                 if(MarketStatus == 1){//收到清盘指令  操作图表
                     for(var i=0;i<stockList.length;i++){
                         redrawChart(data,stockList[i]);
@@ -1051,6 +1052,33 @@ function initCharts(data,type,stockOne){
         var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(decimal));
 
         var option = {
+            grid:{
+                show:true,
+                borderColor:"#e5e5e5",
+                top:'10%',
+                left:"5%",
+                right:"10%",
+                height:'90%',
+                containLabel:true
+            },
+            dataZoom:{
+                type:"inside",
+                disabled:true,
+            },
+            tooltip:{
+                trigger:"axis",
+                show:false
+            },
+            axisPointer:{
+                show:false,
+                label:{
+                    show:false,
+                    backgroundColor:"#555"
+                },
+                lineStyle:{
+                    type:"dotted"
+                }
+            },
             xAxis:{
                 splitLine:{
                     show:true,
@@ -1196,7 +1224,7 @@ function initCharts(data,type,stockOne){
                 data:price
             }
         };
-        // stockOne.myChart = echarts.init(document.getElementById(stockOne.elementId));
+        stockOne.myChart = echarts.init(document.getElementById(stockOne.elementId));
         stockOne.myChart.setOption(option);
 
         var size = (parseFloat(stockOne.history_data[stockOne.history_data.length-1]) - parseFloat(yc)).toFixed(decimal);
@@ -1208,230 +1236,6 @@ function initCharts(data,type,stockOne){
         $("#"+stockOne.elementId).parents(".market-main-chart").siblings(".market-chart-decs").html(htmlStr);
         $("#"+stockOne.elementId).parents("a").attr("href","./detail.html?exchangeID="+stockOne.exchangeID+"&id="+stockOne.id);
     }
-}
-// 得到昨收后画空表
-function initYCCharts(data,stockOne){
-    if(!data){
-        console.log("没有数据");
-        return;
-    }
-    var yc = parseFloat(stockOne.yc);//昨收
-    var decimal = stockOne.xmlData.PriceDecimal;//保留的小数位数
-    var limitUp = Number((yc + yc*0.1).toFixed(decimal));
-    var limitDown = Number((yc - yc*0.1).toFixed(decimal));
-    $("#"+stockOne.elementId).show();
-    var startTime=startTime1=endTime=endTime1=null;//各个指数的交易时间
-    var oneZSInfo = stockOne.oneZSInfo = compareTime(stockOne.xmlData,stockOne.id);
-    if(oneZSInfo.length>1){//分段计算时间
-        startTime = oneZSInfo[0].startTime;
-        endTime = oneZSInfo[0].endTime;
-        startTime1 = oneZSInfo[1].startTime1;
-        endTime1 = oneZSInfo[1].endTime1;
-    }else{//时间连续交易
-        startTime = oneZSInfo[0].startTime;
-        endTime = oneZSInfo[0].endTime;
-    }
-    var v_data = getxAxis(data.Date,stockOne);
-    stockOne.v_data = v_data;
-    var minY,middleY,maxY,minY1,maxY1;
-    if (yc) {
-        minY = (yc - stockOne.interval).toFixed(decimal);
-        middleY = yc.toFixed(decimal);
-        maxY = (yc + stockOne.interval).toFixed(decimal);
-
-        var dd = ((parseFloat(minY) - (yc)) / (yc) );//* 100);
-        if(Math.abs(dd) > 1){
-            minY1 = ((parseFloat(minY) - (yc)) / (yc)).toFixed(2);
-            maxY1 = ((parseFloat(maxY) - (yc)) / (yc)).toFixed(2);
-        }else{
-            minY1 = ((parseFloat(minY) - (yc)) / (yc) * 100).toFixed(2);
-            maxY1 = ((parseFloat(maxY) - (yc)) / (yc) * 100).toFixed(2);
-        }
-    } else {
-        minY = 0;
-        middleY = 1;
-        maxY = 2;
-    }
-    var split = parseFloat(((maxY - minY) / 6).toFixed(4));
-    var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(4));
-
-    var option = {
-        grid:{
-            show:true,
-            borderColor:"#e5e5e5",
-            top:'10%',
-            left:"5%",
-            right:"10%",
-            height:'90%',
-            containLabel:true
-        },
-        dataZoom:{
-            type:"inside",
-            disabled:true,
-        },
-        tooltip:{
-            trigger:"axis",
-            show:false
-        },
-        axisPointer:{
-            show:false,
-            label:{
-                show:false,
-                backgroundColor:"#555"
-            },
-            lineStyle:{
-                type:"dotted"
-            }
-        },
-        xAxis:{
-            splitLine:{
-                show:true,
-                interval:120,
-                lineStyle:{
-                    color:"#e5e5e5",
-                    opacity:1
-                }
-            },
-            axisLine:{
-                show:false
-            },
-            axisTick:{
-                show:false
-            },
-            type:"category",
-            data:v_data,
-            axisLabel: {
-                interval: function (number, string) {
-                    if(startTime1){//有中端
-                        if(string.indexOf(startTime)>-1 || string.indexOf(endTime)>-1 || string.indexOf(endTime1)>-1){
-                            return true;
-                        }else{
-                            return false;
-                        }
-                    }else{//连续
-                        if(string.indexOf(startTime)>-1 || string.indexOf(endTime)>-1){
-                            return true;
-                        }else{
-                            return false;
-                        }
-                    }
-                },
-                formatter: function (value, number) {
-                    var tVal = value.split(" ")[2];
-                    if(startTime1 && value.indexOf(endTime)>-1){
-                        if(startTime1 == "13:01"){
-                            tVal = tVal+"/"+"13:00";
-                        }else{
-                            tVal = tVal+"/"+startTime1;
-                        }
-                    }
-                    return tVal;
-                },
-                textStyle: {
-                    color: '#999'
-                }
-            },
-            axisPointer: {
-                show:false,
-                label: {
-                    formatter: function (params, value, s) {
-                        return (params.value);
-                    },
-                    padding:[3,5,5,5],
-                    show:false
-                }
-            }
-        },
-        yAxis:[{
-            position:"right",
-            type:"value",
-            min:minY,
-            max:maxY,
-            interval: split,
-            boundaryGap: [0, '100%'],
-            splitLine:{
-                lineStyle:{
-                    color:"#e5e5e5"
-                }
-            },
-            axisLine:{
-                show:false
-            },
-            axisTick:{
-                show:false
-            },
-            axisPointer: {
-                label: {
-                    formatter: function (params, value, s) {
-                        return parseFloat(params.value).toFixed(decimal);
-                    }
-                }
-            },
-            axisLabel: {
-                formatter: function (value, index) {
-                    if (index == 3) {
-                        return "";
-                    } else {
-                        return parseFloat(value).toFixed(decimal);
-                    }
-                },
-                textStyle: {
-                    color: "#999"
-                }
-            },
-        }
-        ],
-        series:{
-            type:'line',
-            symbolSize:0,
-            hoverAnimation:false,
-            connectNulls:true,
-            animation:false,
-            lineStyle:{
-                normal:{
-                    color:"#2b99ff",
-                    width:1
-                }
-            },
-            areaStyle:{
-                normal:{
-                    color:{
-                        type: 'linear',
-                        x:0,
-                        y:0,
-                        x2:0,
-                        y2:1,
-                        colorStops: [{
-                            offset: 0, color: 'rgba(43,153,255,0.3)' // 0% 处的颜色
-                        }, {
-                            offset: 1, color: 'rgba(43,153,255,0.1)' // 100% 处的颜色
-                        }],
-                        globalCoord: false
-                    }
-                }
-            },
-            markLine:{
-                symbolSize:0,
-                lineStyle:{
-                    normal:{
-                        color:"#999",
-                        type:"dotted"
-                    }
-                },
-                data: [
-                    {
-                        name: 'Y 轴值为 100 的水平线',
-                        yAxis: middleY
-                    }
-                ],
-                animation:false
-            },
-            data:''
-        }
-    };
-    stockOne.myChart = echarts.init(document.getElementById(stockOne.elementId));
-    stockOne.myChart.setOption(option);
-    $("#"+stockOne.elementId).parents("a").attr("href","./detail.html?exchangeID="+stockOne.exchangeID+"&id="+stockOne.id);
 }
 // 填充报价表表单
 function fillNewOfferForm(data){
