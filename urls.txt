@@ -1,0 +1,8 @@
+测试环境：
+http://117.78.42.127:8080/webHQ/html/detail.html?exchangeID=2&id=1
+http://117.78.42.127:8080/webHQ/html/marketCenter.html
+http://117.78.42.127:8080/stockCN-XHCJ/html/fullScreen.html?exchangeID=2&id=1
+
+生产环境：
+http://117.78.42.127:8080/stockCN/html/marketCenter.html
+http://117.78.42.127:8080/stockCN/html/detail.html?exchangeID=2&id=1
