@@ -313,7 +313,7 @@ var option = null;
         // 初始化数据
         resetData(option);
     
-        // 点击查询周期K线
+        // 点击查询图形
         $("#tab li").on("click",function(){
             var _this = this;
             $("#withoutDataK").html("<img src='../img/loading.gif' class='loading'/>");
@@ -514,7 +514,7 @@ WSConnect.prototype = {
                         socket.request(this.HeartSend);
                     }
 };
-// socket请求
+// socket请求应答
 var initSocketEvent = function(){
 
     socket.ws.onclose = function () {
@@ -534,9 +534,10 @@ var initSocketEvent = function(){
                             StockInfo.getMarketStatus();
                             //订阅快照 获取昨收
                             // StockInfo.getWatchKZ();
+
+                            // 通过Charts.isLoaded判断是否是重连
                             if(Charts.isLoaded){
-                                // 更新MarketStatus状态后，重新查询数据
-                                
+                                // 页面重连后，继续重新查询页面
                                 $("#"+Charts.type).click();
                             }
                             
@@ -602,7 +603,7 @@ var initSocketEvent = function(){
                                                 return;
                                             }
                                             if(StockInfo.MarketStatus==1){
-                                                // 清盘指令后，进行页面数据清理
+                                                // 清盘指令后，进行页面数据清理-包括StockInfo.PreClose和Charts.isLoaded都重置
                                                 clearData();
                                             }
                                             //订阅快照 获取昨收
@@ -622,7 +623,6 @@ var initSocketEvent = function(){
                                             }
                                             // 通过昨收是否存在，判断页面是否是第一次加载
                                             if(!StockInfo.PreClose&&data.PreClose){
-                                                // StockInfo.PreClose = data.PreClose;
                                                 // 存储昨收
                                                 StockInfo.PreClose = data.PreClose?parseFloat(data.PreClose):null;
 
@@ -812,7 +812,7 @@ var initSocketEvent = function(){
                                                 });
                                                 socket.reconnectWS = false;
                                             }
-                                            // 如果当天数据为空并要进行第二次查询，或者是要进行第一次查询时，清空数据
+                                            // 进行第一次查询时，清空数据
                                             if(KLine.HistoryData.queryTimes==0){
                                                 $.each(KLine.HistoryData,function(i,obj){
                                                     if(obj instanceof Array){

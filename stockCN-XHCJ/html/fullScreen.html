@@ -24,7 +24,7 @@
         <div class="container  full-screen-container">
             <div class="f-lineType">
                 <div class="flt-text">
-                    <img src="../img/线形.png">
+                    <img src="../img/line.png">
                     <span class="fl-text">Line</span>
                     <span class="fl-trangle"></span>
                 </div>
@@ -33,11 +33,11 @@
                     <span class="fl-trangle flb-tragle2"></span>
                     <ul class="flb-toggle">
                         <li>
-                            <img src="../img/线形.png">
+                            <img src="../img/line.png">
                             <span class="fl-text">Line</span>
                         </li>
                         <li>
-                            <img src="../img/面积.png">
+                            <img src="../img/area.png">
                             <span class="fl-text">Area</span>
                         </li>
                     </ul>
@@ -52,10 +52,10 @@
         </div>
         <div class="chart_area">
             <!-- 分时图 -->
-            <div id="MLine" class="clearfix">
+            <div id="MLine" class="clearfix fl full-mline">
                 <div class="mline" >
                     <input type="text" class="charts-focus" readonly="readonly" unselectable="on" style="outline: none; position: absolute;z-index: -1;top: 30%;left: 30%;background-color: inherit;border: none;opacity:0;filter:alpha(opacity=0);color:transparent;">
-                    <div id="mline_charts" class="mline_full" style="width:100%;height:730px;">
+                    <div id="mline_charts" class="mline_full" style="width:100%;height:450px;">
                         暂无数据
                     </div>
                     
@@ -87,15 +87,16 @@
                         </span>
                     </div>
                     <label class="point_label">13.38</label>
+                    <!-- 随鼠标走的提示框 -->
+                    <div class="mline_info">
+                            <span class="stockDate">-</span>
+                            <span>
+                                <label class="stockName">-</label>
+                                <i class="lastPrice">-</i>
+                            </span>
+                        </div>
                 </div>
-                <!-- 随鼠标走的提示框 -->
-                <div class="mline_info">
-                    <span class="stockDate">-</span>
-                    <span>
-                        <label class="stockName">-</label>
-                        <i class="lastPrice">-</i>
-                    </span>
-                </div>
+                
             </div>
             <!--K线图开始-->
             <div class="canvas kline fl f-kline" id="kline" style="display: none;">
@@ -147,19 +148,19 @@
                 </div>
                 <ul class="tb-fielList f-tb-fielList">
                     <li>
-                        <p>最高：</p>
+                        <p>最&nbsp;&nbsp;&nbsp;&nbsp;高：</p>
                         <span class="red">-</span>
                     </li>
                     <li>
-                        <p>今开：</p>
+                        <p>今&nbsp;&nbsp;&nbsp;&nbsp;开：</p>
                         <span class="green">-</span>
                     </li>
                     <li>
-                        <p>最低：</p>
+                        <p>最&nbsp;&nbsp;&nbsp;&nbsp;低：</p>
                         <span class="green">-</span>
                     </li>
                     <li>
-                        <p>昨收：</p>
+                        <p>昨&nbsp;&nbsp;&nbsp;&nbsp;收：</p>
                         <span>-</span>
                     </li>
 
@@ -277,8 +278,8 @@
                         { name:"30分",id:"thim" },
                         { name:"60分",id:"hour" }
                     ],
-                    width: '120px',
-                    lineHeight: '60px'
+                    width: '70px',
+                    lineHeight: '40px'
                 }
             );
             //指数与个股区分

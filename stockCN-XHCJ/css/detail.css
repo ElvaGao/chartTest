@@ -617,26 +617,29 @@ ul{
 }
 .fh-logo{
 	float: left;
-	margin: 15px 60px;
+	margin: 15px 50px;
 	font-size: 0;
+}
+.fh-logo img{
+	max-height: 80px;
 }
 .fh-time{
 	float: right;
-	margin-top: 29px;
+	margin-top: 20px;
 	margin-right: 47px;
 }
 .fh-date{
-	font-size: 28px;
+	font-size: 22px;
 	color: #cdcdcd;
 	font-weight: lighter;
 }
 .fh-minute{
-	font-size: 48px;
+	font-size: 34px;
 	color: #e0e0e0;
 	font-weight: lighter;
 }
 .full-screen-container{
-	height: 60px;
+	height: 40px;
 	background-color: #264378;
 }
 .full-screen-container ul{
@@ -646,41 +649,44 @@ ul{
 .full-screen-container li,.flt-text{
 	text-align: center;
 	color: #fff;
-	font-size: 30px;
+	font-size: 18px;
 	font-family: '微软雅黑';
 	border-right: 1px solid #1e2131;
 }
 .full-screen-container .clearfix li.active{
 	background-color: #c23a39;
 }
+.full-mline{
+	width: 70%;
+}
 .f-lineType{
 	float: left;
-	width: 200px;
+	width: 118px;
 	position: relative;
 	cursor: pointer;
 }
 .flt-text{
-	line-height: 60px;
+	line-height: 45px;
 	border: none;
 }
 .fl-text{
-	margin-left: 17px;
+	margin-left: 6px;
 }
 .fl-trangle{
 	position: absolute;
 	display: inline-block;
 	width: 0;
 	height: 0;
-	border-width: 10px;
+	border-width: 7px;
 	border-style: solid;
 	border-color: #fff transparent transparent transparent;
-	top: 27px;
-	margin-left: 12px;
+	top: 20px;
+	margin-left: 9px;
 }
 .f-lineType-box,
 #url_list{
 	position: absolute;
-	left: 36px;
+	left: 0;
 	z-index: 999;
 	background-color: #1e2131;
 	border: 2px solid #264378;
@@ -690,7 +696,7 @@ ul{
 }
 .f-lineType-box li,
 #url_list li{
-	font-size: 24px;
+	font-size: 18px;
 	line-height: 46px;
 	height: 46px;
 	width: 154px;
@@ -718,39 +724,40 @@ ul{
 }
 .f-search{
 	float: right;
-	margin-right: 46px;
+	margin-right: 20px;
 	position: relative;
 }
 .f-search input{
-	line-height: 42px;
-	font-size: 24px;
+	line-height: 30px;
+	font-size: 16px;
 	background-color: #1e2131;
 	border: none;
-	margin-top: 8px;
+	margin-top: 5px;
 	float: left;
-	border-radius: 10px;
+	border-radius: 6px;
 	color: #fff;
 	padding: 0 10px;
-	width: 310px;
+	width: 200px;
 	outline: none;
 }
 .f-search input[type="text"]{
 	padding-right: 40px;
 }
 .f-search input[type="button"]{
-	width: 56px;
-	height: 42px;
+	width: 39px;
+	height: 30px;
 	position: absolute;
 	right: 0;
 	padding: 0;
 	background-color: inherit;
 	cursor: pointer;
-	background: url(../img/大屏搜索2.png) no-repeat center;
+	background: url(../img/search2.png) no-repeat center;
+	background-size: 50% 65%;
 }
 #url_list{
 	position: absolute;
-	width: 360px;
-	top: 54px;
+	width: 250px;
+	top: 35px;
 	left: 0;
 	max-height: 276px;
 	overflow-y: scroll;
@@ -780,7 +787,7 @@ ul{
 }
 #url_list li span{
 	display: inline-block;
-	font-size: 24px;
+	font-size: 16px;
 	text-align: left;
 	padding-left: 15px;
 	box-sizing: border-box;
@@ -789,17 +796,17 @@ ul{
     text-overflow: ellipsis;
 }
 #url_list li span i{
-	font-size: 24px;
+	font-size: 16px;
 }
 #url_list li i{
 	font-style: normal;
 	color: #2b99ff;
 }
 #url_list li span:first-child{
-	width: 60%;
+	width: 65%;
 }
 #url_list li span:last-child{
-	width: 40%;
+	width: 35%;
 }
 .content{
 	position: relative;
@@ -807,22 +814,22 @@ ul{
 	padding-bottom: 80px;
 }
 .f-kline{
-	width: 72.916%;
+	width: 70%;
 	/*width: 100%;*/
-	height: 734px;
-	padding-left: 40px;
+	/* height: 734px; */
+	/* padding-left: 40px; */
 	margin-top: 40px;
 	box-sizing: border-box;
 }
 .f-kline-charts{
 	/*width: 100%;*/
-	height: 734px;
+	height: 450px;
 }
 .f-stockInfo{
-	width: 25.44%;
+	width: 30%;
 	/*width: 100%;*/
 	background-color: #20283f;
-	padding: 40px 20px 40px 40px;
+	padding: 40px 20px 80px 20px;
 }
 
 .f-tb-fieldName{
@@ -836,35 +843,35 @@ ul{
 	line-height: 40px;
 }
 .f-tbfn-title span:first-child{
-	font-size: 40px;
+	font-size: 26px;
 	color: #fff;
 	font-weight: bold;
 	
 }
 .f-tbfn-title span:last-child{
-	font-size: 36px;
+	font-size: 22px;
 	color: #fff;
 	font-weight: normal;
-	margin: 7px 0 0 26px;
+	margin: 7px 0 0 16px;
 }
 .f-tbfn-num{
 	overflow: hidden;
-	margin-top: 30px;
+	margin-top: 14px;
 }
 .f-tbfn-num span{
 	line-height: initial;
-	font-size: 24px;
+	font-size: 18px;
 	margin: 0;
-	margin-top: 18px;
+	margin-top: 6px;
 }
 .f-tbfn-num span:first-child{
-	font-size: 48.5px;
+	font-size: 24px;
 	color: #fff;
-	margin-right: 40px;
+	margin-right: 20px;
 	margin-top: 0;
 }
 .f-tbfn-num span:nth-child(2){
-	margin-right: 15px;
+	margin-right: 12px;
 }
 .f-tbfn-num span.black{
 	color: #fff;
@@ -873,9 +880,9 @@ ul{
 	display: inline-block;
 	width: 0;
 	height: 0;
-	border-width: 10px;
+	border-width: 7px;
 	border-style: solid;
-	margin-right: 20px;
+	margin-right: 6px;
 }
 .f-tbfn-num span .red{
 	border-color: #99353b transparent transparent transparent;
@@ -886,41 +893,43 @@ ul{
 }
 .f-tbfn-num span .black{
 	width: 20px;
-    height: 32px;
+    height: 15px;
     border: none;
-    border-bottom: 5px solid #fff;
+    border-bottom: 3px solid #fff;
     float: left;
 }
 .f-tb-fielList{
 	padding: 0;
-	margin-top: 30px;
-	margin-bottom: 40px;
+	margin-top: 16px;
+	margin-bottom: 18px;
+	overflow: hidden;
 }
 .f-tb-fielList li:nth-child(n){
 	width: 50%;
 	line-height: 40px;
+	height: 35px;
 }
 .f-tb-fielList li,
 .f-tb-fielList li p{
 	color: #a7a8aa;
-	font-size: 22px;
+	font-size: 16px;
 }
 .f-latest-stock h2{
-	font-size: 30px;
+	font-size: 18px;
 	font-weight: bold;
 	color: #fff;
 	line-height: 40px;
 	margin: 0;
 }
 .f-ls-list{
-	margin-top: 12px;
+	margin-top: 10px;
 }
 .f-ls-list li{
-	line-height: 40px;
+	/* line-height: 40px; */
 	font-size: 0;
 }
 .f-ls-list li span{
-	font-size: 22px;
+	font-size: 16px;
 	display: inline-block;
 }
 .f-ls-list li span.black,
@@ -944,11 +953,12 @@ ul{
 	display: block;
 	font-style: normal;
 	color: rgba(255,255,255,0.5);
-	font-size: 20px;
+	font-size: 14px;
+	line-height: 26px;
 }
 .f-kline-info{
-	padding: 20px 25px;
-	width: 255px;
+	padding: 10px 14px;
+    width: 190px;
 	height: auto;
 	background-color: #1e2131;
     border-color: #232735;
@@ -971,8 +981,8 @@ ul{
 /* 分时图 */
 .mline{
 	position: relative;
-	float: left;
-	width: 70%;
+	/* float: left; */
+	/* width: 70%; */
 	margin-top: 40px;
 }
 .mline_full{
@@ -987,14 +997,14 @@ ul{
 	top: 10px;
 	background-color: #1e2131;
 	border: 1px solid #232735;
-	padding: 10px 20px;
+	padding: 10px 14px;
 	box-shadow:0px 0px 7px rgba(0,0,0,0.35);
 	display: inline-block;
 	line-height: 30px;
 	font-family: Helvetica;
-	font-size: 20px;
+	font-size: 18px;
 	font-style: normal;
-	min-width: 240px;
+	min-width: 190px;
 	border-radius: 3px;
 	display: none;
 }
@@ -1005,11 +1015,15 @@ ul{
 .mline_tooltip>span>label{
 	color: rgba(255, 255, 255, 0.5);
 	float: left;
+	font-size: 14px;
+	line-height: 26px;
 }
 .mline_tooltip>span>i{
 	color: #fff;
 	float: right;
-	font-size: 20px;
+	/* font-size: 20px; */
+	font-size: 14px;
+	line-height: 26px;
 }
 /* 浮层信息框 */
 .mline_info{
@@ -1028,12 +1042,12 @@ ul{
 	font-family: Helvetica,Arial,sans-serif;
 	display: block;
 	color: rgba(255, 255, 255, 0.5);
-	font-size: 20px;
+	font-size: 19px;
 	line-height: 30px;
 }
 .mline_info>span:last-child{
 	color: #fff;
-	font-size: 24px;
+	font-size: 22px;
 	margin-top: 10px;
 }
 .lastPrice{
@@ -1053,31 +1067,33 @@ ul{
 .point_label{
 	background-color:#44c96e;
 	color: #fff;
-	font-size: 20px;
+	font-size: 16px;
 	padding: 0px 10px;
 	border-radius: 3px;
 	position: absolute;
-	right: 0;
+	right: 30px;
 	top:0;	
 	display: none;
 }
-#f_kline_charts div:last-child:not(:empty){
+#f_kline_charts div:last-child:not(:empty),
+#mline_charts div:last-child:not(:empty){
 	margin-top: -145px;
-	padding: 16px 22px !important;
+	padding: 8px 18px !important;
 	border: 1px solid #264378 !important;
 	background-color: #1e2131 !important;
-	font-size: 20px !important;
+	font-size: 15px !important;
 	color: rgba(255,255,255,0.5) !important;
 	box-shadow: 0 0 7px rgba(0,0,0,0.35) !important;
 	border-radius: 5px !important;
 	line-height: 30px !important;
-	width: 265px !important;
-	height: 106px !important;
+	width: 166px !important;
+	height: 78px !important;
 }
-#f_kline_charts div:last-child i{
+#f_kline_charts div:last-child i,
+#mline_charts div:last-child i{
 	display: inline-block !important;
-	margin-top: 10px !important;
-	font-size: 24px !important;
+	/* margin-top: 10px !important; */
+	font-size: 16px !important;
 	color: rgba(255,255,255,1) !important;
 	font-style: normal !important;
 	line-height: 30px !important;

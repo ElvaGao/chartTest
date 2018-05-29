@@ -24759,7 +24759,7 @@ function createNameList(result, data) {
             if (isArray(data[0]) && data[0].length > 1) {
                 nameList = [];
                 for (var i = 0; i < dataLen; i++) {
-                    // 修改 -Gao --nameList
+                    // 修改 -XIUGAI --nameList
                     try{
                         nameList[i] = categories[data[i][result.categoryIndex || 0]];
                     }catch(e){
@@ -49085,14 +49085,14 @@ var CandlestickSeries = SeriesModel.extend({
             normal: {
                 color: '#c23531', // 阳线 positive
                 color0: '#314656', // 阴线 negative     '#c23531', '#314656'
-                // 修改 -Gao --colorD
+                // 修改 -XIUGAI --colorD
                 colorD: '#000',
                 borderWidth: 1,
                 // FIXME
                 // ec2中使用的是lineStyle.color 和 lineStyle.color0
                 borderColor: '#c23531',
                 borderColor0: '#314656',
-                // 修改 -Gao --borderColorD
+                // 修改 -XIUGAI --borderColorD
                 borderColorD: '#000'
             },
             emphasis: {
@@ -49187,10 +49187,10 @@ var negativeBorderColorQuery = ['itemStyle', 'normal', 'borderColor0'];
 var defaultBorderColor = ['itemStyle', 'normal'];
 var positiveColorQuery = ['itemStyle', 'normal', 'color'];
 var negativeColorQuery = ['itemStyle', 'normal', 'color0'];
-// 修改 -Gao -borderColorD
+// 修改 -XIUGAI -borderColorD
 var defaultMyBorderColor = ['itemStyle', 'normal', 'colorD'];
 var defaultColor = ['itemStyle', 'normal'];
-// 修改 -Gao --colorD
+// 修改 -XIUGAI --colorD
 var defaultMyColor = ['itemStyle', 'normal', 'colorD'];
 
 var candlestickVisual = function (ecModel, api) {
@@ -49220,7 +49220,7 @@ var candlestickVisual = function (ecModel, api) {
                         // borderColor: itemModel.get(
                         //     (open==close) ? defaultBorderColor : ( sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery)
                         // )
-                        // 修改 -Gao --colorD
+                        // 修改 -XIUGAI --colorD
                         color: itemModel.get(
                             (sign==0) ? defaultMyColor : ( sign > 0 ? positiveColorQuery : negativeColorQuery)
                         ),
@@ -52691,7 +52691,7 @@ function processOnAxis(axisInfo, newValue, updaters, dontSnap, outputFinder) {
     //     }
     // }
     
-    // 修改 -Gao
+    // 修改 -XIUGAI
     if (!dontSnap && axisInfo.snap) {
         if (axis.containData(snapToValue) && snapToValue != null) {
             var dataIndex = outputFinder.dataIndex;

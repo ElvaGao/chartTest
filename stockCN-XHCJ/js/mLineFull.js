@@ -289,14 +289,19 @@ var yc=0,decimal=2,xml;
                         watchStock($this);
                     }
                 break;
+                case "P8002"://清盘
                 case "R8002"://清盘
                     var MarketStatus = data["MarketStatus"] || data[0]["MarketStatus"];
-                    
                     if(MarketStatus == 1){//收到清盘指令  操作图表
                         redrawChart(data,$this);
+                        yc = null;
+                        
                     }
+                    // 获取历史数据
+                    $this.getHistoryData();
+                    //获取今日数据推送
+                    $this.getRealTimePush();
                     
-
                 break;
                 case "R8050":  //心跳包
                     // console.log(data);
@@ -426,15 +431,15 @@ var yc=0,decimal=2,xml;
             animation: false,
             grid: [
                 {
-                    top: 10,
-                    left:80,
-                    right:80,
-                    height:'630px',
+                    left: '8%',
+                    right: 100,
+                    top: "2%",
+                    height:'400px',
                 },
                 {
-                    left:80,
-                    right:80,
-                    bottom: 90,
+                    left: '8%',
+                    right: 100,
+                    bottom: 40,
                     height: '20%',
                 }
             ],
@@ -446,7 +451,7 @@ var yc=0,decimal=2,xml;
                 label: {
                     backgroundColor: colorList[2]
                 },
-                show:true,
+                // show:true,
                 triggerTooltip:false,
                 snap:true
             },
@@ -480,7 +485,7 @@ var yc=0,decimal=2,xml;
                         },
                         textStyle: {
                             color: "rgba(255,255,255,0.5)",
-                            fontSize:20,
+                            fontSize:16,
                             fontFamily:'Helvetica'
                         },
                         margin:'5'
@@ -572,7 +577,7 @@ var yc=0,decimal=2,xml;
                             }
                         },
                         textStyle: {
-                            fontSize:20,
+                            fontSize:16,
                             fontFamily:"Helvetica",
                             color: function (value, index) {
                                 if (parseFloat(value) > 0) {
@@ -622,7 +627,7 @@ var yc=0,decimal=2,xml;
                         },
                         textStyle: {
                             color: "rgba(255,255,255,0.5)",
-                            fontSize:20,
+                            fontSize:16,
                             fontFamily:'Helvetica',
                         }
                     },
@@ -634,7 +639,7 @@ var yc=0,decimal=2,xml;
                         label: {
                             show: true,
                             formatter: function (params, value, s) {
-                                return parseFloat(params.value).toFixed($this.decimal);
+                                return parseFloat(params.value).toFixed(decimal);
                             }
                         },
                         snap: true
@@ -667,34 +672,36 @@ var yc=0,decimal=2,xml;
                     hoverAnimation: false,
                     connectNulls:true,
                     symbolSize:0,
-                    markLine: {
-                        animation:false,
-                        silent:true,
-                        lineStyle: {
-                            normal: {
-                                type: 'dashed',
-                                color: '#fff',
-                                width:0,
-                                opacity:0.5
-                            }
-                        },
-                        label: {
-                            normal: {
-                                // show:false,
-                                position:"start",
-                                formatter: function () {
-                                    return "0.00%";
-                                }
-                            }
-                        },
-                        data: [
-                            {
-                                name: 'Y 轴值为 100 的水平线',
-                                yAxis: 0.00
-                            }
-                        ],
-                        symbol: ['none', 'none']
-                    },
+                    // markLine: {
+                    //     animation:false,
+                    //     silent:true,
+                    //     lineStyle: {
+                    //         normal: {
+                    //             type: 'dashed',
+                    //             color: '#fff',
+                    //             width:0,
+                    //             opacity:0.5
+                    //         }
+                    //     },
+                    //     label: {
+                    //         normal: {
+                    //             // show:false,
+                    //             position:"start",
+                    //             formatter: function () {
+                    //                 return "0.00%";
+                    //             },
+                    //             fontSize:16,
+                    //             color: "rgba(255,255,255,0.5)"
+                    //         }
+                    //     },
+                    //     data: [
+                    //         {
+                    //             name: 'Y 轴值为 100 的水平线',
+                    //             yAxis: 0.00
+                    //         }
+                    //     ],
+                    //     symbol: ['none', 'none']
+                    // },
                     lineStyle: {
                         normal: {
                             width:0,
@@ -729,8 +736,11 @@ var yc=0,decimal=2,xml;
                                 position:"start",
                                 formatter: function () {
                                     return "0.00%";
-                                }
-                            }
+                                },
+                                fontSize:16,
+                                color: "rgba(255,255,255,0.5)"
+                            },
+                            
                         },
                         data: [
                             {
@@ -738,7 +748,7 @@ var yc=0,decimal=2,xml;
                                 yAxis: parseFloat(yc),
                                 label:{
                                     textStyle:{
-                                        fontSize: '20'
+                                        fontSize:16,
                                     }
                                 }
                             },
@@ -804,12 +814,17 @@ var yc=0,decimal=2,xml;
             $(".vol").show();
             $(".chartsTab").show();
             yc = parseFloat(yc);
-            var limitUp = (yc + yc*0.1).toFixed($this.decimal);
-            var limitDown = (yc - yc*0.1).toFixed($this.decimal);
+            var limitUp = (yc + yc*0.1).toFixed(decimal);
+            var limitDown = (yc - yc*0.1).toFixed(decimal);
             if(type == "add"){
                 if(myChart != undefined){
                     var a_lastData = data;
-                    var last_dataTime = formatTime(a_lastData.Time);//行情最新时间
+                    if(a_lastData[0]){
+                        var last_dataTime = formatTime(a_lastData[0].Time);//行情最新时间
+                    }else{
+                        var last_dataTime = formatTime(a_lastData.Time);//行情最新时间
+                    }
+                    // var last_dataTime = formatTime(a_lastData.Time);//行情最新时间
                     _singleTime = a_lastData.Time;
                     _timeFlag = parseInt(_singleTime) + 100;
                     var last_date = dateToStamp(formatDate(a_lastData.Date) +" " + last_dataTime);//最新时间时间戳
@@ -875,9 +890,9 @@ var yc=0,decimal=2,xml;
                     r1 = Math.abs(fvalue - parseFloat(yc));
                     if (r1 > $this.interval) {
                         $this.interval = r1 + r1*0.1;
-                        var minY = (yc - $this.interval).toFixed($this.decimal);
-                        var middleY = yc.toFixed($this.decimal);
-                        var maxY = (yc + $this.interval).toFixed($this.decimal);
+                        var minY = (yc - $this.interval).toFixed(decimal);
+                        var middleY = yc.toFixed(decimal);
+                        var maxY = (yc + $this.interval).toFixed(decimal);
                         if(minY <= limitDown){
                             minY = limitDown;
                         }
@@ -900,7 +915,7 @@ var yc=0,decimal=2,xml;
                                         if (index == 3) {
                                             return ""
                                         } else {
-                                            return parseFloat(value).toFixed($this.decimal);
+                                            return parseFloat(value).toFixed(decimal);
                                         }
                                     }
                                 }
@@ -1059,9 +1074,9 @@ var yc=0,decimal=2,xml;
                     //取绝对值  差值 
                     $this.interval = $this.interval + $this.interval*0.1;
                     if (yc) {
-                        var minY = Number((yc - $this.interval).toFixed($this.decimal));//(minPrice - r1).toFixed($this.decimal);//(yc - $this.interval).toFixed($this.decimal);
-                        var middleY = yc.toFixed($this.decimal);
-                        var maxY = Number((yc + $this.interval).toFixed($this.decimal));//(maxPrice + r1).toFixed($this.decimal);//(yc + $this.interval).toFixed($this.decimal);
+                        var minY = Number((yc - $this.interval).toFixed(decimal));//(minPrice - r1).toFixed(decimal);//(yc - $this.interval).toFixed(decimal);
+                        var middleY = yc.toFixed(decimal);
+                        var maxY = Number((yc + $this.interval).toFixed(decimal));//(maxPrice + r1).toFixed(decimal);//(yc + $this.interval).toFixed(decimal);
                         if(minY < limitDown){
                             minY = limitDown;
                         }
@@ -1096,15 +1111,15 @@ var yc=0,decimal=2,xml;
                         animation: false,
                         grid: [
                             {
-                                top: 10,
-                                left:80,
-                                right:80,
-                                height:'630px',
+                                left: '8%',
+                                right: 100,
+                                top: "2%",
+                                height:'400px',
                             },
                             {
-                                left:80,
-                                right:80,
-                                bottom: 90,
+                                left: '8%',
+                                right: 100,
+                                bottom: 40,
                                 height: '20%',
                             }
                         ],
@@ -1122,7 +1137,36 @@ var yc=0,decimal=2,xml;
                         },
                         tooltip: {
                             trigger: 'axis',
-                            showContent:false
+                            showContent: true,
+                            formatter:  function(params){
+                                            var index = params[0].dataIndex;
+                                            var timeList = $this.v_data[index].split(" ");
+                                            return  timeList[0].replace(/-/gi,"/")
+                                                    +" "+(timeList[2]?timeList[2]:"")
+                                                    +"<br><i>"+xml.options.stockName+" "+floatFixedDecimal($this.history_data[index])+"</i>";
+                                        
+                                        },
+                            position: function (pos, params, dom, rect, size) {
+                                            var valueHigh = $this.history_data[params[0].dataIndex];
+                                            var pixelHigh = myChart.convertToPixel({yAxisIndex:1}, valueHigh );
+
+                                            var valueLast = $this.history_data[$this.history_data.length-1][1];
+                                            var pixelLast = myChart.convertToPixel({xAxisIndex: 1}, $this.v_data[$this.history_data.length-1] );
+
+                                            var poxelPosTop = pixelHigh;
+                                            if(poxelPosTop<200){
+                                                poxelPosTop = pixelHigh + 100;
+                                            }
+                                            var posLeft = pos[0] - 125;
+                                            if(posLeft<30){
+                                                posLeft = pos[0] + 30;
+                                            }
+                                            console.log(posLeft)
+                                            if(posLeft>400){
+                                                posLeft = pixelLast - 220;
+                                            }
+                                            return [posLeft,poxelPosTop];
+                                      }
                         },
                         xAxis: [
                             {
@@ -1150,7 +1194,7 @@ var yc=0,decimal=2,xml;
                                     },
                                     textStyle: {
                                         color: "rgba(255,255,255,0.5)",
-                                        fontSize:20,
+                                        fontSize:16,
                                         fontFamily:'Helvetica'
                                     },
                                     margin:'5'
@@ -1242,7 +1286,7 @@ var yc=0,decimal=2,xml;
                                         }
                                     },
                                     textStyle: {
-                                        fontSize:20,
+                                        fontSize:16,
                                         fontFamily:"Helvetica",
                                         color: function (value, index) {
                                             if (parseFloat(value) > 0) {
@@ -1287,12 +1331,12 @@ var yc=0,decimal=2,xml;
                                         if (index == 3) {
                                             return "";
                                         } else {
-                                            return parseFloat(value).toFixed($this.decimal);
+                                            return parseFloat(value).toFixed(decimal);
                                         }
                                     },
                                     textStyle: {
                                         color: "rgba(255,255,255,0.5)",
-                                        fontSize:20,
+                                        fontSize:16,
                                         fontFamily:'Helvetica',
                                         // color: function (value, index) {
                                         //     if (parseFloat(value) > parseFloat(yc)) {
@@ -1311,7 +1355,7 @@ var yc=0,decimal=2,xml;
                                     label: {
                                         show: true,
                                         formatter: function (params, value, s) {
-                                            return parseFloat(params.value).toFixed($this.decimal);
+                                            return parseFloat(params.value).toFixed(decimal);
                                         }
                                     },
                                     snap: true
@@ -1344,34 +1388,37 @@ var yc=0,decimal=2,xml;
                                 hoverAnimation: false,
                                 connectNulls:true,
                                 symbolSize:0,
-                                markLine: {
-                                    animation:false,
-                                    silent:true,
-                                    lineStyle: {
-                                        normal: {
-                                            type: 'dashed',
-                                            color: '#fff',
-                                            width:0,
-                                            opacity:0.5
-                                        }
-                                    },
-                                    label: {
-                                        normal: {
-                                            // show:false,
-                                            position:"start",
-                                            formatter: function () {
-                                                return "0.00%";
-                                            }
-                                        }
-                                    },
-                                    data: [
-                                        {
-                                            name: 'Y 轴值为 100 的水平线',
-                                            yAxis: 0.00
-                                        }
-                                    ],
-                                    symbol: ['none', 'none']
-                                },
+                                // markLine: {
+                                //     animation:false,
+                                //     silent:true,
+                                //     lineStyle: {
+                                //         normal: {
+                                //             type: 'dashed',
+                                //             color: '#fff',
+                                //             width:0,
+                                //             opacity:0.5
+                                //         }
+                                //     },
+                                //     label: {
+                                //         normal: {
+                                //             // show:false,
+                                //             position:"start",
+                                //             formatter: function () {
+                                //                 return "0.00%";
+                                //             },
+                                //             fontSize: 20,
+                                //             color: "rgba(255,255,255,0.5)"
+                                //         },
+                                        
+                                //     },
+                                //     data: [
+                                //         {
+                                //             name: 'Y 轴值为 100 的水平线',
+                                //             yAxis: 0.00
+                                //         }
+                                //     ],
+                                //     symbol: ['none', 'none']
+                                // },
                                 lineStyle: {
                                     normal: {
                                         width:0,
@@ -1421,8 +1468,11 @@ var yc=0,decimal=2,xml;
                                             position: "end",
                                             formatter: function (params) {
                                                 return params.value + " ";
-                                            }
-                                        }
+                                            },
+                                            fontSize:16,
+                                            color: "rgba(255,255,255,0.5)"
+                                        },
+                                        
                                     },
                                     data: [
                                         {
@@ -1497,7 +1547,7 @@ var yc=0,decimal=2,xml;
                         if(topPixel == pixel[1]-150){
                             return;
                         }
-                        $(".mline_info").css({"top":pixel[1],"left":pixel[0]-70});
+                        // $(".mline_info").css({"top":pixel[1],"left":pixel[0]-70});
                         topPixel = pixel[1]-150;
                         var tooltipTime = $this.v_data[mouseHoverPoint];
                             tooltipTime = tooltipTime.replace(/-/g,"/");
@@ -1510,9 +1560,9 @@ var yc=0,decimal=2,xml;
                             '<label>% Change</label><i>'+zdfData[mouseHoverPoint]+'%</i></span>';
                             $(".mline_tooltip").html(tooltipHtml);
 
-                            $(".mline_info").html(' <span class="stockDate">'+tooltipTime+'</span>'+
-                            '<span><label class="stockName">'+$this.stockName+'</label>'+
-                                '<i class="lastPrice">  '+price[mouseHoverPoint]+'</i></span>');
+                            // $(".mline_info").html(' <span class="stockDate">'+tooltipTime+'</span>'+
+                            // '<span><label class="stockName">'+$this.stockName+'</label>'+
+                            //     '<i class="lastPrice">  '+price[mouseHoverPoint]+'</i></span>');
                         } else {
                             var tooltipHtml = '<span><label>Open</label><i>-</i></span>'+
                             '<span><label>High</label><i>-</i></span><span>'+
@@ -1521,23 +1571,39 @@ var yc=0,decimal=2,xml;
                             '<label>Volume</label><i>-</i></span><span>'+
                             '<label>% Change</label><i>-</i></span>';
                             $(".mline_tooltip").html(tooltipHtml);
-                            $(".mline_info").html(' <span class="stockDate">'+tooltipTime+'</span>'+
-                            '<span><label class="stockName">'+$this.stockName+'</label>'+
-                                '<i class="lastPrice">-</i></span>');
+                            // $(".mline_info").html(' <span class="stockDate">'+tooltipTime+'</span>'+
+                            // '<span><label class="stockName">'+$this.stockName+'</label>'+
+                            //     '<i class="lastPrice">-</i></span>');
                         }
                     });
 
                     $("#MLine").bind("mouseenter", function (event) {
-                        toolContentPosition(event);
-                        _this = $("#MLine");
-                        $(".mline_tooltip").show();
-                        $(".mline_info").show();
+                        var offsetX = event.offsetX;
+                        if(offsetX < pixelLast[0] && offsetX > pixelFirst[0]) {
+                            $(".mline_tooltip").show();
+                            // $(".mline_info").show();
+                            isHoverGraph = true;
+                            toolContentPosition(event);
+                            _this = $("#MLine");
+                        }
                     });
-
                     $("#MLine").bind("mousemove", function (event) {
-                        isHoverGraph = true;
-                        toolContentPosition(event);
-                         _this = $("#MLine");
+                        var offsetX = event.offsetX;
+                        if(offsetX < pixelLast[0] && offsetX > pixelFirst[0]) {
+                            isHoverGraph = true;
+                            toolContentPosition(event);
+                            _this = $("#MLine");
+                            $(".mline_tooltip").show();
+                            // $(".mline_info").show();
+                        }else{
+                            isHoverGraph = false;
+                            mouseHoverPoint = 0;
+                            $(_this).children(".charts-focus").blur();
+                            _this = window;
+                            $(".mline_tooltip").hide();
+                            // $(".mline_info").hide();
+                            topPixel = 0;
+                        }
                     });
 
                     $("#MLine").bind("mouseout", function (event) {
@@ -1546,14 +1612,16 @@ var yc=0,decimal=2,xml;
                         $(_this).children(".charts-focus").blur();
                         _this = window;
                         $(".mline_tooltip").hide();
-                        $(".mline_info").hide();
+                        // $(".mline_info").hide();
                         topPixel = 0;
                     });
+                    
 
                     // Y轴的label
                     $(".point_label").show();
                     $(".point_label").text(price[price.length-1]);
                     var pixelLast = myChart.convertToPixel({seriesIndex: 1}, [$this.v_data[price.length-1], ''+price[price.length-1]]);
+                    var pixelFirst = myChart.convertToPixel({seriesIndex: 1}, [$this.v_data[0], ''+price[0]]);
                     $(".point_label").css({'top':pixelLast[1]-12});
                     if(price[price.length-1] >= yc){
                         $(".point_label").css({"background-color":"#c23a39"});
@@ -1561,14 +1629,6 @@ var yc=0,decimal=2,xml;
 
                     function toolContentPosition(event) {
                         var offsetX = event.offsetX;
-                        if(offsetX > pixelLast[0]) {
-                            $(".mline_tooltip").hide();
-                            $(".mline_info").hide();
-                            topPixel = 0;
-                            return;
-                        }
-                        $(".mline_tooltip").show();
-                        $(".mline_info").show();
                         var continerWidth = $("#mline_charts").width(), toolContent = $(".mline_tooltip").width();
                         var centerX = continerWidth / 2;
                         if (offsetX > centerX) {
@@ -1772,7 +1832,7 @@ var yc=0,decimal=2,xml;
         $this.high_data = [];
         $this.low_data = [];
         setFieldInfo({High:0,Low:0,Open:0,Value:0,Volume:0,Last:0});
-        var decimal = $this.decimal;
+        var decimal = decimal;
         if(data){
             if(myChart == undefined) return;
             yc = parseFloat(yc);
@@ -1797,7 +1857,12 @@ var yc=0,decimal=2,xml;
             var split = parseFloat(((maxY - minY) / 6).toFixed(4));
             var split1 = parseFloat(((maxY1 - minY1) / 6).toFixed(4));
 
-            v_data =  getxAxis((data[0].Date),$this);
+            if(data[0]){
+                v_data =  getxAxis((data[0].Date),$this);
+            }else{
+                v_data =  getxAxis((data.Date),$this);
+            }
+            
             var option ={
                 yAxis: [
                     {

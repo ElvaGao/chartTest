@@ -1245,6 +1245,7 @@ function chartPaint(isHistory){
                                 
                                 },
                     position: function (pos, params, dom, rect, size) {
+                        
                                     var valueHigh = KLineSocket.HistoryData.hValuesList[params[0].dataIndex][3];
                                     var pixelHigh = KLineSocket.KChart.convertToPixel({yAxisIndex:0}, valueHigh );
 
@@ -1274,7 +1275,7 @@ function chartPaint(isHistory){
                     link: {xAxisIndex: 'all'},
                     label: {
                         textStyle: {
-                            fontSize: 20
+                            fontSize:16,
                         }
                     },
                     type: 'line',
@@ -1287,15 +1288,15 @@ function chartPaint(isHistory){
                 },
                 grid: [
                     {
-                        left: '10%',
+                        left: '8%',
                         right: 100,
                         top: "2%",
-                        height: '86.3%'
+                        height:'380px',
                     },
                     {
-                        left: '10%',
+                        left: '8%',
                         right: 100,
-                        bottom: '11.7%',
+                        bottom: 60,
                         height: '8%'
                     }
                 ],
@@ -1304,7 +1305,7 @@ function chartPaint(isHistory){
                         show: true,
                         xAxisIndex: [0, 1],
                         type: 'slider',
-                        top: '95%',
+                        top: '93%',
                         start: 98,
                         end: 100,
                         fillerColor: "rgba(43,46,61,0.55)",
@@ -1427,7 +1428,7 @@ function chartPaint(isHistory){
                                 }
                             },
                             color: '#999',
-                            fontSize: 20,
+                            fontSize:16,
                             // showMaxLabel: true,
                             // showMinLabel: true,
                             // formatter : function(value, index){
@@ -1488,7 +1489,7 @@ function chartPaint(isHistory){
                         axisLabel: {
                             show: true,
                             color: '#999',
-                            fontSize: 20,
+                            fontSize:16,
                             formatter: function (value, index) {
                                 updatePointLabel(value,index);
                                 return (value).toFixed(decimal);
